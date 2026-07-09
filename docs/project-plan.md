@@ -2,7 +2,7 @@
 
 ## Project Plan — Copilot Governance Initiative, BOL Commercial
 
-**Owner:** Naresh, Architect  |  **Status:** Draft  |  **Last updated:** July 2026
+**Owner:** Naresh, Associate Architect  |  **Status:** Draft  |  **Last updated:** July 2026
 
 ## 1. Problem statement
 
