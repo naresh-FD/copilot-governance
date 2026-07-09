@@ -42,6 +42,15 @@ touched by the sync. This gives teams room for legitimate local context
 (e.g. a repo-specific testing quirk) while keeping the compliance-critical
 baseline consistent and centrally auditable.
 
+**Governance rule:** Repo overrides may add local build/test/context rules,
+but **must not weaken, override, or contradict the compliance baseline**. 
+Copilot instructions influence Copilot behavior; if a repo override
+contradicts the compliance baseline, Copilot may follow the weaker rule.
+All repo overrides are subject to code review as part of the PR merge
+process. This is not enforcement (that is the role of policy checks, 
+CODEOWNERS, branch protection, secret scanning, SAST, dependency scanning,
+and human review) — it is *influence*.
+
 ## 5. Workstreams and milestones
 
 | Phase | Scope | Target |
@@ -88,3 +97,19 @@ baseline consistent and centrally auditable.
   based on feedback.
 - Generate the full `repos.json` from `gh repo list` and sequence
   Wave 1 / Wave 2.
+
+## 10. Future improvements
+
+**Phase 4 / 5 enhancement:** For enterprise/compliance maturity, consider
+replacing the fine-grained PAT with a GitHub App. A PAT works for the pilot
+and Waves 1–2, but at 100+ repos in a regulated environment, a GitHub App
+offers better auditability, scoping, rotation, and ownership tracking.
+GitHub Apps integrate with GitHub's RBAC and audit logs; they are the
+modern approach to org-wide automation.
+
+**Path-specific instructions:** GitHub Copilot supports not only repo-wide
+`.github/copilot-instructions.md`, but also path-specific instruction files
+at `.github/instructions/**/*.instructions.md`. For React/Angular/Java at
+scale, future phases may add path-specific rules (e.g. React component
+rules, Angular service rules, Java microservice rules) that complement the
+repo-wide baseline.

@@ -30,17 +30,19 @@ jobs:
       - name: Checkout governance repo
         uses: actions/checkout@v4
 
+      - name: Validate setup
+        run: |
+          chmod +x scripts/validate-copilot-governance.sh
+          scripts/validate-copilot-governance.sh
+
       - name: Filter to single repo (manual runs only)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_filter != '' }}
         run: |
           jq --arg r "${{ inputs.repo_filter }}" '.repos = [$r]' repos.json > repos.filtered.json
           mv repos.filtered.json repos.json
+          echo "Filtered to single repo: ${{ inputs.repo_filter }}"
 
       - name: Run sync
         run: |
           chmod +x scripts/sync-copilot-instructions.sh
           scripts/sync-copilot-instructions.sh
-
-      - name: Summary
-        if: always()
-        run: echo "See job logs above for per-repo results."
