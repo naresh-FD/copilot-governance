@@ -1,0 +1,9 @@
+{
+  "_comment": "One entry per repo name (no org prefix). Group with comments for your own tracking; the sync script only reads the 'repos' array.",
+  "repos": [
+    "alerts",
+    "intrafi-transfers",
+    "react-feature-template",
+    "account-details"
+  ]
+}

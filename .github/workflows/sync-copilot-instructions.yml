@@ -1,0 +1,46 @@
+name: Sync copilot-instructions.md
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "templates/copilot-instructions.base.md"
+      - "repos.json"
+      - "scripts/sync-copilot-instructions.sh"
+  workflow_dispatch:
+    inputs:
+      repo_filter:
+        description: "Optional: sync a single repo only (name, no org prefix)"
+        required: false
+        default: ""
+  schedule:
+    # Weekly safety net in case a downstream PR was closed/ignored
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GOV_SYNC_PAT }}
+      GH_ORG: ${{ vars.GH_ORG }}
+    steps:
+      - name: Checkout governance repo
+        uses: actions/checkout@v4
+
+      - name: Filter to single repo (manual runs only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.repo_filter != '' }}
+        run: |
+          jq --arg r "${{ inputs.repo_filter }}" '.repos = [$r]' repos.json > repos.filtered.json
+          mv repos.filtered.json repos.json
+
+      - name: Run sync
+        run: |
+          chmod +x scripts/sync-copilot-instructions.sh
+          scripts/sync-copilot-instructions.sh
+
+      - name: Summary
+        if: always()
+        run: echo "See job logs above for per-repo results."
