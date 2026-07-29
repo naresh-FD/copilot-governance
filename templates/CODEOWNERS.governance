@@ -1,4 +1,13 @@
 # Copilot governance ownership
+#
+# prompt-core and hooks are the reason this file matters most. prompt-core
+# contains executable code that runs on the developer's machine on every prompt,
+# and the policy rule set that decides what is blocked. hooks registers that
+# code with the IDE. A change to either alters what executes on every developer
+# workstation, so both require security review in every repository — not just
+# in the central governance repository.
 .github/copilot-instructions.md      @org/platform-architecture @org/security
 .github/instructions/**              @org/platform-architecture @org/security
+.github/prompt-core/**               @org/platform-architecture @org/security
+.github/hooks/**                     @org/platform-architecture @org/security
 .github/prompts/**                   @org/platform-architecture

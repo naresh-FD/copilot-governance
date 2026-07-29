@@ -22,6 +22,7 @@ INSTRUCTIONS_DIR="$SCRIPT_DIR/instructions"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
 PROMPT_CORE_DIR="$SCRIPT_DIR/prompt-core"
 HOOKS_DIR="$SCRIPT_DIR/hooks"
+TEST_FILE="$SCRIPT_DIR/tests/prompt-core.test.mjs"
 REQUIRE_GITHUB_AUTH="${REQUIRE_GITHUB_AUTH:-false}"
 
 CENTRAL_START="<!-- CENTRAL GOVERNANCE START -->"
@@ -283,6 +284,21 @@ if command -v node >/dev/null 2>&1; then
   else
     fail "kernel selftest failed:"
     printf '%s\n' "$selftest_out" | sed 's/^/    /'
+  fi
+
+  # The selftest checks structure. These check behaviour — routing accuracy, the
+  # verbatim guarantee, shadow rules never blocking, and failing open. Set
+  # GOV_SKIP_TESTS=1 to skip during rapid local iteration; CI must not skip.
+  if [[ "${GOV_SKIP_TESTS:-0}" == "1" ]]; then
+    echo "SKIP: kernel behaviour tests (GOV_SKIP_TESTS=1)"
+  elif [[ ! -f "$TEST_FILE" ]]; then
+    fail "kernel behaviour tests not found: $TEST_FILE"
+  elif test_out="$(node --test "$TEST_FILE" 2>&1)"; then
+    test_count="$(printf '%s\n' "$test_out" | sed -n 's/^# pass \([0-9]*\)$/\1/p;s/^ℹ pass \([0-9]*\)$/\1/p' | head -1)"
+    pass "kernel behaviour tests: ${test_count:-all} passed"
+  else
+    fail "kernel behaviour tests failed:"
+    printf '%s\n' "$test_out" | grep -E '^(✖|not ok|  [A-Za-z].*:)' | head -20 | sed 's/^/    /'
   fi
 else
   echo "SKIP: kernel selftest (node not installed)"

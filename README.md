@@ -60,6 +60,8 @@ scripts/
   sync-copilot-instructions.sh
   validate-copilot-governance.sh
   hooks/pre-commit
+tests/
+  prompt-core.test.mjs
 docs/
   demo.md
   project-plan.md

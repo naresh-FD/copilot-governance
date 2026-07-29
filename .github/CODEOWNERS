@@ -1,0 +1,25 @@
+# Ownership of the central governance repository.
+#
+# This repository distributes executable code (prompt-core/rewrite.mjs) into
+# every governed repository, where it runs on every prompt submission. A change
+# merged here reaches every developer workstation. That makes review of this
+# repository a supply-chain control, not a housekeeping preference.
+#
+# Replace the placeholder team identifiers below with the real teams before
+# deployment. Pair this file with branch protection on the default branch:
+# required review, required status checks, and no direct pushes.
+
+# Executable code and policy rules — highest sensitivity.
+/prompt-core/                        @org/platform-architecture @org/security
+/hooks/                              @org/platform-architecture @org/security
+/scripts/                            @org/platform-architecture @org/security
+
+# Distributed governance content.
+/templates/                          @org/platform-architecture @org/security
+/instructions/                       @org/platform-architecture @org/security
+/prompts/                            @org/platform-architecture
+
+# Distribution scope and automation.
+/repos.json                          @org/platform-architecture
+/.github/workflows/                  @org/platform-architecture @org/security
+/.github/CODEOWNERS                  @org/platform-architecture @org/security

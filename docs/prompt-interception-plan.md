@@ -190,7 +190,23 @@ needs the Argus export format, which is not yet available to this repository.
 
 **Classification is regex-based.** A prompt routed to the wrong intent inlines
 the wrong workflow. `report` shows the intent distribution; a distribution that
-looks wrong is the signal to tune `router.json`.
+looks wrong is the signal to tune `router.json`. The behavioural tests pin the
+known cases, so a regression in routing fails the build rather than shipping.
+
+**Telemetry is never collected centrally.** `report` reads only the local
+machine's file. That is deliberate for privacy, but it means the platform cannot
+demonstrate estate-wide that interception is actually running — you can only ask
+each developer to run `report` and send the output. Fine across four pilot
+repos, unworkable at estate scale. Central collection is a Wave 1 prerequisite
+and carries its own privacy and employee-monitoring questions.
+
+**This repo ships executable code into every governed repo.** `rewrite.mjs` runs
+on every prompt on every developer's machine, so a bad merge here is code
+execution across the estate. `.github/CODEOWNERS` requires security review on
+`prompt-core/`, `hooks/` and `scripts/`, and the downstream template does the
+same for `.github/prompt-core/**` and `.github/hooks/**` — that downstream
+coverage was missing until it was caught during the approval review. Pair both
+with branch protection and commit signing; neither is configured by this repo.
 
 ## Operating runbook
 
@@ -200,6 +216,19 @@ hook):
 ```bash
 node prompt-core/rewrite.mjs --selftest
 ```
+
+Run the behavioural tests. The selftest checks that the configuration is well
+formed; these check that it *behaves* — routing accuracy, the verbatim
+guarantee, shadow rules never blocking, failing open, and that no deny rule has
+been flipped to enforcing without the evidence review. Also runs inside
+`copilot-gov validate`, so it gates every sync:
+
+```bash
+node --test tests/prompt-core.test.mjs
+```
+
+Set `GOV_SKIP_TESTS=1` to skip them during rapid local iteration. CI must not
+skip them.
 
 See what a given prompt becomes:
 
