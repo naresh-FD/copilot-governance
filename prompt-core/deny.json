@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "_comment": "Deny rules for the prompt interception kernel. Each rule carries its own 'enforce' flag so a high-confidence rule can go live while the rest keep collecting shadow data. enforce=false means the rule is evaluated and logged to telemetry and a warning is shown, but the prompt still proceeds. enforce=true means the prompt is blocked with permissionDecision=deny. Use `copilot-gov report` to review shadow hit counts before flipping any rule.",
+  "rules": [
+    {
+      "id": "bypass-verification",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "--no-verify",
+        "\\bskip (the |all |these )?(tests?|linting|lint|scans?|checks?|ci)\\b",
+        "\\b(disable|turn off|bypass|ignore|silence) (the )?(tests?|linting|lint|pre-?commit|ci|quality gate)\\b",
+        "\\bnosonar\\b",
+        "\\beslint-disable\\b",
+        "\\b(it|test|describe)\\.skip\\b",
+        "\\b@suppresswarnings\\b",
+        "\\bjust make (it|the (test|build|pipeline)) pass\\b"
+      ],
+      "reason": "Suppressing a check is not a fix. Use /fix-sonarqube-issue, /fix-eslint-issue, or /fix-test-failure to address the root cause.",
+      "notes": "Low expected false-positive rate. Likely the first rule to enforce. Watch for legitimate prompts discussing why a suppression already in the codebase exists."
+    },
+    {
+      "id": "hardcoded-secret",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(api[_-]?key|apikey|secret|password|passwd|client[_-]?secret|private[_-]?key|access[_-]?token)\\b[^\\n]{0,20}[:=][^\\n]{0,4}[\"'][^\"'\\n]{8,}[\"']",
+        "\\b(hardcode|hard-code|inline|paste|embed) (the )?(secret|password|credential|api[_-]?key|token)\\b",
+        "\\b-----BEGIN [A-Z ]*PRIVATE KEY-----",
+        "\\bAKIA[0-9A-Z]{16}\\b",
+        "\\bgh[pousr]_[A-Za-z0-9]{20,}\\b",
+        "\\bxox[baprs]-[A-Za-z0-9-]{10,}\\b",
+        "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\."
+      ],
+      "reason": "Secrets must never appear in a prompt, in source, or in configuration. Reference the approved secret store instead — see .github/instructions/security.instructions.md.",
+      "notes": "The provider-prefix signals (AKIA, ghp_, xox, JWT) are near-zero false positive and are good enforce candidates ahead of the generic assignment pattern."
+    },
+    {
+      "id": "disable-security-scan",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(disable|turn off|bypass|skip|suppress|ignore|silence|mute) (the )?(sast|dast|security scan\\w*|dependency scan\\w*|secret scan\\w*|vulnerability scan\\w*|code ?ql|snyk|dependabot|argus)\\b",
+        "\\b(add|create) (an? )?(exception|exclusion|allowlist|whitelist|waiver) (for|to) (the )?(scan|security|vulnerab\\w*|finding)\\b",
+        "\\bmark (it|this|the finding) as (a )?(false positive|accepted risk|won'?t fix)\\b"
+      ],
+      "reason": "Security scanning cannot be disabled or waived from a code assistant. Route exceptions through the security team.",
+      "notes": "Genuine false-positive triage is a legitimate human workflow, so this rule blocks the assistant doing it, not the practice itself. Keep in shadow until the wording proves precise."
+    },
+    {
+      "id": "custom-crypto",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(write|implement|build|create|roll|design) (my |our |a |your )?own (crypto\\w*|encryption|cipher|hash\\w*|jwt|auth\\w*|session|token)\\b",
+        "\\bcustom (encryption|crypto\\w*|cipher|hashing|jwt|auth\\w*)\\b",
+        "\\b(math\\.random|new random\\(\\)) .{0,40}(token|secret|key|password|salt|nonce|id)\\b",
+        "\\b(md5|sha-?1|des|rc4|ecb mode)\\b"
+      ],
+      "reason": "Never invent authentication, session, or cryptographic logic. Use the org-approved library named in .github/instructions/security.instructions.md.",
+      "notes": "The weak-algorithm signal fires on prompts that are asking to REMOVE md5/sha1, which is the desired behavior. Review shadow hits before enforcing."
+    },
+    {
+      "id": "customer-data-in-prompt",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(?:\\d[ -]?){13,19}\\b",
+        "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+        "\\b(real|actual|prod(uction)?|live) (customer|client|user|account|member) (data|record|details|list|export)\\b",
+        "\\b(here'?s|attached is|pasting) (the )?(customer|client|account|cardholder) (data|record|export|dump)\\b",
+        "\\biban\\s*[:=]?\\s*[A-Z]{2}\\d{2}[A-Z0-9]{10,}\\b"
+      ],
+      "reason": "Customer data, card numbers, and government identifiers must not be pasted into a prompt. Use synthetic fixtures — see .github/instructions/testing.instructions.md.",
+      "notes": "The 13-19 digit signal is the highest false-positive risk in this file: it matches long non-PAN numbers such as timestamps in epoch nanoseconds and some ticket ids. Do not enforce without adding a Luhn check first."
+    },
+    {
+      "id": "exfiltration",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(send|post|upload|curl|push|sync|email|exfil\\w*) .{0,40}(\\.env|secret|credential|api[_-]?key|token|config|dump|database) .{0,20}\\b(to|at)\\b .{0,40}(https?://|@)",
+        "\\bcat .{0,20}\\.env\\b",
+        "\\b(print|show|echo|reveal|dump) (me )?(the |all )?(env(ironment)? var\\w*|\\.env|secrets?|credentials?)\\b",
+        "\\bpaste (the )?(contents of )?(\\.env|the vault|credentials)\\b"
+      ],
+      "reason": "Reading out or transmitting credentials and environment configuration is not permitted. Reference the secret by name only.",
+      "notes": "Overlaps with hardcoded-secret by design; both may fire on the same prompt. Telemetry records all matching rule ids."
+    },
+    {
+      "id": "production-mutation",
+      "severity": "high",
+      "enforce": false,
+      "signals": [
+        "\\b(drop|truncate|delete from) .{0,30}\\b(prod\\w*|live)\\b",
+        "\\b(deploy|push|release|hotfix) .{0,20}(straight |directly )?to prod\\w*\\b .{0,30}\\b(without|skip\\w*|bypass\\w*)\\b",
+        "\\bforce[- ]push .{0,20}\\b(main|master|prod\\w*|release)\\b",
+        "\\b(run|execute) .{0,30}\\bagainst (the )?prod\\w*\\b (database|db)\\b"
+      ],
+      "reason": "Production data and branches are out of scope for assistant-driven change. Route through the normal release process.",
+      "notes": "Narrowly worded on purpose. Expect very few hits; a hit is worth reading individually."
+    }
+  ]
+}

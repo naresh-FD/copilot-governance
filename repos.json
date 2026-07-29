@@ -1,9 +1,9 @@
 {
-  "_comment": "One entry per repo name (no org prefix). Group with comments for your own tracking; the sync script only reads the 'repos' array.",
+  "_comment": "One entry per repo name (no org prefix). Group with comments for your own tracking; the sync script only reads the 'repos' array. Replace this example list with your own pilot repos.",
   "repos": [
     "alerts",
-    "intrafi-transfers",
     "react-feature-template",
-    "account-details"
+    "backend-api",
+    "web-dashboard"
   ]
 }
