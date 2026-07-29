@@ -1,83 +1,199 @@
 # copilot-governance
 
-Central source of truth for `.github/copilot-instructions.md` across BOL
-Commercial repos, with automated sync via GitHub Actions.
+Hybrid Copilot Governance and Prompt Optimization Platform — a reusable
+template for centrally governing GitHub Copilot instructions, path-specific
+guardrails, and prompt workflows across any organization's repositories.
 
-## How it works
+This repository is the central source of truth for:
 
-1. `templates/copilot-instructions.base.md` is the org baseline. Edit it here,
-   not in downstream repos.
-2. `repos.json` lists which repos receive the sync.
-3. The `sync-copilot-instructions` workflow runs on:
-   - push to `main` that touches the base template, `repos.json`, or the
-     sync script
-   - manual dispatch (optionally scoped to one repo via `repo_filter`)
-   - a weekly cron safety net (Mondays 03:00 UTC)
-4. For each repo, it clones, replaces everything **above** the
-   `<!-- REPO OVERRIDES START -->` marker with the current baseline, keeps
-   everything at/after the marker untouched, and opens a PR on branch
-   `chore/sync-copilot-instructions` if there's a diff.
-5. Humans review and merge each PR — this never force-merges.
+- repo-wide `.github/copilot-instructions.md`
+- path-specific `.github/instructions/*.instructions.md`
+- reusable `.github/prompts/*.prompt.md` workflows
+- local developer validation through `scripts/copilot-gov.sh`
+- GitHub PR-based sync automation
 
-## One-time setup
+The goal is not only to standardize Copilot instructions. The stronger value is
+prompt governance, secure coding guardrails, code-quality automation, and faster
+developer fixes with reusable approved workflows.
 
-1. **Create a fine-grained PAT** scoped to the org (or the specific 100+
-   repos): permissions `Contents: Read and write`, `Pull requests: Read and
-   write`. Store it as an org or repo secret named `GOV_SYNC_PAT`.
-2. **Set the `GH_ORG` repo/org variable** to your GitHub org name.
-3. Populate `repos.json` with the full repo list (script below can help
-   generate it from `gh repo list`).
-4. Validate your setup locally before the first sync:
-   ```bash
-   export GH_TOKEN=<your-fine-grained-pat>
-   export GH_ORG=<your-org>
-   chmod +x scripts/validate-copilot-governance.sh
-   scripts/validate-copilot-governance.sh
-   ```
-5. Push to `main` once to trigger the first sync, or run the workflow
-   manually from the Actions tab.
+## Repository Layout
 
-## Generating the full repo list
-
-```bash
-gh repo list <org> --limit 400 --json name -q '.[].name' | jq -R -s -c 'split("\n")[:-1]' \
-  | jq '{repos: .}' > repos.json
+```text
+templates/
+  copilot-instructions.base.md
+  CODEOWNERS.governance
+instructions/
+  security.instructions.md
+  code-quality.instructions.md
+  react.instructions.md
+  angular-v12.instructions.md
+  angular-v21.instructions.md
+  java-springboot.instructions.md
+  testing.instructions.md
+  pr-review.instructions.md
+  migration.instructions.md
+prompts/
+  fix-pr-review.prompt.md
+  fix-security-finding.prompt.md
+  fix-console-logs.prompt.md
+  fix-sonarqube-issue.prompt.md
+  fix-eslint-issue.prompt.md
+  fix-test-failure.prompt.md
+  fix-build-failure.prompt.md
+  fix-typescript-error.prompt.md
+  fix-angular-migration.prompt.md
+  fix-react-code-quality.prompt.md
+  fix-java-springboot-security.prompt.md
+  generate-unit-tests.prompt.md
+  document-repo.prompt.md
+  explain-legacy-code.prompt.md
+prompt-core/
+  core.md
+  router.json
+  deny.json
+  rewrite.mjs
+hooks/
+  prompt-interceptor.json
+scripts/
+  copilot-gov.ps1
+  copilot-gov.sh
+  sync-copilot-instructions.sh
+  validate-copilot-governance.sh
+  hooks/pre-commit
+docs/
+  demo.md
+  project-plan.md
+  prompt-governance-plan.md
+  prompt-interception-plan.md
+  phase5-briefing.md
+  rollout-plan.md
+  security-compliance-plan.md
+  hallucination-prevention.md
+  phase1-deliverables.md
 ```
 
-Review the output and remove archived/deprecated repos before committing.
+## Prompt Interception
 
-## Testing before production: dry-run mode
+`prompt-core/` and `hooks/` are the Phase 5 interception kernel. Once synced,
+every prompt submitted in a governed repository is intercepted by a VS Code
+`UserPromptSubmit` hook and rewritten against the governance core before the
+model sees it — the developer's original wording is always carried through
+verbatim. Policy rules ship in shadow mode: logged and surfaced, never blocking,
+until pilot data justifies enforcing them one at a time.
 
-To test the sync workflow without creating PRs:
+This works in VS Code and Claude Code. **JetBrains has no hook support**, so
+IntelliJ users get the instruction and prompt files only. See
+`docs/prompt-interception-plan.md` for the full coverage matrix, the pinned hook
+schema, and the honest limits.
+
+## How Sync Works
+
+1. `templates/copilot-instructions.base.md` contains the managed central
+   baseline and repo override markers.
+2. `instructions/` contains governed path-specific Copilot instruction packs.
+3. `prompts/` contains approved reusable prompt workflows.
+4. `repos.json` lists target repositories.
+5. `scripts/sync-copilot-instructions.sh` clones each target repo, updates:
+   - `.github/copilot-instructions.md`
+   - `.github/instructions/*.instructions.md`
+   - `.github/prompts/*.prompt.md`
+   - `.github/prompt-core/*` and `.github/hooks/*` (the interception kernel)
+6. Repo-specific override content between the override markers is preserved.
+7. Sync records what it shipped in `.github/.copilot-governance-manifest`, so a
+   file removed centrally is removed downstream on the next sync — without
+   touching prompt or hook files the repo added itself.
+8. Sync opens or updates PRs. It does not commit directly to default branches.
+
+## Local CLI
 
 ```bash
-export GH_TOKEN=<your-fine-grained-pat>
-export GH_ORG=<your-org>
-export DRY_RUN=true
-scripts/sync-copilot-instructions.sh
+scripts/copilot-gov.sh doctor
+scripts/copilot-gov.sh validate
+scripts/copilot-gov.sh audit
+scripts/copilot-gov.sh prompt fix-console-logs
+scripts/copilot-gov.sh rewrite "fix the SQL injection in the account lookup"
+scripts/copilot-gov.sh report
+scripts/copilot-gov.sh sync --dry-run
+scripts/copilot-gov.sh install-hooks
 ```
 
-In dry-run mode, the script will validate, clone repos, compute diffs, and
-show what it *would* push — but it won't actually push branches or create
-PRs. Use this to verify the sync behavior on a few repos before full
-rollout.
+On Windows without WSL/Git Bash (Windows PowerShell 5.1, no `pwsh` required):
 
-## Adding a repo-specific override
+```powershell
+scripts\copilot-gov.ps1 doctor
+scripts\copilot-gov.ps1 validate
+scripts\copilot-gov.ps1 audit
+scripts\copilot-gov.ps1 prompt fix-console-logs
+```
 
-In the target repo's `.github/copilot-instructions.md`, add anything
-between the `REPO OVERRIDES START` and `REPO OVERRIDES END` markers. The
-sync workflow will never touch that section — only the org baseline above
-it gets refreshed.
+Use `sync --apply` only when `GH_TOKEN` and `GH_ORG` are configured.
 
-**Important:** Repo overrides may add local build/test/context rules, but
-**must not weaken, override, or contradict the compliance baseline**. If a
-repo's override contradicts the baseline, Copilot may follow the override,
-weakening your governance. All repo overrides are subject to code review as
-part of the PR merge process.
+## Local Content Enforcement (Token Budget)
 
-## Rollout plan
+`validate` (and the pre-commit hook installed by `install-hooks`) enforces a
+word budget on every file that gets auto-injected into Copilot requests — the
+central governance block and each `instructions/*.instructions.md` file
+(`applyTo: "**/*"` files have the same reach as the top-level file). Default
+budget is 300 words per file, override with `TOKEN_BUDGET_WORDS`; two files
+(`security.instructions.md`, `code-quality.instructions.md`) have documented
+higher ceilings since exhaustive pattern coverage is their purpose. It also
+blocks unresolved placeholders and literal-looking hardcoded secrets in
+governance content, and (bash only) warns on verbatim duplicate phrasing
+across files. See [docs/demo.md](docs/demo.md) for how to test this and what
+it caught the first time it ran.
 
-See `docs/project-plan.md` (or the Word version shared alongside this repo)
-for the phased rollout across the ~100+ repos, starting with the four repos
-already onboarded from the security remediation work (`alerts`,
-`intrafi-transfers`, `react-feature-template`, `account-details`).
+## Authentication
+
+Recommended long-term automation is a GitHub App with fine-grained repository
+scope and short-lived installation tokens.
+
+For pilot rollout, a fine-grained PAT can be used if approved:
+
+- `Contents: Read and write`
+- `Pull requests: Read and write`
+- scoped only to target repositories
+- stored as `GOV_SYNC_PAT`
+- paired with repo/org variable `GH_ORG`
+
+## Override Model
+
+Central managed section:
+
+```text
+<!-- CENTRAL GOVERNANCE START -->
+Managed by copilot-governance.
+...
+<!-- CENTRAL GOVERNANCE END -->
+```
+
+Repo-owned section:
+
+```text
+<!-- REPO OVERRIDES START -->
+Repo-specific rules go here.
+<!-- REPO OVERRIDES END -->
+```
+
+Rules:
+
+- Central section is managed by this repo.
+- Repo overrides are preserved.
+- Overrides can add local context but cannot weaken security, compliance,
+  testing, or code-quality rules.
+- Duplicate markers fail validation/sync.
+- Existing files without markers enter onboarding mode and are preserved inside
+  the repo override section.
+
+## Pilot Repos
+
+`repos.json` holds the example pilot list — replace it with your own repos
+before running a real sync:
+
+```text
+alerts
+react-feature-template
+backend-api
+web-dashboard
+```
+
+See [docs/project-plan.md](docs/project-plan.md) for the rollout plan.

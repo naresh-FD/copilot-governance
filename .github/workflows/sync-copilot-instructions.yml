@@ -1,12 +1,19 @@
-name: Sync copilot-instructions.md
+name: Sync Copilot governance
 
 on:
   push:
     branches: [main]
     paths:
       - "templates/copilot-instructions.base.md"
+      - "instructions/**"
+      - "prompts/**"
+      - "prompt-core/**"
+      - "hooks/**"
       - "repos.json"
       - "scripts/sync-copilot-instructions.sh"
+      - "scripts/validate-copilot-governance.sh"
+      - "scripts/copilot-gov.sh"
+      - "scripts/copilot-gov.ps1"
   workflow_dispatch:
     inputs:
       repo_filter:
@@ -20,19 +27,32 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: copilot-governance-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GOV_SYNC_PAT }}
       GH_ORG: ${{ vars.GH_ORG }}
+      REQUIRE_GITHUB_AUTH: "true"
     steps:
       - name: Checkout governance repo
         uses: actions/checkout@v4
 
+      # The validator runs the interception kernel's selftest, which needs node.
+      # Without this step it would silently SKIP that check and ship an unvalidated
+      # router or deny ruleset downstream.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Validate setup
         run: |
-          chmod +x scripts/validate-copilot-governance.sh
+          chmod +x scripts/*.sh
           scripts/validate-copilot-governance.sh
 
       - name: Filter to single repo (manual runs only)
@@ -44,5 +64,4 @@ jobs:
 
       - name: Run sync
         run: |
-          chmod +x scripts/sync-copilot-instructions.sh
           scripts/sync-copilot-instructions.sh

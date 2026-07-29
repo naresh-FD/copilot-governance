@@ -1,0 +1,10 @@
+# Microsoft Office lock/owner files, created while a document is open
+~$*
+
+# Local prompt-interception telemetry. The kernel writes to the user's home
+# directory by default; this covers the case where GOV_TELEMETRY_DIR is pointed
+# at the working tree for debugging. Prompt-derived data must never be committed.
+.copilot-gov/
+.tmp-telemetry/
+
+node_modules/

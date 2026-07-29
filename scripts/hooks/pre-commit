@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# Tracked pre-commit hook source. Not active on its own — .git/hooks/ is not
+# version-controlled, so this only runs after a developer installs it via:
+#   scripts/copilot-gov.sh install-hooks
+#
+# Runs the same local, no-network validation as CI (content budget,
+# deny-pattern, marker, and required-file checks) so a bloated or broken
+# governance file is caught before commit, not after a sync PR opens.
+#
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)")"
+
+echo "Running copilot-gov validate (pre-commit)..."
+"$ROOT/scripts/validate-copilot-governance.sh"

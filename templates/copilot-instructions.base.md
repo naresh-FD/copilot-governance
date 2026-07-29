@@ -1,73 +1,51 @@
-<!--
-  ORG BASELINE — copilot-instructions.md
-  Owned by: Platform/Architecture team (copilot-governance repo)
-  Do not edit directly in downstream repos — edit here and let the sync
-  workflow propagate. Repo-specific rules go in the REPO OVERRIDES block
-  below, which the sync script preserves on every push.
--->
+<!-- CENTRAL GOVERNANCE START -->
+Managed by copilot-governance.
+Do not edit this section directly in downstream repositories.
+Update the central governance repository and sync by pull request.
 
-# GitHub Copilot Instructions — BOL Commercial
+# GitHub Copilot Instructions
 
-## Compliance (non-negotiable)
+## Operating Posture
 
-- This is a regulated banking/financial environment. **Never** transmit source
-  code, credentials, customer data, or internal identifiers to any service
-  outside our approved, contracted tooling.
-- Do not suggest storing secrets, tokens, or connection strings in code,
-  comments, or config files. Point to the approved secrets manager instead.
-- Do not fabricate API responses, security control behavior, or compliance
-  claims. If uncertain, say so and flag for human review.
-- Any authentication, authorization, encryption, or PII-handling code must be
-  flagged for security review before merge — do not present it as "safe to
-  ship" on its own.
+This repository participates in the hybrid Copilot Governance and Prompt
+Optimization Platform. `security.instructions.md` and
+`code-quality.instructions.md` apply to every file (`applyTo: "**/*"`) and
+are auto-injected same as this file — their rules are not repeated here to
+avoid double-injecting the same content on every request. Also load:
 
-## Stack conventions
+- `.github/instructions/testing.instructions.md`
+- `.github/instructions/pr-review.instructions.md`
+- relevant stack files under `.github/instructions/`
 
-### React microfrontends
-- Functional components with hooks; no new class components.
-- Co-locate tests with source (`Component.test.tsx` beside `Component.tsx`).
-- Shared UI primitives come from the design-system package — don't
-  reimplement existing components.
+Use path-specific instructions where they apply. Do not rely on this file as
+the only source of standards.
 
-### Angular — legacy (v12)
-- Treat v12 code as maintenance-mode: bug fixes and security patches only.
-- Do not introduce new Angular v12 modules/features; new functionality
-  belongs in the v21 migration track unless explicitly scoped otherwise.
-- Preserve existing RxJS patterns already in the file rather than mixing
-  styles mid-file.
+## Prompt Workflow Usage
 
-### Angular — active migration (v21)
-- Standalone components by default; avoid NgModules for new code.
-- Prefer signals over RxJS for new local component state; keep RxJS for
-  cross-cutting async streams (HTTP, websockets).
-- Flag any code that will block or complicate migration of adjacent v12
-  modules.
+For repeatable work, use approved prompt workflows from `.github/prompts/`
+instead of writing long prompts from scratch (`/fix-console-logs`,
+`/fix-security-finding`, etc. — see that directory for the full list).
 
-### Java microservices
-- Follow existing package structure; don't introduce a new layering pattern
-  in a service without discussion.
-- Favor constructor injection; no field injection in new code.
-- All new endpoints need request/response validation and explicit error
-  handling — no silent catch-and-swallow.
+## Governed Prompts
 
-### CI/CD
-- Azure DevOps pipelines are the source of truth for build/release. Don't
-  suggest GitHub Actions as a replacement for release pipelines — GitHub
-  Actions in this org is scoped to governance/sync automation only (like
-  this file's own propagation).
+Prompts in this repository are intercepted by `.github/hooks/` and rewritten
+against the governance core before the model answers. Your original wording is
+always carried through verbatim. Policy rules currently run in shadow mode —
+matches are logged and shown, not blocked. This applies in VS Code only;
+JetBrains has no hook support, so there these instruction files are the only
+control.
 
-## Code review posture
+## Repo Override Rule
 
-- Prioritize correctness and security over cleverness or brevity.
-- Call out breaking changes to shared/microfrontend contracts explicitly.
-- When suggesting a refactor, keep the diff minimal and scoped to the task.
+Repo-specific overrides may add local build commands, test commands, domain
+context, stack notes, and approved exceptions. They must not weaken or
+contradict the central security, compliance, testing, or code-quality rules.
+When in doubt, follow the stricter rule and ask for human review.
+
+<!-- CENTRAL GOVERNANCE END -->
 
 <!-- REPO OVERRIDES START -->
-<!--
-  Repo-specific additions go below this line. The sync workflow will
-  overwrite everything ABOVE this marker with the latest org baseline and
-  leave everything from "REPO OVERRIDES START" to the end of the file
-  untouched. Add your repo's exceptions, extra context, or stack notes here.
--->
-
+Repo-specific rules go here.
+These rules can add local standards but cannot weaken central security,
+compliance, testing, or code-quality requirements.
 <!-- REPO OVERRIDES END -->

@@ -1,0 +1,4 @@
+# Copilot governance ownership
+.github/copilot-instructions.md      @org/platform-architecture @org/security
+.github/instructions/**              @org/platform-architecture @org/security
+.github/prompts/**                   @org/platform-architecture

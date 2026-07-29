@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "_comment": "Intent map for the prompt interception kernel. Regexes are JavaScript, matched case-insensitively against the raw developer prompt. 'requireAll' entries must ALL match for the intent to be eligible; 'signals' are scored by how many match. Final score = matched signals * weight. Highest score wins; ties break by file order, so higher-risk intents are listed first. Template and anchor paths are relative to the governance root (repo root centrally, .github/ downstream).",
+  "core": "core.md",
+  "fallback": "generic",
+  "intents": [
+    {
+      "id": "java-security",
+      "risk": "high",
+      "weight": 1.5,
+      "requireAll": [
+        "\\b(java|spring ?boot|spring security|maven|gradle|servlet|jpa|hibernate|@(rest)?controller|@preauthorize|@service)\\b",
+        "\\b(security|vulnerab\\w*|cwe|owasp|injection|auth\\w*|credential|secret|token|crypto|encrypt\\w*|sanitiz\\w*|csrf|ssrf|xss)\\b"
+      ],
+      "signals": [
+        "\\b(vulnerab\\w*|insecure)\\b",
+        "\\bcwe-? ?\\d+\\b",
+        "\\bowasp\\b",
+        "\\b(sql ?injection|sqli|xss|csrf|ssrf|xxe|path traversal|deserializ\\w*)\\b",
+        "\\bhardcoded (secret|password|credential|key|token)\\b",
+        "\\bspring security\\b"
+      ],
+      "template": "prompts/fix-java-springboot-security.prompt.md",
+      "anchors": [
+        "instructions/security.instructions.md",
+        "instructions/java-springboot.instructions.md"
+      ],
+      "requireHumanReview": true
+    },
+    {
+      "id": "security-fix",
+      "risk": "high",
+      "weight": 1,
+      "signals": [
+        "\\b(vulnerab\\w*|insecure)\\b",
+        "\\bcwe-? ?\\d+\\b",
+        "\\bowasp\\b",
+        "\\b(sql ?injection|sqli|xss|csrf|ssrf|xxe|path traversal|open redirect|deserializ\\w*)\\b",
+        "\\bhardcoded (secret|password|credential|key|token)\\b",
+        "\\b(encrypt\\w*|decrypt\\w*|cipher|crypto\\w*|hashing)\\b",
+        "\\b(sanitiz\\w*|escape) (input|output|user)\\b",
+        "\\bsecurity (finding|issue|fix|bug|flaw|review|scan|vulnerability)\\b",
+        "\\b(jwt|oauth|session fixation|privilege escalation)\\b"
+      ],
+      "template": "prompts/fix-security-finding.prompt.md",
+      "anchors": [
+        "instructions/security.instructions.md"
+      ],
+      "requireHumanReview": true
+    },
+    {
+      "id": "pr-review",
+      "risk": "medium",
+      "weight": 1.2,
+      "requireAll": [
+        "\\b(pr|pull request|review|reviewer|merge request)\\b"
+      ],
+      "signals": [
+        "\\b(pr|pull request|merge request) (review|comment|feedback|change)\\b",
+        "\\baddress (the )?(review|reviewer|pr) (comment|feedback)\\b",
+        "\\breview (comment|feedback|thread)\\b",
+        "\\brequested changes\\b"
+      ],
+      "template": "prompts/fix-pr-review.prompt.md",
+      "anchors": [
+        "instructions/pr-review.instructions.md",
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "angular-migration",
+      "risk": "medium",
+      "weight": 1.5,
+      "requireAll": [
+        "\\bangular\\b",
+        "\\b(migrat\\w*|upgrad\\w*|v1[2-9]|v2[0-9]|standalone|signal|ivy|ng update)\\b"
+      ],
+      "signals": [
+        "\\b(migrat\\w*|upgrad\\w*)\\b",
+        "\\bng update\\b",
+        "\\bv1[2-9]\\b",
+        "\\bv2[0-9]\\b",
+        "\\b(standalone component|signals?|control flow)\\b",
+        "\\bdeprecated\\b"
+      ],
+      "template": "prompts/fix-angular-migration.prompt.md",
+      "anchors": [
+        "instructions/migration.instructions.md",
+        "instructions/angular-v21.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "generate-tests",
+      "risk": "medium",
+      "weight": 1.3,
+      "requireAll": [
+        "\\b(test|tests|spec|coverage)\\b"
+      ],
+      "signals": [
+        "\\b(write|add|generate|create) (unit |integration )?tests?\\b",
+        "\\btest coverage\\b",
+        "\\bcover(age)? (this|the|these)\\b",
+        "\\b(jest|junit|jasmine|vitest|testing library)\\b",
+        "\\bspec file\\b"
+      ],
+      "template": "prompts/generate-unit-tests.prompt.md",
+      "anchors": [
+        "instructions/testing.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "test-failure",
+      "risk": "medium",
+      "weight": 1.3,
+      "requireAll": [
+        "\\b(test|tests|spec|suite)\\b",
+        "\\b(fail\\w*|break\\w*|broken|red|error\\w*|flak\\w*)\\b"
+      ],
+      "signals": [
+        "\\b(test|tests|spec|suite) (is |are |keeps? )?(fail\\w*|break\\w*|broken)\\b",
+        "\\bfailing tests?\\b",
+        "\\bflak\\w*\\b",
+        "\\bassertion (error|failed)\\b",
+        "\\bexpected .{0,20}(but )?received\\b"
+      ],
+      "template": "prompts/fix-test-failure.prompt.md",
+      "anchors": [
+        "instructions/testing.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "build-failure",
+      "risk": "medium",
+      "weight": 1.2,
+      "requireAll": [
+        "\\b(build|compil\\w*|bundl\\w*|webpack|vite|maven|gradle|ci|pipeline)\\b"
+      ],
+      "signals": [
+        "\\bbuild (is |keeps? )?(fail\\w*|break\\w*|broken|red)\\b",
+        "\\b(compil\\w*|bundl\\w*) (error|fail\\w*)\\b",
+        "\\b(ci|pipeline) (is |keeps? )?(fail\\w*|red|broken)\\b",
+        "\\bmodule not found\\b",
+        "\\b(cannot|could not) resolve\\b"
+      ],
+      "template": "prompts/fix-build-failure.prompt.md",
+      "anchors": [
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "sonarqube",
+      "risk": "medium",
+      "weight": 1.4,
+      "requireAll": [
+        "\\b(sonar\\w*|code smell|cognitive complexity|quality gate|nosonar)\\b"
+      ],
+      "signals": [
+        "\\bsonar\\w*\\b",
+        "\\bcode smell\\b",
+        "\\bcognitive complexity\\b",
+        "\\bquality gate\\b",
+        "\\bduplicat\\w* (code|block)\\b"
+      ],
+      "template": "prompts/fix-sonarqube-issue.prompt.md",
+      "anchors": [
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "console-cleanup",
+      "risk": "low",
+      "weight": 1.4,
+      "signals": [
+        "\\bconsole\\.(log|debug|warn|error|info)\\b",
+        "\\bdebugger\\b",
+        "\\b(remove|clean ?up|strip|delete) (the )?(console|debug|log|logging)\\b",
+        "\\bdebug (output|statement|logging)\\b",
+        "\\bsystem\\.out\\.print\\w*\\b"
+      ],
+      "template": "prompts/fix-console-logs.prompt.md",
+      "anchors": [
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "typescript-error",
+      "risk": "low",
+      "weight": 1.3,
+      "requireAll": [
+        "\\b(typescript|ts|type|types|tsc|tsconfig)\\b"
+      ],
+      "signals": [
+        "\\bts\\d{4}\\b",
+        "\\btype ?script (error|issue)\\b",
+        "\\btype error\\b",
+        "\\bis not assignable to type\\b",
+        "\\b(property|object) .{0,30}does not exist on type\\b",
+        "\\bimplicitly has an .{0,10}any.{0,10} type\\b",
+        "\\btsc\\b"
+      ],
+      "template": "prompts/fix-typescript-error.prompt.md",
+      "anchors": [
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "eslint",
+      "risk": "low",
+      "weight": 1.3,
+      "requireAll": [
+        "\\b(eslint|lint\\w*|prettier)\\b"
+      ],
+      "signals": [
+        "\\beslint\\b",
+        "\\blint(er|ing)? (error|warning|issue|failure)\\b",
+        "\\bprettier\\b",
+        "\\beslint-disable\\b",
+        "\\bno-unused-vars\\b"
+      ],
+      "template": "prompts/fix-eslint-issue.prompt.md",
+      "anchors": [
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "react-quality",
+      "risk": "low",
+      "weight": 1.2,
+      "requireAll": [
+        "\\b(react|jsx|tsx|hooks?|component)\\b"
+      ],
+      "signals": [
+        "\\breact\\b",
+        "\\buse(state|effect|memo|callback|ref|context)\\b",
+        "\\b(refactor|clean ?up|improve|simplify) (this |the )?component\\b",
+        "\\b(re-?render|memo(ization)?|prop drilling)\\b",
+        "\\bcustom hook\\b"
+      ],
+      "template": "prompts/fix-react-code-quality.prompt.md",
+      "anchors": [
+        "instructions/react.instructions.md",
+        "instructions/code-quality.instructions.md"
+      ],
+      "requireHumanReview": false
+    },
+    {
+      "id": "explain-legacy",
+      "risk": "low",
+      "weight": 1.1,
+      "requireAll": [
+        "\\b(explain|understand|walk me through|what does|how does|legacy)\\b"
+      ],
+      "signals": [
+        "\\bexplain\\b",
+        "\\bwhat does (this|the|it)\\b",
+        "\\bhow does (this|the|it)\\b",
+        "\\bwalk me through\\b",
+        "\\blegacy\\b",
+        "\\bunderstand (this|the) (code|file|class|function|module)\\b"
+      ],
+      "template": "prompts/explain-legacy-code.prompt.md",
+      "anchors": [],
+      "requireHumanReview": false
+    },
+    {
+      "id": "document-repo",
+      "risk": "low",
+      "weight": 1.1,
+      "requireAll": [
+        "\\b(document\\w*|readme|docs?|adr|changelog)\\b"
+      ],
+      "signals": [
+        "\\b(write|add|generate|update) (the )?(readme|docs?|documentation)\\b",
+        "\\bdocument (this|the) (repo|repository|project|module|api)\\b",
+        "\\bchangelog\\b",
+        "\\badr\\b"
+      ],
+      "template": "prompts/document-repo.prompt.md",
+      "anchors": [],
+      "requireHumanReview": false
+    }
+  ],
+  "generic": {
+    "id": "generic",
+    "risk": "low",
+    "template": null,
+    "anchors": [
+      "instructions/security.instructions.md",
+      "instructions/code-quality.instructions.md"
+    ],
+    "requireHumanReview": false,
+    "guidance": [
+      "Identify which instruction files under `.github/instructions/` govern the files you touch, and follow them.",
+      "If an approved prompt workflow under `.github/prompts/` fits this task better, say so and use it.",
+      "Make the smallest correct change. Do not refactor beyond what was asked.",
+      "State how the change was verified before reporting it as done."
+    ]
+  }
+}
