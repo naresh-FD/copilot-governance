@@ -94,11 +94,16 @@ REQUIRED_PROMPT_CORE=(
   core.md
   router.json
   deny.json
+  surfaces.json
   rewrite.mjs
 )
 
+# One config per interception surface. The three runtimes do not share an output
+# schema, so a missing config is a silently ungoverned surface, not a downgrade.
 REQUIRED_HOOKS=(
   prompt-interceptor.json
+  copilot-cli-interceptor.json
+  claude-code-settings.fragment.json
 )
 
 errors=0
@@ -247,26 +252,64 @@ for file in "${REQUIRED_HOOKS[@]}"; do
   [[ -f "$HOOKS_DIR/$file" ]] && pass "hook config present: $file" || fail "missing hook config: $file"
 done
 
-# The hook must point at the downstream location of the engine. Getting this
-# path wrong fails silently at runtime — the hook simply never produces output
-# and every prompt passes through ungoverned.
-hook_config="$HOOKS_DIR/prompt-interceptor.json"
-if [[ -f "$hook_config" ]]; then
-  if command -v jq >/dev/null 2>&1; then
-    if jq empty "$hook_config" >/dev/null 2>&1; then
-      pass "hook config is valid JSON"
-      hook_cmd="$(jq -r '.hooks.UserPromptSubmit[0].command // ""' "$hook_config")"
-      if [[ "$hook_cmd" == *".github/prompt-core/rewrite.mjs"* ]]; then
-        pass "hook command targets .github/prompt-core/rewrite.mjs"
-      else
-        fail "hook command does not target .github/prompt-core/rewrite.mjs (got: '$hook_cmd')"
-      fi
+# Every hook command must point at the downstream location of the engine AND
+# name its surface. Getting the path wrong fails silently at runtime — the hook
+# never produces usable output and every prompt passes through ungoverned.
+# Omitting --surface is just as bad: UserPromptSubmit is sent by both VS Code
+# and Claude Code, which block by different mechanisms, so an unlabelled hook
+# renders the wrong schema and the deny is ignored.
+#
+# jq paths per surface, as "<file>|<jq expression>|<expected --surface value>".
+HOOK_COMMAND_PATHS=(
+  "prompt-interceptor.json|.hooks.UserPromptSubmit[0].command|vscode"
+  "copilot-cli-interceptor.json|.hooks.userPromptSubmitted[0].bash|copilot-cli"
+  "copilot-cli-interceptor.json|.hooks.userPromptTransformed[0].bash|copilot-cli"
+  "claude-code-settings.fragment.json|.hooks.UserPromptSubmit[0].command|claude"
+)
+
+if command -v jq >/dev/null 2>&1; then
+  for hook_file in "${REQUIRED_HOOKS[@]}"; do
+    path="$HOOKS_DIR/$hook_file"
+    [[ -f "$path" ]] || continue
+    if jq empty "$path" >/dev/null 2>&1; then
+      pass "hook config is valid JSON: $hook_file"
     else
-      fail "hook config is invalid JSON: $hook_config"
+      fail "hook config is invalid JSON: $path"
     fi
-  else
-    echo "SKIP: hook config JSON checks (jq not installed)"
+  done
+
+  for entry in "${HOOK_COMMAND_PATHS[@]}"; do
+    IFS='|' read -r hook_file jq_path want_surface <<<"$entry"
+    path="$HOOKS_DIR/$hook_file"
+    [[ -f "$path" ]] || continue
+    hook_cmd="$(jq -r "$jq_path // \"\"" "$path" 2>/dev/null)"
+    if [[ -z "$hook_cmd" ]]; then
+      fail "$hook_file: no command at $jq_path"
+      continue
+    fi
+    if [[ "$hook_cmd" != *".github/prompt-core/rewrite.mjs"* ]]; then
+      fail "$hook_file $jq_path does not target .github/prompt-core/rewrite.mjs (got: '$hook_cmd')"
+    elif [[ "$hook_cmd" != *"--surface $want_surface"* ]]; then
+      fail "$hook_file $jq_path is missing '--surface $want_surface' (got: '$hook_cmd')"
+    else
+      pass "$hook_file $jq_path targets the engine as --surface $want_surface"
+    fi
+  done
+
+  # Every surface declared by the engine must have a hook registering it.
+  # A surface with no config is an ungoverned client, which is the failure mode
+  # this whole check exists to prevent.
+  if [[ -f "$PROMPT_CORE_DIR/surfaces.json" ]]; then
+    while read -r surface_id; do
+      if grep -rqF -- "--surface $surface_id" "$HOOKS_DIR"; then
+        pass "surface '$surface_id' has a hook registration"
+      else
+        fail "surface '$surface_id' is declared in surfaces.json but no hook config registers it"
+      fi
+    done < <(jq -r '.surfaces | keys[]' "$PROMPT_CORE_DIR/surfaces.json")
   fi
+else
+  echo "SKIP: hook config JSON checks (jq not installed)"
 fi
 
 # Router/deny structure, regex compilation, template and anchor resolution, and

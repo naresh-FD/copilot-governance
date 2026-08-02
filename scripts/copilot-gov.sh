@@ -17,6 +17,7 @@ Commands:
   sync --apply                     Apply governance sync through PR automation
   prompt <workflow>                Print an approved prompt workflow
   rewrite <text>                   Show how the kernel governs a given prompt
+  simulate <text>                  Replay the hook on every surface (no IDE needed)
   report                           Summarize local prompt interception telemetry
   install-hooks                    Install the local pre-commit validation hook
   doctor                           Show local tool readiness
@@ -26,6 +27,7 @@ Examples:
   scripts/copilot-gov.sh audit
   scripts/copilot-gov.sh prompt fix-console-logs
   scripts/copilot-gov.sh rewrite "fix the SQL injection in the account lookup"
+  scripts/copilot-gov.sh simulate "fix the SQL injection in the account lookup"
   scripts/copilot-gov.sh report
   scripts/copilot-gov.sh install-hooks
 USAGE
@@ -55,6 +57,21 @@ rewrite() {
 report() {
   require_node
   node "$ROOT/prompt-core/rewrite.mjs" --report
+}
+
+# Replays a hook payload against every surface across the real process boundary.
+# This is the check that catches the engine emitting a field the target runtime
+# ignores — the failure mode that makes a hook fail open silently.
+simulate() {
+  local text="${1:-}"
+  if [[ -z "$text" ]]; then
+    echo "Prompt text is required."
+    echo "Example: scripts/copilot-gov.sh simulate \"remove the console logs\""
+    exit 1
+  fi
+  require_node
+  shift || true
+  node "$ROOT/scripts/simulate-hook.mjs" --prompt "$text" "$@"
 }
 
 install_hooks() {
@@ -170,6 +187,9 @@ case "$cmd" in
     ;;
   rewrite)
     rewrite "${2:-}"
+    ;;
+  simulate)
+    simulate "${@:2}"
     ;;
   report)
     report
