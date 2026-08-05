@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "maxSkillsPerPrompt": 2,
+  "defaultSkillBudgetChars": 7000,
+  "skills": {
+    "debugging-and-error-recovery": {
+      "path": "skill-registry/upstream/addyosmani/debugging-and-error-recovery/SKILL.md",
+      "status": "approved",
+      "risk": "low",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "test-failure",
+        "build-failure",
+        "typescript-error"
+      ],
+      "maxChars": 6500,
+      "requiresHumanReview": false
+    },
+    "test-driven-development": {
+      "path": "skill-registry/upstream/addyosmani/test-driven-development/SKILL.md",
+      "status": "approved",
+      "risk": "medium",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "generate-tests",
+        "test-failure",
+        "security-fix",
+        "java-security"
+      ],
+      "maxChars": 7000,
+      "requiresHumanReview": false
+    },
+    "security-and-hardening": {
+      "path": "skill-registry/upstream/addyosmani/security-and-hardening/SKILL.md",
+      "status": "approved",
+      "risk": "high",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "security-fix",
+        "java-security"
+      ],
+      "maxChars": 8000,
+      "requiresHumanReview": true
+    },
+    "code-review-and-quality": {
+      "path": "skill-registry/upstream/addyosmani/code-review-and-quality/SKILL.md",
+      "status": "approved",
+      "risk": "medium",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "pr-review",
+        "sonarqube",
+        "react-quality",
+        "eslint"
+      ],
+      "maxChars": 7000,
+      "requiresHumanReview": false
+    },
+    "incremental-implementation": {
+      "path": "skill-registry/upstream/addyosmani/incremental-implementation/SKILL.md",
+      "status": "approved",
+      "risk": "low",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "build-failure"
+      ],
+      "maxChars": 6500,
+      "requiresHumanReview": false
+    },
+    "context-engineering": {
+      "path": "skill-registry/upstream/addyosmani/context-engineering/SKILL.md",
+      "status": "approved",
+      "risk": "low",
+      "allowedStacks": [
+        "react",
+        "angular",
+        "node",
+        "java"
+      ],
+      "allowedIntents": [
+        "generate-tests",
+        "document-repo"
+      ],
+      "maxChars": 6500,
+      "requiresHumanReview": false
+    },
+    "deprecation-and-migration": {
+      "path": "skill-registry/upstream/addyosmani/deprecation-and-migration/SKILL.md",
+      "status": "approved",
+      "risk": "medium",
+      "allowedStacks": [
+        "angular"
+      ],
+      "allowedIntents": [
+        "angular-migration"
+      ],
+      "maxChars": 7000,
+      "requiresHumanReview": false
+    }
+  }
+}

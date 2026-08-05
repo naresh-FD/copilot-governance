@@ -21,6 +21,9 @@ import { readFileSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { homedir } from 'node:os';
 import { join, dirname, basename } from 'node:path';
+import { detectRepositoryProfile } from './repo-profile.mjs';
+import { selectSkills } from './skill-selector.mjs';
+import { optimizeContext } from './context-optimizer.mjs';
 import { fileURLToPath } from 'node:url';
 
 const KERNEL_VERSION = 1;
@@ -102,6 +105,21 @@ function fenceVerbatim(text) {
   return `${fence}text\n${text}\n${fence}`;
 }
 
+
+function loadAnchors(anchorPaths) {
+  return (anchorPaths || []).map((path) => {
+    const full = join(GOV_ROOT, path);
+    if (!existsSync(full)) return null;
+    return { path, content: readFileSync(full, 'utf8') };
+  }).filter(Boolean);
+}
+
+function readJsonIfPresent(path) {
+  if (!existsSync(path)) return null;
+  try { return readJson(path); } catch (err) { process.stderr.write(`prompt-core: optional JSON unreadable: ${path}: ${err.message}
+`); return null; }
+}
+
 function loadTemplate(relPath) {
   const full = join(GOV_ROOT, relPath);
   if (!existsSync(full)) {
@@ -118,7 +136,7 @@ function loadTemplate(relPath) {
   return { title: null, body: raw };
 }
 
-function compose({ core, prompt, intent, risk, template, anchors, requireHumanReview, guidance, shadowHits }) {
+function compose({ core, prompt, intent, risk, template, anchors, requireHumanReview, guidance, shadowHits, repositoryProfile, skills, contextDecision }) {
   const out = [];
   out.push(`<!-- copilot-governance | prompt-core v${KERNEL_VERSION} | intent=${intent} risk=${risk} -->`);
   out.push('');
@@ -132,7 +150,33 @@ function compose({ core, prompt, intent, risk, template, anchors, requireHumanRe
   out.push(fenceVerbatim(prompt.trim()));
   out.push('');
 
-  if (template) {
+  if (repositoryProfile) {
+    out.push('## Repository profile');
+    out.push('');
+    out.push(`- Stack: ${repositoryProfile.stacks.length ? repositoryProfile.stacks.join(', ') : 'unknown'}`);
+    out.push(`- Package manager: ${repositoryProfile.packageManager || 'unknown'}`);
+    out.push(`- Test command: ${repositoryProfile.commands?.test || 'not detected'}`);
+    out.push(`- Build command: ${repositoryProfile.commands?.build || 'not detected'}`);
+    out.push(`- Typecheck command: ${repositoryProfile.commands?.typecheck || 'not detected'}`);
+    out.push('');
+  }
+
+
+  const sectionIds = new Set((contextDecision?.sections || []).map((section) => section.id));
+  const selectedSkillSections = skills ? skills.filter((skill) => !contextDecision || sectionIds.has(`skill:${skill.name}`)) : [];
+
+  if (selectedSkillSections.length) {
+    out.push('## Approved engineering skills');
+    out.push('');
+    for (const skill of selectedSkillSections) {
+      out.push(`### ${skill.name}`);
+      out.push('');
+      out.push(skill.content.trim());
+      out.push('');
+    }
+  }
+
+  if (template && (!contextDecision || sectionIds.has('template'))) {
     out.push(`## Governed workflow — ${template.title || intent}`);
     out.push('');
     out.push(template.body);
@@ -144,12 +188,12 @@ function compose({ core, prompt, intent, risk, template, anchors, requireHumanRe
     out.push('');
   }
 
-  if (anchors && anchors.length) {
+  if (anchors && anchors.length && (!contextDecision || anchors.some((anchor) => sectionIds.has(`anchor:${anchor.path}`)))) {
     out.push('## Instruction anchors');
     out.push('');
     out.push('Read and follow these before changing code:');
     out.push('');
-    for (const anchor of anchors) out.push(`- \`.github/${anchor}\``);
+    for (const anchor of anchors) if (!contextDecision || sectionIds.has(`anchor:${anchor.path}`)) out.push(`- \`.github/${anchor.path}\``);
     out.push('');
   }
 
@@ -467,6 +511,13 @@ function buildResponse(prompt, cwd, sessionId) {
   const match = classify(prompt, router);
   const chosen = match ? match.intent : router.generic;
   const template = chosen.template ? loadTemplate(chosen.template) : null;
+  const repositoryProfile = detectRepositoryProfile(cwd || process.cwd());
+  const registry = readJsonIfPresent(join(GOV_ROOT, 'skill-registry', 'approved-skills.json')) || { maxSkillsPerPrompt: 0, skills: {} };
+  const skillDecision = selectSkills({ intent: chosen, repositoryProfile, registry, governanceRoot: GOV_ROOT });
+  const anchors = loadAnchors(chosen.anchors || []);
+  const contextBudgetChars = Number(process.env.GOV_PROMPT_BUDGET_CHARS ?? 18000);
+  const contextDecision = optimizeContext({ core, originalPrompt: prompt, skills: skillDecision.selected, anchors, template, maximumChars: contextBudgetChars });
+  const requireHumanReview = chosen.requireHumanReview === true || skillDecision.selected.some((skill) => skill.requiresHumanReview);
 
   const governed = compose({
     core,
@@ -474,8 +525,11 @@ function buildResponse(prompt, cwd, sessionId) {
     intent: chosen.id,
     risk: chosen.risk || 'low',
     template,
-    anchors: chosen.anchors || [],
-    requireHumanReview: chosen.requireHumanReview === true,
+    anchors,
+    skills: skillDecision.selected,
+    repositoryProfile,
+    contextDecision,
+    requireHumanReview,
     guidance: chosen.guidance || [],
     shadowHits,
   });
@@ -487,6 +541,13 @@ function buildResponse(prompt, cwd, sessionId) {
     score: match ? Number(match.score.toFixed(2)) : 0,
     signalsMatched: match ? match.matchedCount : 0,
     template: chosen.template || null,
+    repositoryStacks: repositoryProfile.stacks,
+    selectedSkills: skillDecision.selected.map((skill) => skill.name),
+    rejectedSkills: skillDecision.rejected,
+    contextBudgetChars,
+    contextUsedChars: contextDecision.usedChars,
+    droppedSections: contextDecision.droppedSections,
+    humanReviewRequired: requireHumanReview,
     blocked: false,
     rewrittenChars: governed.length,
   });
