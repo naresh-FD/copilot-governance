@@ -25,7 +25,11 @@
         "instructions/security.instructions.md",
         "instructions/java-springboot.instructions.md"
       ],
-      "requireHumanReview": true
+      "requireHumanReview": true,
+      "skills": [
+        "security-and-hardening",
+        "test-driven-development"
+      ]
     },
     {
       "id": "security-fix",
@@ -46,7 +50,11 @@
       "anchors": [
         "instructions/security.instructions.md"
       ],
-      "requireHumanReview": true
+      "requireHumanReview": true,
+      "skills": [
+        "security-and-hardening",
+        "test-driven-development"
+      ]
     },
     {
       "id": "pr-review",
@@ -66,7 +74,10 @@
         "instructions/pr-review.instructions.md",
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "code-review-and-quality"
+      ]
     },
     {
       "id": "angular-migration",
@@ -89,27 +100,10 @@
         "instructions/migration.instructions.md",
         "instructions/angular-v21.instructions.md"
       ],
-      "requireHumanReview": false
-    },
-    {
-      "id": "generate-tests",
-      "risk": "medium",
-      "weight": 1.3,
-      "requireAll": [
-        "\\b(test|tests|spec|coverage)\\b"
-      ],
-      "signals": [
-        "\\b(write|add|generate|create) (unit |integration )?tests?\\b",
-        "\\btest coverage\\b",
-        "\\bcover(age)? (this|the|these)\\b",
-        "\\b(jest|junit|jasmine|vitest|testing library)\\b",
-        "\\bspec file\\b"
-      ],
-      "template": "prompts/generate-unit-tests.prompt.md",
-      "anchors": [
-        "instructions/testing.instructions.md"
-      ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "deprecation-and-migration"
+      ]
     },
     {
       "id": "test-failure",
@@ -130,7 +124,35 @@
       "anchors": [
         "instructions/testing.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "debugging-and-error-recovery",
+        "test-driven-development"
+      ]
+    },
+    {
+      "id": "generate-tests",
+      "risk": "medium",
+      "weight": 1.3,
+      "requireAll": [
+        "\\b(test|tests|spec|coverage)\\b"
+      ],
+      "signals": [
+        "\\b(write|add|generate|create) (unit |integration )?tests?\\b",
+        "\\btest coverage\\b",
+        "\\bcover(age)? (this|the|these)\\b",
+        "\\b(jest|junit|jasmine|vitest|testing library)\\b",
+        "\\bspec file\\b"
+      ],
+      "template": "prompts/generate-unit-tests.prompt.md",
+      "anchors": [
+        "instructions/testing.instructions.md"
+      ],
+      "requireHumanReview": false,
+      "skills": [
+        "test-driven-development",
+        "context-engineering"
+      ]
     },
     {
       "id": "build-failure",
@@ -150,7 +172,11 @@
       "anchors": [
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "debugging-and-error-recovery",
+        "incremental-implementation"
+      ]
     },
     {
       "id": "sonarqube",
@@ -170,7 +196,10 @@
       "anchors": [
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "code-review-and-quality"
+      ]
     },
     {
       "id": "console-cleanup",
@@ -209,7 +238,10 @@
       "anchors": [
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "debugging-and-error-recovery"
+      ]
     },
     {
       "id": "eslint",
@@ -229,7 +261,10 @@
       "anchors": [
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "code-review-and-quality"
+      ]
     },
     {
       "id": "react-quality",
@@ -250,7 +285,10 @@
         "instructions/react.instructions.md",
         "instructions/code-quality.instructions.md"
       ],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "code-review-and-quality"
+      ]
     },
     {
       "id": "explain-legacy",
@@ -286,7 +324,10 @@
       ],
       "template": "prompts/document-repo.prompt.md",
       "anchors": [],
-      "requireHumanReview": false
+      "requireHumanReview": false,
+      "skills": [
+        "context-engineering"
+      ]
     }
   ],
   "generic": {
@@ -303,6 +344,7 @@
       "If an approved prompt workflow under `.github/prompts/` fits this task better, say so and use it.",
       "Make the smallest correct change. Do not refactor beyond what was asked.",
       "State how the change was verified before reporting it as done."
-    ]
+    ],
+    "skills": []
   }
 }
