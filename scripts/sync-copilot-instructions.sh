@@ -17,6 +17,7 @@ INSTRUCTIONS_DIR="$SCRIPT_DIR/instructions"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
 PROMPT_CORE_DIR="$SCRIPT_DIR/prompt-core"
 HOOKS_DIR="$SCRIPT_DIR/hooks"
+SKILLS_DIR="$SCRIPT_DIR/skill-registry/upstream/addyosmani"
 TARGET_FILE=".github/copilot-instructions.md"
 MANIFEST_FILE=".github/.copilot-governance-manifest"
 BRANCH_NAME="chore/sync-copilot-governance"
@@ -164,6 +165,7 @@ for repo in "${REPOS[@]}"; do
     copy_tree "$PROMPTS_DIR" ".github/prompts"
     copy_tree "$PROMPT_CORE_DIR" ".github/prompt-core"
     copy_tree "$HOOKS_DIR" ".github/hooks"
+    copy_tree "$SKILLS_DIR" ".github/skills"
 
     new_manifest="$(mktemp)"
     {
@@ -172,6 +174,7 @@ for repo in "${REPOS[@]}"; do
       list_tree "$PROMPTS_DIR" ".github/prompts"
       list_tree "$PROMPT_CORE_DIR" ".github/prompt-core"
       list_tree "$HOOKS_DIR" ".github/hooks"
+      list_tree "$SKILLS_DIR" ".github/skills"
     } | LC_ALL=C sort > "$new_manifest"
 
     prune_stale "$new_manifest"
@@ -198,6 +201,7 @@ for repo in "${REPOS[@]}"; do
       .github/prompts \
       .github/prompt-core \
       .github/hooks \
+      .github/skills \
       "$MANIFEST_FILE"
     git -c user.name="copilot-governance-bot" \
       -c user.email="copilot-governance-bot@users.noreply.github.com" \
@@ -218,7 +222,7 @@ for repo in "${REPOS[@]}"; do
       gh pr create \
         --repo "$ORG/$repo" \
         --title "chore: sync Copilot governance baseline" \
-        --body "Automated sync from copilot-governance. Central instructions, path-specific instruction packs, prompt workflows, and the prompt interception kernel (\`.github/prompt-core\` + \`.github/hooks\`) are updated by PR. Repo overrides are preserved and must not weaken the baseline.
+        --body "Automated sync from copilot-governance. Central instructions, path-specific instruction packs, prompt workflows, approved repository skills, and the prompt interception kernel (\`.github/prompt-core\` + \`.github/hooks\`) are updated by PR. Repo overrides are preserved and must not weaken the baseline.
 
 The interception kernel rewrites Copilot prompts against the governance core before the model sees them. All deny rules ship in shadow mode: they are logged, never blocking. See \`docs/prompt-interception-plan.md\` in the governance repo." \
         --head "$BRANCH_NAME" \

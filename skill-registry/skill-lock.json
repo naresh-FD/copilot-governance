@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "source": {
+    "repository": "addyosmani/agent-skills",
+    "commit": "reviewed-compact-2026-08-05",
+    "license": "MIT",
+    "reviewedAt": "2026-08-05"
+  },
+  "skills": {
+    "debugging-and-error-recovery": {
+      "sha256": "46e3e5c49e820ed88a1962f55444dc4fe95000104a8018b65f674677c4f7aaeb",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-001"
+    },
+    "test-driven-development": {
+      "sha256": "5a443dc8e96b84bc5eea52bcb6e4084a10f349209a636cdd36c6e102684687a1",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-002"
+    },
+    "security-and-hardening": {
+      "sha256": "83c4d5b801d4bfdb2fe1952161fab6631cec03f63428d9f2522e2b0d1f3f5dd9",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-003"
+    },
+    "code-review-and-quality": {
+      "sha256": "e3b9259eee2c0cf1c93dd42424b4f647eb69fcfd00ea15376f0157588ab9c8b5",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-004"
+    },
+    "incremental-implementation": {
+      "sha256": "57fca16611a4de5fc85d4f7fd38e23fccda9ad493ec487a7e7d34f1981c49923",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-005"
+    },
+    "context-engineering": {
+      "sha256": "110799065790f0c6d7ef631584d0808f61fe887d93bca9b4cfa2b105db72d062",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-006"
+    },
+    "deprecation-and-migration": {
+      "sha256": "b14bcf613de9735bbfe0c8aeaa9e19696e3d6b2b6fada1368318af3f1fe8d81f",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-007"
+    }
+  }
+}
