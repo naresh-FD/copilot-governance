@@ -4,7 +4,7 @@
   "defaultSkillBudgetChars": 7000,
   "skills": {
     "debugging-and-error-recovery": {
-      "path": "skill-registry/upstream/addyosmani/debugging-and-error-recovery/SKILL.md",
+      "path": "skill-registry/compact/debugging-and-error-recovery/SKILL.md",
       "status": "approved",
       "risk": "low",
       "allowedStacks": [
@@ -22,7 +22,7 @@
       "requiresHumanReview": false
     },
     "test-driven-development": {
-      "path": "skill-registry/upstream/addyosmani/test-driven-development/SKILL.md",
+      "path": "skill-registry/compact/test-driven-development/SKILL.md",
       "status": "approved",
       "risk": "medium",
       "allowedStacks": [
@@ -41,7 +41,7 @@
       "requiresHumanReview": false
     },
     "security-and-hardening": {
-      "path": "skill-registry/upstream/addyosmani/security-and-hardening/SKILL.md",
+      "path": "skill-registry/compact/security-and-hardening/SKILL.md",
       "status": "approved",
       "risk": "high",
       "allowedStacks": [
@@ -58,7 +58,7 @@
       "requiresHumanReview": true
     },
     "code-review-and-quality": {
-      "path": "skill-registry/upstream/addyosmani/code-review-and-quality/SKILL.md",
+      "path": "skill-registry/compact/code-review-and-quality/SKILL.md",
       "status": "approved",
       "risk": "medium",
       "allowedStacks": [
@@ -77,7 +77,7 @@
       "requiresHumanReview": false
     },
     "incremental-implementation": {
-      "path": "skill-registry/upstream/addyosmani/incremental-implementation/SKILL.md",
+      "path": "skill-registry/compact/incremental-implementation/SKILL.md",
       "status": "approved",
       "risk": "low",
       "allowedStacks": [
@@ -93,7 +93,7 @@
       "requiresHumanReview": false
     },
     "context-engineering": {
-      "path": "skill-registry/upstream/addyosmani/context-engineering/SKILL.md",
+      "path": "skill-registry/compact/context-engineering/SKILL.md",
       "status": "approved",
       "risk": "low",
       "allowedStacks": [
@@ -110,7 +110,7 @@
       "requiresHumanReview": false
     },
     "deprecation-and-migration": {
-      "path": "skill-registry/upstream/addyosmani/deprecation-and-migration/SKILL.md",
+      "path": "skill-registry/compact/deprecation-and-migration/SKILL.md",
       "status": "approved",
       "risk": "medium",
       "allowedStacks": [

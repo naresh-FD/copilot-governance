@@ -1,44 +1,44 @@
 {
   "version": 1,
   "source": {
-    "repository": "addyosmani/agent-skills",
-    "commit": "reviewed-compact-2026-08-05",
-    "license": "MIT",
+    "repository": "copilot-governance/skill-registry",
+    "commit": "internal-compact-2026-08-05",
+    "license": "Internal",
     "reviewedAt": "2026-08-05"
   },
   "skills": {
     "debugging-and-error-recovery": {
-      "sha256": "46e3e5c49e820ed88a1962f55444dc4fe95000104a8018b65f674677c4f7aaeb",
+      "sha256": "f6c36f943aded506e65680dbb157e2597310525559b5574345752bf4543fd861",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-001"
     },
     "test-driven-development": {
-      "sha256": "5a443dc8e96b84bc5eea52bcb6e4084a10f349209a636cdd36c6e102684687a1",
+      "sha256": "e1aab3fafed08f38f06ca559b02d0ce4bd9f5e6590b8e1ddae6282b92379cdee",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-002"
     },
     "security-and-hardening": {
-      "sha256": "83c4d5b801d4bfdb2fe1952161fab6631cec03f63428d9f2522e2b0d1f3f5dd9",
+      "sha256": "edc5eaef1b12459dfcbe6b704d09e55dc22687b2f8c5ad64de31e5ac108c8dec",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-003"
     },
     "code-review-and-quality": {
-      "sha256": "e3b9259eee2c0cf1c93dd42424b4f647eb69fcfd00ea15376f0157588ab9c8b5",
+      "sha256": "803b17f7dabf5424fc9f2175646b33396351afb04e8f44a1c7ac6a1cc0c034c5",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-004"
     },
     "incremental-implementation": {
-      "sha256": "57fca16611a4de5fc85d4f7fd38e23fccda9ad493ec487a7e7d34f1981c49923",
+      "sha256": "c524c5d8ce6bc703e854c5fcd8cbf2b0d6f0e94c33ce2d54ce13295092694ecb",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-005"
     },
     "context-engineering": {
-      "sha256": "110799065790f0c6d7ef631584d0808f61fe887d93bca9b4cfa2b105db72d062",
+      "sha256": "798f44467aff5ae9f58e789471aa93c710af04d85fe6e70a62e13f179d614823",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-006"
     },
     "deprecation-and-migration": {
-      "sha256": "b14bcf613de9735bbfe0c8aeaa9e19696e3d6b2b6fada1368318af3f1fe8d81f",
+      "sha256": "386f8e26e908accaafccb59507db5b3fae06dc11cc8a540638df06ebb42d5d84",
       "approvedBy": "governance-team",
       "approvalTicket": "GOV-007"
     }

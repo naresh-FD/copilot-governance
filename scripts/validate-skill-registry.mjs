@@ -45,7 +45,7 @@ if (registry && lock) {
     if (!expected) problems.push(`${name}: missing lock hash`);
     else if (actual !== expected) problems.push(`${name}: hash mismatch`);
     for (const pattern of FORBIDDEN) if (pattern.test(text)) problems.push(`${name}: forbidden pattern ${pattern}`);
-    if (!/MIT/i.test(text) || !/addyosmani\/agent-skills/i.test(text)) problems.push(`${name}: attribution missing`);
+    if (!/source:\s*copilot-governance/i.test(text)) problems.push(`${name}: provenance missing`);
     for (const f of walk(dirname(p))) {
       if (basename(f) !== 'SKILL.md') problems.push(`${name}: unapproved extra file ${relative(ROOT, f)}`);
     }
