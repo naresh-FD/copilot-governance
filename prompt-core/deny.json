@@ -6,7 +6,7 @@
     {
       "id": "bypass-verification",
       "severity": "high",
-      "enforce": false,
+      "enforce": true,
       "signals": [
         "--no-verify",
         "\\bskip (the |all |these )?(tests?|linting|lint|scans?|checks?|ci)\\b",

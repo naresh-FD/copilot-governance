@@ -8,3 +8,12 @@
 .tmp-telemetry/
 
 node_modules/
+
+# Local dogfood hook used for in-repo testing. The canonical hook files live
+# in hooks/ (root) and are synced downstream by sync-copilot-instructions.sh
+# as .github/hooks/. This local copy is machine-specific and must not be
+# committed.
+.github/hooks/
+
+# Claude Code local settings — machine-specific paths, never commit.
+.claude/

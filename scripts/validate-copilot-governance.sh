@@ -96,6 +96,9 @@ REQUIRED_PROMPT_CORE=(
   deny.json
   surfaces.json
   rewrite.mjs
+  repo-profile.mjs
+  skill-selector.mjs
+  context-optimizer.mjs
 )
 
 # One config per interception surface. The three runtimes do not share an output
@@ -320,6 +323,13 @@ if command -v node >/dev/null 2>&1; then
     pass "rewrite.mjs parses"
   else
     fail "rewrite.mjs has a syntax error"
+  fi
+
+  if skill_out="$(node "$SCRIPT_DIR/scripts/validate-skill-registry.mjs" 2>&1)"; then
+    pass "skill registry: ${skill_out#skill registry validation OK — }"
+  else
+    fail "skill registry validation failed:"
+    printf '%s\n' "$skill_out" | sed 's/^/    /'
   fi
 
   if selftest_out="$(node "$PROMPT_CORE_DIR/rewrite.mjs" --selftest 2>&1)"; then

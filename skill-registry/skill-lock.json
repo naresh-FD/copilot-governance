@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "source": {
+    "repository": "copilot-governance/skill-registry",
+    "commit": "internal-compact-2026-08-05",
+    "license": "Internal",
+    "reviewedAt": "2026-08-05"
+  },
+  "skills": {
+    "debugging-and-error-recovery": {
+      "sha256": "f6c36f943aded506e65680dbb157e2597310525559b5574345752bf4543fd861",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-001"
+    },
+    "test-driven-development": {
+      "sha256": "e1aab3fafed08f38f06ca559b02d0ce4bd9f5e6590b8e1ddae6282b92379cdee",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-002"
+    },
+    "security-and-hardening": {
+      "sha256": "edc5eaef1b12459dfcbe6b704d09e55dc22687b2f8c5ad64de31e5ac108c8dec",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-003"
+    },
+    "code-review-and-quality": {
+      "sha256": "803b17f7dabf5424fc9f2175646b33396351afb04e8f44a1c7ac6a1cc0c034c5",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-004"
+    },
+    "incremental-implementation": {
+      "sha256": "c524c5d8ce6bc703e854c5fcd8cbf2b0d6f0e94c33ce2d54ce13295092694ecb",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-005"
+    },
+    "context-engineering": {
+      "sha256": "798f44467aff5ae9f58e789471aa93c710af04d85fe6e70a62e13f179d614823",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-006"
+    },
+    "deprecation-and-migration": {
+      "sha256": "386f8e26e908accaafccb59507db5b3fae06dc11cc8a540638df06ebb42d5d84",
+      "approvedBy": "governance-team",
+      "approvalTicket": "GOV-007"
+    }
+  }
+}

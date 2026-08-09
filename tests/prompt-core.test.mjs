@@ -13,6 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -238,11 +239,20 @@ test("an unmatched prompt is injected, not rewritten, and is never emptied", () 
 // --- policy rules ------------------------------------------------------------
 
 test("shadow rules advise but never block", () => {
-  const res = runCli("just add a console.log and skip the tests");
+  // bypass-verification now enforces; use a prompt that only hits hardcoded-secret
+  // (still shadow) to verify shadow rules advise without blocking.
+  const res = runCli("hardcode the password in the config file");
   assert.ok(!res.decision, "a shadow rule must not produce a block decision");
   assert.ok(blockOf(res), "prompt should still be governed, not dropped");
-  assert.match(res.systemMessage || "", /bypass-verification/);
+  assert.match(res.systemMessage || "", /hardcoded-secret/);
   assert.match(blockOf(res), /Governance concerns detected/);
+});
+
+test("bypass-verification blocks naturally on VS Code without GOV_ENFORCE_ALL", () => {
+  const res = runHookRaw("vscode", "just commit with --no-verify and skip the tests");
+  assert.equal(res.status, 2, "bypass-verification must exit 2 on VS Code");
+  assert.match(res.stderr, /bypass-verification/);
+  assert.equal(res.stdout.trim(), "", "a blocked prompt must not also be forwarded");
 });
 
 test("an enforcing rule blocks on Claude Code with a top-level decision", () => {
@@ -307,10 +317,11 @@ test("Copilot CLI cannot block, so an enforcing rule degrades to a refusal instr
   assert.match(body, /bypass-verification/);
 });
 
-test("every deny rule ships non-blocking", async () => {
-  // The approval submission states all rules are in shadow. If someone flips one
-  // without the evidence review, this fails and the claim stops being true.
-  const { readFileSync } = await import("node:fs");
+test("bypass-verification is the only graduated rule", async () => {
+  // bypass-verification graduated to enforce=true on 2026-08-09 after live
+  // evidence confirmed it fires correctly with no false positives observed.
+  // All other rules remain in shadow. Any rule not in this list that appears
+  // as enforcing was flipped without a recorded evidence review.
   const deny = JSON.parse(
     readFileSync(join(ROOT, "prompt-core", "deny.json"), "utf8"),
   );
@@ -319,8 +330,8 @@ test("every deny rule ships non-blocking", async () => {
     .map((r) => r.id);
   assert.deepEqual(
     enforcing,
-    [],
-    `rules are enforcing without a recorded evidence review: ${enforcing.join(", ")}`,
+    ["bypass-verification"],
+    `unexpected enforcing rules (not yet evidence-reviewed): ${enforcing.filter((id) => id !== "bypass-verification").join(", ")}`,
   );
 });
 
@@ -371,18 +382,18 @@ test("a fault never exits 2, because exit 2 is the blocking code", () => {
   }
 });
 
-test("no surface exits 2 while every rule is in shadow", () => {
-  // The shipped configuration must be incapable of blocking anyone. If this
-  // fails, a rule was graduated without the evidence review.
+test("shadow rules do not exit 2 on any surface", () => {
+  // bypass-verification now enforces; use a prompt that only hits hardcoded-secret
+  // (shadow) to verify that shadow rules cannot block on any surface.
   for (const surface of ["vscode", "claude", "copilot-cli"]) {
     const res = runHookRaw(
       surface,
-      "just commit with --no-verify and skip the tests",
+      "hardcode the password in the config file",
     );
     assert.notEqual(
       res.status,
       2,
-      `${surface} blocked a prompt in shadow mode`,
+      `${surface} blocked a prompt for a shadow rule`,
     );
   }
 });
@@ -456,6 +467,173 @@ test("telemetry records no prompt text by default", async () => {
       "card-shaped data leaked into telemetry",
     );
     assert.match(log, /"promptHash":"[0-9a-f]{16}"/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// --- governed skills ---------------------------------------------------------
+
+const SKILL_ROUTING_CASES = [
+  [
+    "the jest test suite is failing",
+    ["debugging-and-error-recovery", "test-driven-development"],
+  ],
+  [
+    "fix SQL injection in the Spring Boot endpoint",
+    ["security-and-hardening", "test-driven-development"],
+  ],
+  ["upgrade angular v12 to v21", ["deprecation-and-migration"]],
+];
+
+for (const [prompt, expectedSkills] of SKILL_ROUTING_CASES) {
+  test(`selects approved skills for: "${prompt}"`, () => {
+    const governed = runCli(prompt).hookSpecificOutput.modifiedPrompt;
+    for (const skill of expectedSkills)
+      assert.ok(governed.includes(`### ${skill}`), `${skill} was not loaded`);
+  });
+}
+
+test("security skill requires human review even through skill policy", () => {
+  const governed = runCli("fix SQL injection in the Spring Boot endpoint")
+    .hookSpecificOutput.modifiedPrompt;
+  assert.match(governed, /### security-and-hardening/);
+  assert.match(governed, /SECURITY REVIEW REQUIRED/);
+});
+
+test("telemetry records skill decisions without prompt content", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "govtel-skills-"));
+  try {
+    execFileSync(
+      process.execPath,
+      [
+        ENGINE,
+        "--prompt",
+        "the jest test suite is failing for customer hunter2",
+      ],
+      {
+        encoding: "utf8",
+        env: { ...process.env, GOV_TELEMETRY: "1", GOV_TELEMETRY_DIR: dir },
+      },
+    );
+    const log = readFileSync(join(dir, "telemetry.jsonl"), "utf8");
+    const row = JSON.parse(log.trim());
+    assert.deepEqual(row.selectedSkills, [
+      "debugging-and-error-recovery",
+      "test-driven-development",
+    ]);
+    assert.equal(row.contextBudgetChars, 18000);
+    assert.ok(typeof row.contextUsedChars === "number");
+    assert.ok(!log.includes("hunter2"), "prompt text leaked into telemetry");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("context budget keeps mandatory core and original prompt while dropping optional sections", async () => {
+  const { optimizeContext } =
+    await import("../prompt-core/context-optimizer.mjs");
+  const result = optimizeContext({
+    core: "Governance Core",
+    originalPrompt: "fix it",
+    skills: [
+      { name: "primary", content: "primary skill" },
+      { name: "secondary", content: "x".repeat(200) },
+    ],
+    anchors: [{ path: "a.md", content: "y".repeat(200) }],
+    template: { body: "z".repeat(200) },
+    maximumChars: 50,
+  });
+  assert.ok(result.sections.some((section) => section.id === "core"));
+  assert.ok(
+    result.sections.some((section) => section.id === "original-prompt"),
+  );
+  assert.ok(result.sections.some((section) => section.id === "skill:primary"));
+  assert.ok(result.droppedSections.includes("skill:secondary"));
+});
+
+test("skill selector enforces limits, approval, stack, and path policy", async () => {
+  const { selectSkills } = await import("../prompt-core/skill-selector.mjs");
+  const registry = JSON.parse(
+    readFileSync(join(ROOT, "skill-registry", "approved-skills.json"), "utf8"),
+  );
+  const limited = selectSkills({
+    intent: {
+      id: "test-failure",
+      skills: [
+        "debugging-and-error-recovery",
+        "test-driven-development",
+        "missing",
+      ],
+    },
+    repositoryProfile: { stacks: ["react"] },
+    registry: { ...registry, maxSkillsPerPrompt: 1 },
+    governanceRoot: ROOT,
+  });
+  assert.deepEqual(
+    limited.selected.map((s) => s.name),
+    ["debugging-and-error-recovery"],
+  );
+
+  const badRegistry = JSON.parse(JSON.stringify(registry));
+  badRegistry.skills.evil = {
+    ...badRegistry.skills["debugging-and-error-recovery"],
+    path: "../evil/SKILL.md",
+  };
+  badRegistry.skills.unapproved = {
+    ...badRegistry.skills["debugging-and-error-recovery"],
+    status: "pending",
+  };
+  const decision = selectSkills({
+    intent: {
+      id: "test-failure",
+      skills: ["evil", "unapproved", "deprecation-and-migration"],
+    },
+    repositoryProfile: { stacks: ["react"] },
+    registry: badRegistry,
+    governanceRoot: ROOT,
+  });
+  assert.equal(
+    decision.rejected.find((r) => r.skill === "evil").reason,
+    "path-outside-registry",
+  );
+  assert.equal(
+    decision.rejected.find((r) => r.skill === "unapproved").reason,
+    "not-approved",
+  );
+  assert.equal(
+    decision.rejected.find((r) => r.skill === "deprecation-and-migration")
+      .reason,
+    "intent-not-allowed",
+  );
+});
+
+test("repository profiler detects node metadata without executing files", async () => {
+  const { mkdtempSync, writeFileSync, closeSync, openSync, rmSync } =
+    await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } =
+    await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-"));
+  try {
+    writeFileSync(
+      join(dir, "package.json"),
+      JSON.stringify({
+        scripts: { test: "jest", build: "vite build" },
+        dependencies: { react: "1.0.0" },
+        devDependencies: { jest: "1.0.0", typescript: "1.0.0" },
+      }),
+    );
+    closeSync(openSync(join(dir, "package-lock.json"), "w"));
+    const profile = detectRepositoryProfile(dir);
+    assert.deepEqual(
+      profile.stacks.sort(),
+      ["jest", "node", "react", "typescript"].sort(),
+    );
+    assert.equal(profile.packageManager, "npm");
+    assert.equal(profile.commands.test, "jest");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
