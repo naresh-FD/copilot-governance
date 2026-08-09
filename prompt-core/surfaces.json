@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "_comment": [
+    "Per-surface capability matrix for the prompt interception kernel.",
+    "",
+    "The three hook runtimes do NOT share an output schema, and none of them",
+    "supports every governance action. This file is the single place that records",
+    "what each surface can actually do, so the engine renders the correct shape",
+    "instead of emitting a field the runtime silently ignores. A hook that writes",
+    "an unsupported field does not fail loudly — the prompt simply goes to the",
+    "model ungoverned, which is the worst possible failure for a control.",
+    "",
+    "Verified against vendor documentation on 2026-08-02. The hooks APIs on all",
+    "three surfaces are Preview. Re-verify at each pilot checkpoint and bump",
+    "'verifiedOn' when you do.",
+    "",
+    "Fields:",
+    "  events        Event names this surface sends to the engine.",
+    "  notifyOnly    Events that cannot change anything; log telemetry and exit.",
+    "  promptField   stdin field holding the text to govern.",
+    "  rewriteField  stdout field that REPLACES the model-facing prompt, or null.",
+    "  injectField   stdout field that ADDS context beside the prompt, or null.",
+    "  block         How a deliberate policy deny is expressed: 'decision',",
+    "                'exit2', or null when the surface cannot block at all.",
+    "  systemMessage Whether a 'systemMessage' string is surfaced to the developer."
+  ],
+  "verifiedOn": "2026-08-02",
+  "default": "vscode",
+  "surfaces": {
+    "vscode": {
+      "label": "VS Code Copilot",
+      "events": ["UserPromptSubmit"],
+      "notifyOnly": [],
+      "promptField": "prompt",
+      "rewriteField": "hookSpecificOutput.modifiedPrompt",
+      "rewriteVerified": false,
+      "injectField": "hookSpecificOutput.additionalContext",
+      "injectVerified": true,
+      "injectVerifiedOn": "2026-08-09",
+      "block": "exit2",
+      "systemMessage": true,
+      "notes": [
+        "additionalContext CONFIRMED 2026-08-09: live VS Code session with the hook",
+        "active received the governance block and the model followed the governed",
+        "security-fix workflow unprompted — searched for instruction anchors, applied",
+        "parameterized SQL, added a regression test, flagged for human review.",
+        "modifiedPrompt is still unverified: VS Code documents no prompt-replacement",
+        "field on UserPromptSubmit. The engine emits modifiedPrompt speculatively but",
+        "governance does NOT depend on it. Do not describe this surface as 'rewriting'",
+        "prompts until rewriteVerified is true.",
+        "permissionDecision/permissionDecisionReason are PreToolUse-only and are",
+        "ignored here, so exit 2 is the only documented way to stop a prompt."
+      ]
+    },
+    "claude": {
+      "label": "Claude Code",
+      "events": ["UserPromptSubmit"],
+      "notifyOnly": [],
+      "promptField": "prompt",
+      "rewriteField": null,
+      "rewriteVerified": false,
+      "injectField": "hookSpecificOutput.additionalContext",
+      "block": "decision",
+      "systemMessage": true,
+      "notes": [
+        "Claude Code cannot replace prompt text on any event; the documentation is",
+        "explicit that UserPromptSubmit 'can't replace the prompt; it only injects",
+        "additionalContext alongside it'. UserPromptExpansion cannot rewrite either.",
+        "Blocking is the top-level {\"decision\":\"block\",\"reason\":...} form, NOT",
+        "permissionDecision. UserPromptSubmit takes no matcher and lowers the",
+        "default command timeout to 30s."
+      ]
+    },
+    "copilot-cli": {
+      "label": "Copilot CLI / coding agent",
+      "events": ["userPromptSubmitted", "userPromptTransformed"],
+      "notifyOnly": ["userPromptSubmitted"],
+      "promptField": "transformedPrompt",
+      "rewriteField": "modifiedTransformedPrompt",
+      "rewriteVerified": true,
+      "injectField": "modifiedTransformedPrompt",
+      "block": null,
+      "systemMessage": false,
+      "notes": [
+        "The only surface with real, documented prompt replacement.",
+        "userPromptSubmitted is notification-only ('Output processed: No') and",
+        "cannot block or modify, so it is used for telemetry alone.",
+        "userPromptTransformed is mutation-only: it can rewrite what the model",
+        "receives but cannot block. An enforcing deny rule therefore CANNOT stop a",
+        "prompt here — it degrades to a hard refusal instruction written into the",
+        "rewritten prompt. That is a genuine enforcement gap, not parity.",
+        "Because there is no injectField distinct from rewriteField, no-match",
+        "injection is done by prepending the governance preamble to the existing",
+        "transformed prompt, which leaves the developer's text intact after it."
+      ]
+    }
+  }
+}

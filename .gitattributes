@@ -1,0 +1,16 @@
+# Enforce LF line endings in the repository on all platforms.
+# Without this, Git on Windows silently converts LF → CRLF on checkout,
+# which breaks the skill-registry validator (frontmatter regex + SHA-256
+# hashes are both LF-sensitive) and causes the pre-commit hook to reject
+# every commit until someone manually normalises the files.
+
+* text=auto eol=lf
+
+# Binaries — no line-ending translation.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.zip  binary
+*.gz   binary

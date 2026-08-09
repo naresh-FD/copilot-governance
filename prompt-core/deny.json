@@ -1,11 +1,12 @@
 {
   "version": 1,
-  "_comment": "Deny rules for the prompt interception kernel. Each rule carries its own 'enforce' flag so a high-confidence rule can go live while the rest keep collecting shadow data. enforce=false means the rule is evaluated and logged to telemetry and a warning is shown, but the prompt still proceeds. enforce=true means the prompt is blocked with permissionDecision=deny. Use `copilot-gov report` to review shadow hit counts before flipping any rule.",
+  "_comment": "Deny rules for the prompt interception kernel. Each rule carries its own 'enforce' flag so a high-confidence rule can go live while the rest keep collecting shadow data. enforce=false means the rule is evaluated and logged to telemetry, an advisory is shown, and the concern is written into the governed prompt, but the prompt still proceeds. enforce=true means the prompt is blocked using whatever mechanism the target surface documents (see surfaces.json) — and note that Copilot CLI has no block mechanism at all, so there an enforcing rule degrades to an in-prompt refusal instruction. Use `copilot-gov report` to review shadow hit counts before flipping any rule.",
+  "_provenance": "'provenance' records where a rule's signals came from. 'argus-cwe' means the rule is derived from the Argus CWE ruleset and therefore carries production false-positive data from a live system; those rules graduate to enforcing first. 'hand-authored' means the signals were written here and have no evidence behind them beyond local shadow volume. 'graduationBlocker', when present, names a specific defect that must be fixed before the rule may be enforced at all — the selftest fails if such a rule is flipped to enforce=true. No rule currently carries Argus provenance: the importer that would populate it is still blocked on the Argus export format.",
   "rules": [
     {
       "id": "bypass-verification",
       "severity": "high",
-      "enforce": false,
+      "enforce": true,
       "signals": [
         "--no-verify",
         "\\bskip (the |all |these )?(tests?|linting|lint|scans?|checks?|ci)\\b",
@@ -17,6 +18,7 @@
         "\\bjust make (it|the (test|build|pipeline)) pass\\b"
       ],
       "reason": "Suppressing a check is not a fix. Use /fix-sonarqube-issue, /fix-eslint-issue, or /fix-test-failure to address the root cause.",
+      "provenance": "hand-authored",
       "notes": "Low expected false-positive rate. Likely the first rule to enforce. Watch for legitimate prompts discussing why a suppression already in the codebase exists."
     },
     {
@@ -33,7 +35,8 @@
         "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\."
       ],
       "reason": "Secrets must never appear in a prompt, in source, or in configuration. Reference the approved secret store instead — see .github/instructions/security.instructions.md.",
-      "notes": "The provider-prefix signals (AKIA, ghp_, xox, JWT) are near-zero false positive and are good enforce candidates ahead of the generic assignment pattern."
+      "provenance": "hand-authored",
+      "notes": "The provider-prefix signals (AKIA, ghp_, xox, JWT) are near-zero false positive and are good enforce candidates ahead of the generic assignment pattern. Splitting this rule in two — provider prefixes enforcing, generic assignment pattern in shadow — is a better first move than graduating it whole."
     },
     {
       "id": "disable-security-scan",
@@ -45,6 +48,8 @@
         "\\bmark (it|this|the finding) as (a )?(false positive|accepted risk|won'?t fix)\\b"
       ],
       "reason": "Security scanning cannot be disabled or waived from a code assistant. Route exceptions through the security team.",
+      "provenance": "hand-authored",
+      "graduationBlocker": "The signals do not distinguish an assistant being asked to waive a finding from a developer discussing a waiver that already went through security. Narrow the wording before enforcing.",
       "notes": "Genuine false-positive triage is a legitimate human workflow, so this rule blocks the assistant doing it, not the practice itself. Keep in shadow until the wording proves precise."
     },
     {
@@ -58,7 +63,9 @@
         "\\b(md5|sha-?1|des|rc4|ecb mode)\\b"
       ],
       "reason": "Never invent authentication, session, or cryptographic logic. Use the org-approved library named in .github/instructions/security.instructions.md.",
-      "notes": "The weak-algorithm signal fires on prompts that are asking to REMOVE md5/sha1, which is the desired behavior. Review shadow hits before enforcing."
+      "provenance": "hand-authored",
+      "graduationBlocker": "The weak-algorithm signal matches prompts asking to REMOVE md5/sha1, which is work we want to encourage. Enforcing as written would block remediation of the exact weakness the rule exists to find.",
+      "notes": "Review shadow hits before enforcing; the fix is to require an authoring verb near the algorithm name rather than matching the name alone."
     },
     {
       "id": "customer-data-in-prompt",
@@ -72,7 +79,9 @@
         "\\biban\\s*[:=]?\\s*[A-Z]{2}\\d{2}[A-Z0-9]{10,}\\b"
       ],
       "reason": "Customer data, card numbers, and government identifiers must not be pasted into a prompt. Use synthetic fixtures — see .github/instructions/testing.instructions.md.",
-      "notes": "The 13-19 digit signal is the highest false-positive risk in this file: it matches long non-PAN numbers such as timestamps in epoch nanoseconds and some ticket ids. Do not enforce without adding a Luhn check first."
+      "provenance": "hand-authored",
+      "graduationBlocker": "The 13-19 digit signal has no Luhn check, so it matches epoch-nanosecond timestamps and long ticket ids. Add Luhn validation before enforcing.",
+      "notes": "Highest false-positive risk in this file. Note the rule still earns its place in shadow: a hit is a useful signal that a developer pasted something they should not have, even when the digits are not a card."
     },
     {
       "id": "exfiltration",
@@ -85,6 +94,7 @@
         "\\bpaste (the )?(contents of )?(\\.env|the vault|credentials)\\b"
       ],
       "reason": "Reading out or transmitting credentials and environment configuration is not permitted. Reference the secret by name only.",
+      "provenance": "hand-authored",
       "notes": "Overlaps with hardcoded-secret by design; both may fire on the same prompt. Telemetry records all matching rule ids."
     },
     {
@@ -98,6 +108,7 @@
         "\\b(run|execute) .{0,30}\\bagainst (the )?prod\\w*\\b (database|db)\\b"
       ],
       "reason": "Production data and branches are out of scope for assistant-driven change. Route through the normal release process.",
+      "provenance": "hand-authored",
       "notes": "Narrowly worded on purpose. Expect very few hits; a hit is worth reading individually."
     }
   ]
