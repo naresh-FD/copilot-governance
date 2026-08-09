@@ -5,17 +5,20 @@ applyTo: "**/*"
 # Security Instructions
 
 ## Hallucination Prevention Rules
+
 If you are unsure of exact function names, import paths, or patterns, say so explicitly. Never invent custom security implementations. Always cite the exact code location or configuration key.
 
 ## Secrets and Credentials — FORBIDDEN Patterns
 
 **NEVER** do these (hallucination risk):
+
 - Hardcode passwords, tokens, API keys, connection strings, certificates, session IDs
 - Store secrets in `.env`, `config.json`, source code, tests, comments, samples, or frontend
 - Create custom secret encryption or rotation logic
 - Suggest environment-specific hardcoding tricks
 
 **ALWAYS** do these (approved patterns):
+
 - Use `process.env.SECRET_KEY` (Node) / `System.getenv("SECRET_KEY")` (Java) for retrieval only
 - For sensitive data, use the org's approved vault:
   - **Node**: `@org/config.secrets.get("KEY_NAME")`
@@ -31,6 +34,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 ## Logging — FORBIDDEN Patterns
 
 **NEVER** log (hallucination risk):
+
 - Customer data, account numbers, card numbers, SSN, email, phone
 - Passwords, API keys, tokens, session IDs, JWTs, OAuth codes
 - Request/response bodies containing PII or authentication headers
@@ -38,6 +42,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 - `console.log()`, `System.out.println()`, or debug output in production code
 
 **ALWAYS** do these (approved patterns):
+
 - Use approved logger: `logger.info("Safe message")` with business-safe context only
   - Node: `winston` or `pino` configured to approved log sink
   - Java: `org.slf4j.Logger` configured to approved log sink
@@ -51,6 +56,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 ## Input Validation and Injection Prevention — FORBIDDEN Patterns
 
 **NEVER** do these (hallucination risk):
+
 - Use user input directly in SQL: `"SELECT * FROM users WHERE id = " + userId`
 - Use user input in XPath, LDAP, OS commands without escaping
 - Trust client-side validation; assume all input is malicious
@@ -58,6 +64,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 - Deserialize untrusted JSON without schema validation
 
 **ALWAYS** do these (approved patterns):
+
 - Validate at trust boundary (API entry point):
   - Node: `@org/validator.sanitize(input, schema)`
   - Java: `@Valid @RequestBody User user` with Bean Validation
@@ -65,6 +72,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 - Use parameterized queries / prepared statements only:
   - Node: `db.query("SELECT * FROM users WHERE id = ?", [userId])`
   - Java: `PreparedStatement ps = db.prepareStatement("SELECT * FROM users WHERE id = ?")`
+  - For account lookups: `db.query("SELECT * FROM accounts WHERE account_id = ?", [accountId])`
 - For HTML/XML: Use framework escaping (React's JSX, Angular's sanitizer)
 - For URLs: Use `new URL(userInput).href` or approved URL builder
 
@@ -73,12 +81,14 @@ If no approved pattern exists, flag for security review before suggesting anythi
 ## Authentication and Authorization — FORBIDDEN Patterns
 
 **NEVER** do these (hallucination risk):
+
 - Invent custom JWT signing, token generation, or session management
 - Bypass MFA, dual-control/change-approval workflows, or permission checks with flags or admin overrides
 - Store tokens in localStorage or client cookies without HttpOnly + Secure flags
 - Trust user ID or role from client headers; always validate on backend
 
 **ALWAYS** do these (approved patterns):
+
 - Use centralized auth:
   - **Node/Java**: Use `@org/auth-guard` middleware/decorator
   - **Angular/React**: Use `@org/auth-provider` component wrapper
@@ -92,12 +102,14 @@ If no approved pattern exists, flag for security review before suggesting anythi
 ## Error Handling — FORBIDDEN Patterns
 
 **NEVER** do these (hallucination risk):
+
 - Return full stack traces, internal paths, or database error details to users
 - Swallow errors silently: `catch (e) { }`
 - Log secrets, payloads, or internal state in error messages
 - Assume errors are non-recoverable without retry logic
 
 **ALWAYS** do these (approved patterns):
+
 - Return safe error messages to users:
   ```json
   { "error": "Operation failed", "errorCode": "PAYMENT_DECLINED" }
@@ -114,6 +126,7 @@ If no approved pattern exists, flag for security review before suggesting anythi
 ## Security-Sensitive Change Flags
 
 **Always flag for human security review** if changes touch:
+
 - Authentication, authorization, MFA, or permission logic
 - Encryption, key generation, or cryptographic operations
 - Payment, billing, or transaction processing
@@ -129,6 +142,7 @@ Add comment: `// SECURITY REVIEW REQUIRED` and open a PR for human review.
 ## Summary: What to Refuse
 
 If a request asks you to:
+
 1. Write custom auth/encryption → Refuse; cite approved pattern location
 2. Log secrets or PII → Refuse; show approved logging pattern
 3. Invent secret storage → Refuse; show vault usage pattern
