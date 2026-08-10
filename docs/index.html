@@ -1,3 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Platform reference for the Copilot Governance Platform — architecture, MVP phases, the Phase 5 prompt interception kernel, security guardrails, approved workflows, rollout waves, and success metrics.">
+<meta name="color-scheme" content="light dark">
 <title>Copilot Governance — Platform Reference</title>
 <style>
 :root {
@@ -8,6 +15,11 @@
   --bg:        #F2F6FB; --surface: #FFFFFF; --surf-alt: #EBF1F9;
   --text:      #142035; --text-mid: #4A5D72; --text-light: #7A8FA6;
   --border:    #D4DDE9; --r: 12px;
+  /* Foreground-only tokens. These must never be --navy/--green/--red directly:
+     those are surface colours and flip to mid-tones in dark mode, which leaves
+     heading and status text at ~1.6:1 on the flipped card grounds. */
+  --head:      #1D3364; --code-fg: #0F6F6B;
+  --ok-fg:     #127552; --warn-fg: #A06010; --danger-fg: #A83030;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -17,6 +29,8 @@
     --green:#35D49A;--amber:#E8A94A;--red:#D05858;
     --bg:#0E1520;--surface:#141E2D;--surf-alt:#1A2840;
     --text:#E5EDF7;--text-mid:#8EA5BF;--text-light:#5A7690;--border:#243348;
+    --head:#DCE7F5;--code-fg:#4FD8D2;
+    --ok-fg:#4BD8A0;--warn-fg:#E8A94A;--danger-fg:#F08A85;
   }
 }
 :root[data-theme="dark"] {
@@ -26,12 +40,18 @@
   --green:#35D49A;--amber:#E8A94A;--red:#D05858;
   --bg:#0E1520;--surface:#141E2D;--surf-alt:#1A2840;
   --text:#E5EDF7;--text-mid:#8EA5BF;--text-light:#5A7690;--border:#243348;
+  --head:#DCE7F5;--code-fg:#4FD8D2;
+  --ok-fg:#4BD8A0;--warn-fg:#E8A94A;--danger-fg:#F08A85;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.65;color:var(--text);background:var(--bg)}
+body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.65;color:var(--text);background:var(--bg);-webkit-text-size-adjust:100%}
 h1,h2,h3,h4{font-weight:700;line-height:1.25;text-wrap:balance}
-code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.83em;background:var(--surf-alt);padding:.15em .4em;border-radius:4px;color:var(--teal-dim)}
+code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.83em;background:var(--surf-alt);padding:.15em .4em;border-radius:4px;color:var(--code-fg);overflow-wrap:anywhere}
 a{color:var(--teal);text-decoration:none}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:2px}
+/* Sticky nav is 52px — without this, anchor jumps hide the heading behind it. */
+section[id],header[id]{scroll-margin-top:60px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 
 /* NAV */
 .top-nav{position:sticky;top:0;z-index:100;background:var(--navy-dim);border-bottom:2px solid var(--teal-dim)}
@@ -40,7 +60,7 @@ a{color:var(--teal);text-decoration:none}
 .nav-brand em{color:var(--teal);font-style:normal}
 .nav-links{display:flex;overflow-x:auto;flex:1;scrollbar-width:none}
 .nav-links::-webkit-scrollbar{display:none}
-.nav-links a{display:flex;align-items:center;padding:0 .85rem;height:52px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.nav-links a{display:flex;align-items:center;padding:0 .85rem;height:52px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.72);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
 .nav-links a:hover,.nav-links a.active{color:#fff;border-bottom-color:var(--teal)}
 
 /* LAYOUT */
@@ -48,16 +68,14 @@ a{color:var(--teal);text-decoration:none}
 .sec-white{background:var(--surface);padding:4rem 0}
 .sec-bg{background:var(--bg);padding:4rem 0}
 .sec-dark{background:var(--navy-dim);padding:4rem 0}
-.w-scroll{overflow-x:auto}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.w-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
 /* TYPOGRAPHY */
-.eyebrow{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-dim);margin-bottom:.45rem;display:flex;align-items:center;gap:.7rem}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--code-fg);margin-bottom:.45rem;display:flex;align-items:center;gap:.7rem}
 .eyebrow::before{content:'';width:24px;height:2px;background:var(--teal)}
 .sec-dark .eyebrow{color:var(--teal)}
 .sec-dark .eyebrow::before{background:var(--teal)}
-.sec-title{font-size:1.7rem;color:var(--navy);margin-bottom:.5rem}
+.sec-title{font-size:1.7rem;color:var(--head);margin-bottom:.5rem}
 .sec-dark .sec-title{color:#fff}
 .sec-desc{font-size:.9rem;color:var(--text-mid);max-width:580px;line-height:1.75;margin-bottom:2.5rem}
 .sec-dark .sec-desc{color:rgba(255,255,255,.62)}
@@ -79,7 +97,7 @@ a{color:var(--teal);text-decoration:none}
 .stat-item{text-align:center;padding:.5rem 1rem;border-right:1px solid rgba(255,255,255,.2)}
 .stat-item:last-child{border-right:none}
 .stat-num{font-size:2.2rem;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
-.stat-lbl{font-size:11.5px;color:rgba(255,255,255,.8);margin-top:.3rem;font-weight:500}
+.stat-lbl{font-size:11.5px;color:rgba(255,255,255,.92);margin-top:.3rem;font-weight:500}
 
 /* MODE CARDS */
 .modes{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
@@ -89,7 +107,7 @@ a{color:var(--teal);text-decoration:none}
 .icon-circle{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
 .ic-teal{background:var(--teal)} .ic-navy{background:var(--navy)} .ic-blue{background:var(--blue)}
 .icon-circle svg{width:20px;height:20px}
-.mode-card h3{font-size:1rem;color:var(--navy);margin-bottom:.4rem}
+.mode-card h3{font-size:1rem;color:var(--head);margin-bottom:.4rem}
 .mode-card p{font-size:13px;color:var(--text-mid);line-height:1.65}
 
 /* CAPABILITIES GRID */
@@ -99,7 +117,7 @@ a{color:var(--teal);text-decoration:none}
 .cap-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
 .ct .cap-icon{background:var(--teal-dim)} .cb .cap-icon{background:var(--navy)}
 .cap-icon svg{width:22px;height:22px}
-.cap-card h3{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:.4rem;line-height:1.3}
+.cap-card h3{font-size:.9rem;font-weight:700;color:var(--head);margin-bottom:.4rem;line-height:1.3}
 .cap-card p{font-size:12.5px;color:var(--text-mid);line-height:1.55}
 .cap-bar{position:absolute;bottom:0;left:1.25rem;right:1.25rem;height:3px;border-radius:2px 2px 0 0}
 .ct .cap-bar{background:var(--teal-dim)} .cb .cap-bar{background:var(--navy)}
@@ -123,10 +141,10 @@ a{color:var(--teal);text-decoration:none}
 .tl-circle{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;color:#fff;flex-shrink:0}
 .tl-done{background:var(--green)} .tl-active{background:var(--teal)} .tl-future{background:var(--border);color:var(--text-light)}
 .tl-label-col{padding:.6rem 0 2rem}
-.tl-name{font-weight:700;font-size:.88rem;color:var(--navy);line-height:1.3}
+.tl-name{font-weight:700;font-size:.88rem;color:var(--head);line-height:1.3}
 .status-pill{display:inline-block;font-size:11px;font-weight:700;padding:.18rem .55rem;border-radius:4px;margin-top:.3rem}
-.sp-done{background:rgba(45,189,138,.15);color:#178E62}
-.sp-active{background:rgba(31,170,165,.15);color:var(--teal-dim)}
+.sp-done{background:rgba(45,189,138,.15);color:var(--ok-fg)}
+.sp-active{background:rgba(31,170,165,.15);color:var(--code-fg)}
 .sp-future{background:var(--surf-alt);color:var(--text-light)}
 .tl-content-col{padding:.5rem 0 2rem}
 .tl-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1.1rem;font-size:13px;color:var(--text-mid);line-height:1.65}
@@ -150,8 +168,8 @@ a{color:var(--teal);text-decoration:none}
 .cov-table td:first-child{font-weight:600;color:var(--text)}
 .cov-table tr:nth-child(even) td{background:var(--surf-alt)}
 .badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;font-weight:700;padding:.2rem .6rem;border-radius:4px}
-.b-yes{background:rgba(45,189,138,.15);color:#178E62}
-.b-no{background:rgba(192,64,58,.1);color:#A83030}
+.b-yes{background:rgba(45,189,138,.15);color:var(--ok-fg)}
+.b-no{background:rgba(192,64,58,.1);color:var(--danger-fg)}
 .b-partial{background:rgba(58,107,178,.12);color:var(--blue)}
 
 /* FLOW DIAGRAM */
@@ -159,7 +177,7 @@ a{color:var(--teal);text-decoration:none}
 .flow-step{display:flex;align-items:center;gap:0;flex-shrink:0}
 .flow-box{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:12.5px;text-align:center;line-height:1.4;color:var(--text)}
 .flow-box.hl{border-color:var(--teal);background:var(--teal-bg)}
-.flow-box strong{display:block;font-size:13px;margin-bottom:.2rem;color:var(--navy)}
+.flow-box strong{display:block;font-size:13px;margin-bottom:.2rem;color:var(--head)}
 .flow-box small{font-size:11px;color:var(--text-mid)}
 .flow-box code{font-size:.8em}
 .flow-arrow{padding:0 .5rem;color:var(--teal);font-size:1.2rem;font-weight:700;align-self:center;flex-shrink:0}
@@ -184,7 +202,7 @@ a{color:var(--teal);text-decoration:none}
 .dec-table th:first-child{border-radius:var(--r) 0 0 0;width:40px} .dec-table th:last-child{border-radius:0 var(--r) 0 0}
 .dec-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);color:var(--text-mid);vertical-align:top;line-height:1.6}
 .dec-table tr:last-child td{border-bottom:none}
-.dec-num{font-weight:800;color:var(--teal-dim);font-size:.95rem}
+.dec-num{font-weight:800;color:var(--code-fg);font-size:.95rem}
 
 /* GUARDRAILS */
 .gr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
@@ -208,15 +226,15 @@ a{color:var(--teal);text-decoration:none}
 .halu-body{background:var(--surface);padding:0}
 .halu-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);font-size:12px}
 .halu-row:last-child{border-bottom:none}
-.halu-row .bad{padding:.55rem .85rem;color:var(--red);border-right:1px solid var(--border)}
-.halu-row .good{padding:.55rem .85rem;color:#178E62}
+.halu-row .bad{padding:.55rem .85rem;color:var(--danger-fg);border-right:1px solid var(--border)}
+.halu-row .good{padding:.55rem .85rem;color:var(--ok-fg)}
 .halu-row-head{display:grid;grid-template-columns:1fr 1fr;background:var(--surf-alt);border-bottom:1px solid var(--border)}
 .halu-row-head span{padding:.45rem .85rem;font-size:11px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.06em}
 .halu-row-head span:first-child{border-right:1px solid var(--border)}
 
 /* WORKFLOWS */
 .wf-grid{display:flex;flex-wrap:wrap;gap:.6rem}
-.wf-chip{display:inline-flex;align-items:center;background:var(--teal-bg);border:1px solid rgba(31,170,165,.3);border-radius:6px;padding:.32rem .8rem;font-size:12.5px;font-weight:600;color:var(--teal-dim);font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+.wf-chip{display:inline-flex;align-items:center;background:var(--teal-bg);border:1px solid rgba(31,170,165,.3);border-radius:6px;padding:.32rem .8rem;font-size:12.5px;font-weight:600;color:var(--code-fg);font-family:'Cascadia Code','Fira Code',Consolas,monospace}
 .wf-rules{display:flex;flex-direction:column;gap:.6rem;margin-top:1.5rem}
 .wf-rule{display:flex;gap:.75rem;align-items:flex-start;font-size:13px;color:var(--text-mid);line-height:1.6}
 .wf-rule::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:.5rem}
@@ -227,7 +245,7 @@ a{color:var(--teal);text-decoration:none}
 .wave-card.done{border-top:4px solid var(--green)}
 .wave-card.active{border-top:4px solid var(--teal)}
 .wave-card.future{border-top:4px solid var(--border)}
-.wave-num{font-size:1.6rem;font-weight:800;color:var(--navy);line-height:1}
+.wave-num{font-size:1.6rem;font-weight:800;color:var(--head);line-height:1}
 .wave-name{font-size:.82rem;font-weight:700;color:var(--text);margin:.35rem 0 .25rem}
 .wave-scope{font-size:11.5px;color:var(--text-mid);line-height:1.5}
 
@@ -240,9 +258,9 @@ a{color:var(--teal);text-decoration:none}
 .pv-table td:first-child{color:var(--text);font-weight:500}
 .pv-table tr:nth-child(even) td{background:var(--surf-alt)}
 .pv-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:11px;font-weight:700;padding:.2rem .65rem;border-radius:4px;white-space:nowrap}
-.pv-proven{background:rgba(45,189,138,.15);color:#178E62}
-.pv-target{background:rgba(224,148,58,.15);color:#A06010}
-.pv-enforced{background:rgba(31,170,165,.15);color:var(--teal-dim)}
+.pv-proven{background:rgba(45,189,138,.15);color:var(--ok-fg)}
+.pv-target{background:rgba(224,148,58,.15);color:var(--warn-fg)}
+.pv-enforced{background:rgba(31,170,165,.15);color:var(--code-fg)}
 
 /* METRICS TABLE */
 .met-table{width:100%;border-collapse:collapse;font-size:13.5px}
@@ -251,7 +269,7 @@ a{color:var(--teal);text-decoration:none}
 .met-table td{padding:.72rem 1.1rem;border-bottom:1px solid var(--border);color:var(--text-mid)}
 .met-table tr:last-child td{border-bottom:none}
 .met-table td:first-child{font-weight:600;color:var(--text)}
-.met-table td:last-child{font-weight:700;color:var(--teal-dim);font-variant-numeric:tabular-nums}
+.met-table td:last-child{font-weight:700;color:var(--code-fg);font-variant-numeric:tabular-nums}
 .met-table tr:nth-child(even) td{background:var(--surf-alt)}
 
 /* FOOTER */
@@ -268,20 +286,29 @@ a{color:var(--teal);text-decoration:none}
   .wave-row{grid-template-columns:repeat(3,1fr)}
   .hero h1{font-size:2rem}
   .stats-inner{grid-template-columns:repeat(2,1fr)}
-  .two-col{grid-template-columns:1fr}
   .tl-row{grid-template-columns:48px 1fr}
+  /* Number column must span both rows or its connector line stops short. */
+  .tl-num-col{grid-row:1/3}
+  .tl-label-col{padding-bottom:.4rem}
   .tl-content-col{grid-column:2}
 }
 @media(max-width:600px){
   .cap-grid{grid-template-columns:1fr}
   .gr-grid{grid-template-columns:1fr}
   .wave-row{grid-template-columns:repeat(2,1fr)}
-  .arch-row{grid-template-columns:52px 1fr}
-  .arch-lbl{grid-column:1/-1;border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  /* Single column: the decorative icon is dropped so the label bar and the
+     value each get full width. Keeping a 52px track here auto-placed the
+     value into the icon column. */
+  .arch-row{grid-template-columns:1fr}
+  .arch-ico{display:none}
+  .arch-lbl{border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .pilot-checks{grid-template-columns:1fr!important}
   .wrap{padding:0 1.25rem}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+</head>
+<body>
 
 <!-- NAV -->
 <nav class="top-nav">
@@ -505,7 +532,7 @@ a{color:var(--teal);text-decoration:none}
       <div class="tl-row">
         <div class="tl-num-col"><div class="tl-circle tl-active">5</div></div>
         <div class="tl-label-col"><div class="tl-name">Prompt Interception</div><div class="status-pill sp-active">In Progress</div></div>
-        <div class="tl-content-col"><div class="tl-box">Every prompt governed before the model sees it on every hook-capable surface. Running in <strong>shadow mode</strong> — deny rules logged but never blocking, until pilot data justifies enforcement per rule. JetBrains gap is a named accepted risk.</div></div>
+        <div class="tl-content-col"><div class="tl-box">Every prompt governed before the model sees it on every hook-capable surface. All <strong>seven policy rules ship in shadow mode</strong> — evaluated and logged, developer sees an advisory, prompt proceeds. Enforcement switches on one rule at a time once pilot data shows which fire cleanly. JetBrains gap is a named accepted risk.</div></div>
       </div>
       <div class="tl-row">
         <div class="tl-num-col"><div class="tl-circle tl-future">6</div></div>
@@ -677,7 +704,7 @@ a{color:var(--teal);text-decoration:none}
         </div>
       </div>
       <div class="halu-card">
-        <div class="halu-head low"><h3>Performance Hallucinations</h3><span class="risk">Lower Risk</span></div>
+        <div class="halu-head low"><h3>Performance / Quality Hallucinations</h3><span class="risk">Low Risk</span></div>
         <div class="halu-body">
           <div class="halu-row-head"><span>Refuse</span><span>Use Instead</span></div>
           <div class="halu-row"><div class="bad"><code>for (item of items) { await fetch() }</code> — N+1</div><div class="good"><code>Promise.all(items.map(fetch))</code></div></div>
@@ -758,7 +785,7 @@ a{color:var(--teal);text-decoration:none}
 
     <div style="margin-top:2.5rem">
       <div class="eyebrow" style="margin-bottom:.75rem">Pilot Validation Checklist</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem 2rem">
+      <div class="pilot-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem 2rem">
         <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Does Copilot follow security instructions consistently?</div>
         <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are repeated prompts reduced? By how much?</div>
         <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are PR fixes measurably faster?</div>
@@ -807,13 +834,13 @@ a{color:var(--teal);text-decoration:none}
           </tr>
           <tr>
             <td>Custom instructions auto-apply in Copilot Chat</td>
-            <td><span class="pv-badge pv-proven">Real Copilot feature</span></td>
-            <td>Ask Copilot to <code>console.log</code> — should push back citing the instruction file</td>
+            <td><span class="pv-badge pv-proven">Real feature — client/version dependent</span></td>
+            <td>Ask Copilot to <code>console.log</code> — should push back citing the instruction file. No pushback means a setup problem, not a governance-content problem.</td>
           </tr>
           <tr>
-            <td>40–60% Copilot-side token reduction</td>
+            <td>70–80% Copilot-side token reduction <span style="color:var(--text-light)">(claimed in <code>PHASE1_COMPLETE.md</code>)</span></td>
             <td><span class="pv-badge pv-target">Target — not measured</span></td>
-            <td>Requires pilot usage data over 4–6 weeks</td>
+            <td>Requires pilot usage data over 4–6 weeks. Nothing in the repo measures actual Copilot usage — no telemetry, no Copilot metrics API hook.</td>
           </tr>
           <tr>
             <td>85%+ hallucination refusal rate</td>
@@ -891,3 +918,5 @@ const obs = new IntersectionObserver(entries => {
 }, { threshold: 0.25 });
 sections.forEach(s => obs.observe(s));
 </script>
+</body>
+</html>
