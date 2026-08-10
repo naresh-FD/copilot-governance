@@ -200,14 +200,16 @@ h3.h3{font-size:1.02rem;margin-bottom:.6rem}
 .hero-art{width:180px;flex-shrink:0}
 .hero h1{font-size:2.15rem;margin-bottom:.6rem}
 .hero-txt{flex:1;min-width:260px}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.15rem}
+.chips{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.15rem}
 .chip{
   display:inline-flex;align-items:center;gap:.42rem;font-size:12px;font-weight:600;
-  padding:.28rem .7rem;border-radius:20px;border:1px solid var(--line);
-  background:var(--surface);color:var(--body);
+  padding:.32rem .75rem;border-radius:20px;border:1px solid var(--accent-line);
+  background:var(--accent-soft);color:var(--accent-fg);
 }
-.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.d-ok{background:#2DBD8A}.d-run{background:var(--accent)}.d-idle{background:var(--muted)}
+.chip-ico{width:13px;height:13px;flex-shrink:0}
+.hero-status{margin-top:.95rem;font-size:12px;color:var(--muted)}
+.hero-status a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line)}
+.hero-status a:hover{color:var(--accent-fg)}
 
 /* STATS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.25rem}
@@ -279,17 +281,38 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 .b-info{background:var(--accent-soft);color:var(--accent-fg)}
 .num{font-weight:800;color:var(--accent-fg);font-variant-numeric:tabular-nums}
 
-/* FLOW */
-.flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:1.4rem;background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
-.fbox{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:.7rem .9rem;text-align:center;flex-shrink:0;min-width:130px}
-.fbox.on{border-color:var(--accent);background:var(--accent-soft)}
-.fbox b{display:block;font-size:12.5px;color:var(--ink);margin-bottom:.15rem}
-.fbox small{font-size:10.8px;color:var(--muted);line-height:1.4;display:block}
-.farr{padding:0 .55rem;color:var(--accent);flex-shrink:0}
-.farr svg{width:16px;height:16px}
-.fsteps{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:.6rem .85rem;flex-shrink:0;min-width:210px}
-.fstep{display:flex;align-items:center;gap:.5rem;font-size:11.8px;color:var(--body);padding:.14rem 0}
-.fstep::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+/* KERNEL FLOW — vertical stepper; never needs a scrollbar at any width */
+.kflow{list-style:none}
+.kflow li{display:grid;grid-template-columns:42px 1fr;gap:0 1.1rem;position:relative;padding-bottom:1.15rem}
+.kflow li::before{content:'';position:absolute;left:21px;top:42px;bottom:-4px;width:2px;background:var(--line)}
+.kflow li:last-child{padding-bottom:0}
+.kflow li:last-child::before{display:none}
+.kf-pin{
+  width:42px;height:42px;border-radius:50%;background:var(--accent-soft);
+  border:1.5px solid var(--accent-line);color:var(--accent-fg);
+  display:grid;place-items:center;position:relative;z-index:1;flex-shrink:0;
+}
+.kf-pin svg{width:19px;height:19px}
+.kf-body{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem}
+.kf-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.35rem}
+.kf-head b{font-size:.95rem;color:var(--ink)}
+.kf-tag{
+  margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:.16rem .55rem;border-radius:5px;background:var(--panel);color:var(--muted);border:1px solid var(--line);
+  white-space:nowrap;
+}
+.kf-body p{font-size:13px;color:var(--body);line-height:1.65}
+.kf-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem;margin-top:.8rem}
+.kf-mini-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem .75rem}
+.kf-mini-item b{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.28rem}
+.kf-mini-item span{font-size:12.3px;color:var(--body)}
+@media(max-width:560px){
+  .kflow li{grid-template-columns:34px 1fr;gap:0 .8rem}
+  .kflow li::before{left:17px;top:34px}
+  .kf-pin{width:34px;height:34px}
+  .kf-pin svg{width:16px;height:16px}
+  .kf-mini{grid-template-columns:1fr}
+}
 
 /* CALLOUTS / GAPS */
 .note{display:flex;gap:.85rem;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r);padding:1rem 1.15rem;margin-top:1.1rem}
@@ -539,10 +562,12 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <h1>Documentation</h1>
         <p class="lede">Everything about the Copilot Governance Platform — a hybrid prompt governance and optimization platform that enforces secure coding guardrails, reduces repeated AI token waste, and gives teams reusable workflows. Synced to every repository through PR-based automation and applied at prompt time by the interception kernel. You can also ask for <a href="https://github.com/naresh-FD/copilot-governance/issues" target="_blank" rel="noopener">support</a>.</p>
         <div class="chips">
-          <span class="chip"><span class="dot d-ok"></span>Phases 0–4 Delivered</span>
-          <span class="chip"><span class="dot d-run"></span>Phase 5 Shadow Mode</span>
-          <span class="chip"><span class="dot d-idle"></span>Phases 6–7 Not Started</span>
+          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>Prompt Interception</span>
+          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Guardrails</span>
+          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>14 Reusable Workflows</span>
+          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>PR-Based Sync</span>
         </div>
+        <p class="hero-status">Phases 0–4 delivered · Phase 5 running in shadow mode · Phases 6–7 not started — see <a href="#phases">MVP Phases</a></p>
       </div>
     </div>
 
@@ -678,22 +703,42 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     </div>
 
     <h3 class="h3" id="ic-flow" style="margin-top:2.25rem">Kernel Flow</h3>
-    <div class="flow">
-      <div class="fbox"><b>Developer Prompt</b><small>free-form text</small></div>
-      <span class="farr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      <div class="fbox on"><b>UserPromptSubmit</b><small>hook registration</small></div>
-      <span class="farr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      <div class="fbox on"><b>rewrite.mjs</b><small>single file, zero deps</small></div>
-      <span class="farr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      <div class="fsteps">
-        <div class="fstep">screen → <code>deny.json</code></div>
-        <div class="fstep">classify → <code>router.json</code></div>
-        <div class="fstep">compose → <code>core.md</code> + workflow</div>
-        <div class="fstep">log → <code>telemetry.jsonl</code></div>
-      </div>
-      <span class="farr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></span>
-      <div class="fbox"><b>AI Model</b><small>additionalContext or modifiedTransformedPrompt</small></div>
-    </div>
+    <ol class="kflow">
+      <li>
+        <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.3a8.4 8.4 0 0 1-.9-3.7 8.4 8.4 0 0 1 8.4-8.5h.4a8.5 8.5 0 0 1 8 8v.5z"/></svg></span>
+        <div class="kf-body">
+          <div class="kf-head"><b>Developer Prompt</b><span class="kf-tag">Input</span></div>
+          <p>Free-form text typed into VS Code, Copilot CLI or Claude Code — nothing about it is touched yet.</p>
+        </div>
+      </li>
+      <li>
+        <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+        <div class="kf-body">
+          <div class="kf-head"><b>UserPromptSubmit Hook</b><span class="kf-tag">Registration</span></div>
+          <p>Fires before the model sees anything. Registered per surface in <code>prompt-interceptor.json</code>.</p>
+        </div>
+      </li>
+      <li>
+        <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></span>
+        <div class="kf-body">
+          <div class="kf-head"><b>rewrite.mjs</b><span class="kf-tag">Engine · zero deps</span></div>
+          <p>A single file runs four steps in order:</p>
+          <div class="kf-mini">
+            <div class="kf-mini-item"><b>Screen</b><span><code>deny.json</code></span></div>
+            <div class="kf-mini-item"><b>Classify</b><span><code>router.json</code></span></div>
+            <div class="kf-mini-item"><b>Compose</b><span><code>core.md</code> + matched workflow</span></div>
+            <div class="kf-mini-item"><b>Log</b><span><code>telemetry.jsonl</code></span></div>
+          </div>
+        </div>
+      </li>
+      <li>
+        <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/></svg></span>
+        <div class="kf-body">
+          <div class="kf-head"><b>AI Model</b><span class="kf-tag">Output</span></div>
+          <p>Receives <code>additionalContext</code> on VS Code and Claude Code, or <code>modifiedTransformedPrompt</code> on Copilot CLI — the delivery mechanism depends on the surface.</p>
+        </div>
+      </li>
+    </ol>
 
     <h3 class="h3" id="ic-coverage" style="margin-top:2.25rem">Surface Coverage Matrix</h3>
     <div class="tbl-wrap scroller">
