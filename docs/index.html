@@ -1,0 +1,893 @@
+<title>Copilot Governance — Platform Reference</title>
+<style>
+:root {
+  --teal:      #1FAAA5; --teal-dim: #178F8A; --teal-bg: #C4ECEB;
+  --navy:      #1D3364; --navy-dim: #162550;
+  --blue:      #3A6BB2; --blue-bg: #CAD8EE;
+  --green:     #2DBD8A; --amber: #E0943A; --red: #C0403A;
+  --bg:        #F2F6FB; --surface: #FFFFFF; --surf-alt: #EBF1F9;
+  --text:      #142035; --text-mid: #4A5D72; --text-light: #7A8FA6;
+  --border:    #D4DDE9; --r: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --teal:#26C5BF;--teal-dim:#1DADA8;--teal-bg:#0E3332;
+    --navy:#2B4C8C;--navy-dim:#1E3870;
+    --blue:#4F7EC5;--blue-bg:#182C48;
+    --green:#35D49A;--amber:#E8A94A;--red:#D05858;
+    --bg:#0E1520;--surface:#141E2D;--surf-alt:#1A2840;
+    --text:#E5EDF7;--text-mid:#8EA5BF;--text-light:#5A7690;--border:#243348;
+  }
+}
+:root[data-theme="dark"] {
+  --teal:#26C5BF;--teal-dim:#1DADA8;--teal-bg:#0E3332;
+  --navy:#2B4C8C;--navy-dim:#1E3870;
+  --blue:#4F7EC5;--blue-bg:#182C48;
+  --green:#35D49A;--amber:#E8A94A;--red:#D05858;
+  --bg:#0E1520;--surface:#141E2D;--surf-alt:#1A2840;
+  --text:#E5EDF7;--text-mid:#8EA5BF;--text-light:#5A7690;--border:#243348;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;font-size:15px;line-height:1.65;color:var(--text);background:var(--bg)}
+h1,h2,h3,h4{font-weight:700;line-height:1.25;text-wrap:balance}
+code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.83em;background:var(--surf-alt);padding:.15em .4em;border-radius:4px;color:var(--teal-dim)}
+a{color:var(--teal);text-decoration:none}
+
+/* NAV */
+.top-nav{position:sticky;top:0;z-index:100;background:var(--navy-dim);border-bottom:2px solid var(--teal-dim)}
+.nav-inner{display:flex;align-items:center;gap:0;height:52px;max-width:1100px;margin:0 auto;padding:0 2rem}
+.nav-brand{font-weight:700;font-size:13px;color:#fff;white-space:nowrap;flex-shrink:0;margin-right:1.5rem}
+.nav-brand em{color:var(--teal);font-style:normal}
+.nav-links{display:flex;overflow-x:auto;flex:1;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{display:flex;align-items:center;padding:0 .85rem;height:52px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.6);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.nav-links a:hover,.nav-links a.active{color:#fff;border-bottom-color:var(--teal)}
+
+/* LAYOUT */
+.wrap{max-width:1100px;margin:0 auto;padding:0 2rem}
+.sec-white{background:var(--surface);padding:4rem 0}
+.sec-bg{background:var(--bg);padding:4rem 0}
+.sec-dark{background:var(--navy-dim);padding:4rem 0}
+.w-scroll{overflow-x:auto}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+
+/* TYPOGRAPHY */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal-dim);margin-bottom:.45rem;display:flex;align-items:center;gap:.7rem}
+.eyebrow::before{content:'';width:24px;height:2px;background:var(--teal)}
+.sec-dark .eyebrow{color:var(--teal)}
+.sec-dark .eyebrow::before{background:var(--teal)}
+.sec-title{font-size:1.7rem;color:var(--navy);margin-bottom:.5rem}
+.sec-dark .sec-title{color:#fff}
+.sec-desc{font-size:.9rem;color:var(--text-mid);max-width:580px;line-height:1.75;margin-bottom:2.5rem}
+.sec-dark .sec-desc{color:rgba(255,255,255,.62)}
+
+/* HERO */
+.hero{background:var(--navy);padding:4rem 0 3.5rem}
+.hero-eye{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin-bottom:1rem;display:flex;align-items:center;gap:.7rem}
+.hero-eye::before{content:'';width:28px;height:2px;background:var(--teal)}
+.hero h1{font-size:2.5rem;color:#fff;max-width:680px;margin-bottom:1rem}
+.hero-sub{font-size:1.05rem;color:rgba(255,255,255,.72);max-width:600px;line-height:1.8;margin-bottom:2rem}
+.chips{display:flex;flex-wrap:wrap;gap:.65rem}
+.chip{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:.28rem .85rem;font-size:12px;color:rgba(255,255,255,.88);font-weight:500}
+.chip-dot{width:6px;height:6px;border-radius:50%}
+.cd-green{background:var(--green)} .cd-teal{background:var(--teal)} .cd-grey{background:var(--text-light)}
+
+/* STATS BAR */
+.stats-bar{background:var(--teal-dim);padding:1.5rem 0}
+.stats-inner{display:grid;grid-template-columns:repeat(4,1fr);gap:0;max-width:1100px;margin:0 auto;padding:0 2rem}
+.stat-item{text-align:center;padding:.5rem 1rem;border-right:1px solid rgba(255,255,255,.2)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-size:2.2rem;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.stat-lbl{font-size:11.5px;color:rgba(255,255,255,.8);margin-top:.3rem;font-weight:500}
+
+/* MODE CARDS */
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.mode-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem;border-top:4px solid var(--teal)}
+.mode-card:nth-child(2){border-top-color:var(--navy)}
+.mode-card:nth-child(3){border-top-color:var(--blue)}
+.icon-circle{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.ic-teal{background:var(--teal)} .ic-navy{background:var(--navy)} .ic-blue{background:var(--blue)}
+.icon-circle svg{width:20px;height:20px}
+.mode-card h3{font-size:1rem;color:var(--navy);margin-bottom:.4rem}
+.mode-card p{font-size:13px;color:var(--text-mid);line-height:1.65}
+
+/* CAPABILITIES GRID */
+.cap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
+.cap-card{border-radius:var(--r);padding:1.5rem 1.25rem 1.85rem;position:relative;overflow:hidden}
+.cap-card.ct{background:var(--teal-bg)} .cap-card.cb{background:var(--blue-bg)}
+.cap-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.ct .cap-icon{background:var(--teal-dim)} .cb .cap-icon{background:var(--navy)}
+.cap-icon svg{width:22px;height:22px}
+.cap-card h3{font-size:.9rem;font-weight:700;color:var(--navy);margin-bottom:.4rem;line-height:1.3}
+.cap-card p{font-size:12.5px;color:var(--text-mid);line-height:1.55}
+.cap-bar{position:absolute;bottom:0;left:1.25rem;right:1.25rem;height:3px;border-radius:2px 2px 0 0}
+.ct .cap-bar{background:var(--teal-dim)} .cb .cap-bar{background:var(--navy)}
+
+/* ARCH TABLE */
+.arch-wrap{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.arch-row{display:grid;grid-template-columns:62px 220px 1fr;border-bottom:1px solid var(--border)}
+.arch-row:last-child{border-bottom:none}
+.arch-ico{background:var(--surface);display:flex;align-items:center;justify-content:center;padding:.9rem .5rem;border-right:1px solid var(--border)}
+.arch-ring{width:34px;height:34px;border-radius:50%;border:2px solid var(--teal);display:flex;align-items:center;justify-content:center}
+.arch-ring svg{width:14px;height:14px}
+.arch-lbl{background:var(--navy);color:#fff;font-weight:700;font-size:12.5px;display:flex;align-items:center;padding:.9rem 1.1rem;border-right:1px solid rgba(255,255,255,.08)}
+.arch-val{background:var(--surface);padding:.9rem 1.1rem;font-size:13px;color:var(--text-mid);display:flex;align-items:center;flex-wrap:wrap;gap:.35rem}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column}
+.tl-row{display:grid;grid-template-columns:52px 160px 1fr;gap:0 1.5rem;position:relative}
+.tl-num-col{display:flex;flex-direction:column;align-items:center;z-index:1;padding-top:.1rem}
+.tl-num-col::after{content:'';flex:1;width:2px;background:var(--border);margin-top:.4rem;min-height:2rem}
+.tl-row:last-child .tl-num-col::after{display:none}
+.tl-circle{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;color:#fff;flex-shrink:0}
+.tl-done{background:var(--green)} .tl-active{background:var(--teal)} .tl-future{background:var(--border);color:var(--text-light)}
+.tl-label-col{padding:.6rem 0 2rem}
+.tl-name{font-weight:700;font-size:.88rem;color:var(--navy);line-height:1.3}
+.status-pill{display:inline-block;font-size:11px;font-weight:700;padding:.18rem .55rem;border-radius:4px;margin-top:.3rem}
+.sp-done{background:rgba(45,189,138,.15);color:#178E62}
+.sp-active{background:rgba(31,170,165,.15);color:var(--teal-dim)}
+.sp-future{background:var(--surf-alt);color:var(--text-light)}
+.tl-content-col{padding:.5rem 0 2rem}
+.tl-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem 1.1rem;font-size:13px;color:var(--text-mid);line-height:1.65}
+.tl-box strong{color:var(--text)}
+
+/* BEFORE/AFTER TABLE */
+.ba-table{width:100%;border-collapse:collapse;font-size:13px}
+.ba-table th{background:var(--navy);color:#fff;font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:.7rem 1rem;text-align:left}
+.ba-table th:first-child{border-radius:var(--r) 0 0 0} .ba-table th:last-child{border-radius:0 var(--r) 0 0}
+.ba-table td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text-mid);vertical-align:top}
+.ba-table tr:last-child td{border-bottom:none}
+.ba-table td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+.ba-table tr:nth-child(even) td{background:var(--surf-alt)}
+
+/* COVERAGE TABLE */
+.cov-table{width:100%;border-collapse:collapse;font-size:13px}
+.cov-table thead th{background:var(--navy);color:#fff;font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:.75rem 1rem;text-align:left}
+.cov-table thead th:first-child{border-radius:var(--r) 0 0 0} .cov-table thead th:last-child{border-radius:0 var(--r) 0 0}
+.cov-table td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text-mid);vertical-align:middle}
+.cov-table tr:last-child td{border-bottom:none}
+.cov-table td:first-child{font-weight:600;color:var(--text)}
+.cov-table tr:nth-child(even) td{background:var(--surf-alt)}
+.badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;font-weight:700;padding:.2rem .6rem;border-radius:4px}
+.b-yes{background:rgba(45,189,138,.15);color:#178E62}
+.b-no{background:rgba(192,64,58,.1);color:#A83030}
+.b-partial{background:rgba(58,107,178,.12);color:var(--blue)}
+
+/* FLOW DIAGRAM */
+.flow-diagram{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:1.5rem;background:var(--surf-alt);border-radius:var(--r);border:1px solid var(--border)}
+.flow-step{display:flex;align-items:center;gap:0;flex-shrink:0}
+.flow-box{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:12.5px;text-align:center;line-height:1.4;color:var(--text)}
+.flow-box.hl{border-color:var(--teal);background:var(--teal-bg)}
+.flow-box strong{display:block;font-size:13px;margin-bottom:.2rem;color:var(--navy)}
+.flow-box small{font-size:11px;color:var(--text-mid)}
+.flow-box code{font-size:.8em}
+.flow-arrow{padding:0 .5rem;color:var(--teal);font-size:1.2rem;font-weight:700;align-self:center;flex-shrink:0}
+.flow-branch-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem .9rem;display:flex;flex-direction:column;gap:.35rem;min-width:200px}
+.flow-branch-row{font-size:12px;color:var(--text-mid);display:flex;align-items:center;gap:.5rem}
+.flow-branch-row code{font-size:.85em}
+.flow-branch-row::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+
+/* GAPS */
+.gap-list{display:flex;flex-direction:column;gap:.85rem}
+.gap-item{display:flex;gap:.9rem;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:0 8px 8px 0;padding:1rem 1.1rem}
+.gap-item.critical{border-left-color:var(--red)}
+.gap-icon{width:28px;height:28px;border-radius:6px;background:rgba(224,148,58,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gap-item.critical .gap-icon{background:rgba(192,64,58,.12)}
+.gap-icon svg{width:14px;height:14px}
+.gap-item p{font-size:13px;color:var(--text-mid);line-height:1.65}
+.gap-item strong{color:var(--text);display:block;margin-bottom:.2rem}
+
+/* DECISIONS TABLE */
+.dec-table{width:100%;border-collapse:collapse;font-size:13px}
+.dec-table th{background:var(--navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.65rem 1rem;text-align:left}
+.dec-table th:first-child{border-radius:var(--r) 0 0 0;width:40px} .dec-table th:last-child{border-radius:0 var(--r) 0 0}
+.dec-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);color:var(--text-mid);vertical-align:top;line-height:1.6}
+.dec-table tr:last-child td{border-bottom:none}
+.dec-num{font-weight:800;color:var(--teal-dim);font-size:.95rem}
+
+/* GUARDRAILS */
+.gr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.gr-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:1.1rem 1.25rem;display:flex;gap:.9rem;align-items:flex-start}
+.gr-icon{width:32px;height:32px;border-radius:6px;background:rgba(31,170,165,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gr-icon svg{width:15px;height:15px}
+.gr-item p{font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.6}
+.gr-item strong{color:rgba(255,255,255,.95);display:block;margin-bottom:.2rem;font-size:13px}
+
+/* HALLUCINATION CATEGORIES */
+.halu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem}
+.halu-card{border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.halu-head{padding:.9rem 1.1rem;display:flex;align-items:center;gap:.75rem}
+.halu-head.sec{background:#1A3060} .halu-head.high{background:#2A4D26} .halu-head.med{background:#3D3010} .halu-head.low{background:#1A2C45}
+.halu-head h3{font-size:.88rem;font-weight:700;color:#fff;margin:0}
+.halu-head .risk{font-size:10.5px;font-weight:700;padding:.15rem .5rem;border-radius:3px;margin-left:auto;color:#fff}
+.halu-head.sec .risk{background:rgba(192,64,58,.7)}
+.halu-head.high .risk{background:rgba(224,148,58,.7)}
+.halu-head.med .risk{background:rgba(58,107,178,.7)}
+.halu-head.low .risk{background:rgba(45,189,138,.5)}
+.halu-body{background:var(--surface);padding:0}
+.halu-row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);font-size:12px}
+.halu-row:last-child{border-bottom:none}
+.halu-row .bad{padding:.55rem .85rem;color:var(--red);border-right:1px solid var(--border)}
+.halu-row .good{padding:.55rem .85rem;color:#178E62}
+.halu-row-head{display:grid;grid-template-columns:1fr 1fr;background:var(--surf-alt);border-bottom:1px solid var(--border)}
+.halu-row-head span{padding:.45rem .85rem;font-size:11px;font-weight:700;color:var(--text-mid);text-transform:uppercase;letter-spacing:.06em}
+.halu-row-head span:first-child{border-right:1px solid var(--border)}
+
+/* WORKFLOWS */
+.wf-grid{display:flex;flex-wrap:wrap;gap:.6rem}
+.wf-chip{display:inline-flex;align-items:center;background:var(--teal-bg);border:1px solid rgba(31,170,165,.3);border-radius:6px;padding:.32rem .8rem;font-size:12.5px;font-weight:600;color:var(--teal-dim);font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+.wf-rules{display:flex;flex-direction:column;gap:.6rem;margin-top:1.5rem}
+.wf-rule{display:flex;gap:.75rem;align-items:flex-start;font-size:13px;color:var(--text-mid);line-height:1.6}
+.wf-rule::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:.5rem}
+
+/* WAVE ROLLOUT */
+.wave-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem}
+.wave-card{border-radius:var(--r);padding:1.25rem 1rem;text-align:center;border:1px solid var(--border);background:var(--surface)}
+.wave-card.done{border-top:4px solid var(--green)}
+.wave-card.active{border-top:4px solid var(--teal)}
+.wave-card.future{border-top:4px solid var(--border)}
+.wave-num{font-size:1.6rem;font-weight:800;color:var(--navy);line-height:1}
+.wave-name{font-size:.82rem;font-weight:700;color:var(--text);margin:.35rem 0 .25rem}
+.wave-scope{font-size:11.5px;color:var(--text-mid);line-height:1.5}
+
+/* PROVEN TABLE */
+.pv-table{width:100%;border-collapse:collapse;font-size:13px}
+.pv-table th{background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.65rem 1rem;text-align:left}
+.pv-table th:first-child{border-radius:var(--r) 0 0 0} .pv-table th:last-child{border-radius:0 var(--r) 0 0}
+.pv-table td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text-mid);vertical-align:top;line-height:1.6}
+.pv-table tr:last-child td{border-bottom:none}
+.pv-table td:first-child{color:var(--text);font-weight:500}
+.pv-table tr:nth-child(even) td{background:var(--surf-alt)}
+.pv-badge{display:inline-flex;align-items:center;gap:.35rem;font-size:11px;font-weight:700;padding:.2rem .65rem;border-radius:4px;white-space:nowrap}
+.pv-proven{background:rgba(45,189,138,.15);color:#178E62}
+.pv-target{background:rgba(224,148,58,.15);color:#A06010}
+.pv-enforced{background:rgba(31,170,165,.15);color:var(--teal-dim)}
+
+/* METRICS TABLE */
+.met-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.met-table thead th{background:var(--teal);color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.7rem 1.1rem;text-align:left}
+.met-table thead th:first-child{border-radius:var(--r) 0 0 0} .met-table thead th:last-child{border-radius:0 var(--r) 0 0}
+.met-table td{padding:.72rem 1.1rem;border-bottom:1px solid var(--border);color:var(--text-mid)}
+.met-table tr:last-child td{border-bottom:none}
+.met-table td:first-child{font-weight:600;color:var(--text)}
+.met-table td:last-child{font-weight:700;color:var(--teal-dim);font-variant-numeric:tabular-nums}
+.met-table tr:nth-child(even) td{background:var(--surf-alt)}
+
+/* FOOTER */
+.doc-footer{background:var(--navy-dim);padding:2rem 0;font-size:12.5px;color:rgba(255,255,255,.5)}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.footer-brand{font-weight:700;font-size:14px;color:#fff}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .cap-grid{grid-template-columns:repeat(2,1fr)}
+  .modes{grid-template-columns:1fr}
+  .gr-grid{grid-template-columns:repeat(2,1fr)}
+  .halu-grid{grid-template-columns:1fr}
+  .wave-row{grid-template-columns:repeat(3,1fr)}
+  .hero h1{font-size:2rem}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .tl-row{grid-template-columns:48px 1fr}
+  .tl-content-col{grid-column:2}
+}
+@media(max-width:600px){
+  .cap-grid{grid-template-columns:1fr}
+  .gr-grid{grid-template-columns:1fr}
+  .wave-row{grid-template-columns:repeat(2,1fr)}
+  .arch-row{grid-template-columns:52px 1fr}
+  .arch-lbl{grid-column:1/-1;border-right:none;border-bottom:1px solid rgba(255,255,255,.08)}
+  .wrap{padding:0 1.25rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="nav-inner">
+    <div class="nav-brand">Copilot <em>Governance</em></div>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#phases">Phases</a>
+      <a href="#interception">Interception</a>
+      <a href="#security">Security</a>
+      <a href="#workflows">Workflows</a>
+      <a href="#rollout">Rollout</a>
+      <a href="#demo">Proven vs Target</a>
+      <a href="#metrics">Metrics</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="overview" class="hero">
+  <div class="wrap">
+    <div class="hero-eye">Platform Reference — naresh-fd/copilot-governance</div>
+    <h1>Copilot Governance Platform</h1>
+    <p class="hero-sub">A hybrid prompt governance and optimization platform that enforces secure coding guardrails, reduces repeated AI token waste, and gives development teams reusable workflows — synced across every repository through PR-based automation and applied at prompt time via the interception kernel.</p>
+    <div class="chips">
+      <span class="chip"><span class="chip-dot cd-green"></span>Phases 0–4 Delivered</span>
+      <span class="chip"><span class="chip-dot cd-teal"></span>Phase 5 In Shadow Mode</span>
+      <span class="chip"><span class="chip-dot cd-grey"></span>Phases 6–7 Not Started</span>
+      <span class="chip"><span class="chip-dot cd-grey"></span>4 Pilot Repositories</span>
+    </div>
+  </div>
+</header>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-num">7</div><div class="stat-lbl">Platform Phases</div></div>
+    <div class="stat-item"><div class="stat-num">14</div><div class="stat-lbl">Approved Workflows</div></div>
+    <div class="stat-item"><div class="stat-num">3</div><div class="stat-lbl">Governed Surfaces</div></div>
+    <div class="stat-item"><div class="stat-num">10</div><div class="stat-lbl">Success Metrics</div></div>
+  </div>
+</div>
+
+<!-- MODES -->
+<section class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Deployment Modes</div>
+    <h2 class="sec-title">Three Ways to Govern</h2>
+    <p class="sec-desc">The platform meets teams where they work — local tooling, GitHub automation, and an optional visibility layer — without requiring a new process or tool.</p>
+    <div class="modes">
+      <div class="mode-card">
+        <div class="icon-circle ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <h3>Local Developer CLI</h3>
+        <p>Validate governance, preview prompt rewrites, run dry-run syncs, and catch compliance issues before they reach a PR — from the terminal with <code>copilot-gov.sh</code> or <code>copilot-gov.ps1</code>.</p>
+      </div>
+      <div class="mode-card">
+        <div class="icon-circle ic-navy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        </div>
+        <h3>GitHub PR Automation</h3>
+        <p>Central governance synced to all target repos through PR-based automation. Manifest-tracked removals, drift detection, and override preservation on every sync cycle.</p>
+      </div>
+      <div class="mode-card">
+        <div class="icon-circle ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        </div>
+        <h3>Coverage Dashboard</h3>
+        <p>Optional visibility layer — repo onboarding coverage, governance drift, deny-rule violations, and prompt workflow usage. Planned for the platform team; not required for pilot.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Core Capabilities</div>
+    <h2 class="sec-title">What the Platform Does</h2>
+    <p class="sec-desc">Eight interlocking capabilities that together make AI-assisted development safe, consistent, and auditable.</p>
+    <div class="cap-grid">
+      <div class="cap-card ct">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+        <h3>Instruction Sync</h3>
+        <p>Central baseline synced to every repo. Manifest-tracked so deleted rules are cleaned up — no orphaned governance.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card cb">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+        <h3>Prompt Interception</h3>
+        <p>Every prompt governed before the model sees it. Developer wording preserved verbatim; context and rules are injected.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card ct">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Security Guardrails</h3>
+        <p>No hardcoded secrets, no PII logging, no auth bypass, OWASP prevention — at the prompt layer, not just in review.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card cb">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <h3>Code Quality Gates</h3>
+        <p>Guardrails against console logs, debug artifacts, and linting anti-patterns — 80% reduction in review noise targeted.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card cb">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h3>Local CLI Tooling</h3>
+        <p><code>doctor</code>, <code>validate</code>, <code>audit</code>, <code>rewrite</code> — token budget enforcement and placeholder detection before the pre-commit hook.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card ct">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <h3>Reusable Workflows</h3>
+        <p>14 approved <code>.prompt.md</code> workflows for common fixes. 40–60% less repeated context per fix request.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card cb">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>Override Safety</h3>
+        <p>Repo-specific sections always preserved. Overrides may extend rules but cannot weaken security or compliance guardrails.</p>
+        <div class="cap-bar"></div>
+      </div>
+      <div class="cap-card ct">
+        <div class="cap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
+        <h3>Audit &amp; Reporting</h3>
+        <p>Drift fixed within one sync cycle. CODEOWNERS gates every governance PR. Telemetry tracks interception events and deny-rule hits.</p>
+        <div class="cap-bar"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE TABLE -->
+<section id="architecture" class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Platform Architecture</div>
+    <h2 class="sec-title">Design at a Glance</h2>
+    <p class="sec-desc">Key structural decisions — from the central baseline to the interception kernel to the override model.</p>
+    <div class="w-scroll">
+      <div class="arch-wrap">
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div></div>
+          <div class="arch-lbl">Platform</div>
+          <div class="arch-val">Copilot Governance Platform — central repo <code>naresh-fd/copilot-governance</code> is the source of truth for all governed content.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div></div>
+          <div class="arch-lbl">Purpose</div>
+          <div class="arch-val">Reduce repeated AI token waste, enforce secure coding guardrails, and give teams reusable approved workflows for common fixes.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div></div>
+          <div class="arch-lbl">Governance Files</div>
+          <div class="arch-val"><code>copilot-instructions.md</code> (repo-wide) · <code>instructions/*.instructions.md</code> (path-specific) · <code>prompts/*.prompt.md</code> (approved workflows)</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg></div></div>
+          <div class="arch-lbl">Sync Engine</div>
+          <div class="arch-val">PR-based sync to each target repo. <code>.copilot-governance-manifest</code> tracks shipped files so centrally deleted rules are removed downstream without touching repo-added content.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="14" x2="4" y2="14"/></svg></div></div>
+          <div class="arch-lbl">Interception Kernel</div>
+          <div class="arch-val"><code>prompt-core/</code> + <code>hooks/</code>. <code>rewrite.mjs</code> intercepts via <code>UserPromptSubmit</code> — developer wording carried verbatim, governance injected. All deny rules ship in shadow mode.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div></div>
+          <div class="arch-lbl">Security Layer</div>
+          <div class="arch-val">No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, secure error handling — enforced at prompt time.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div></div>
+          <div class="arch-lbl">Override Model</div>
+          <div class="arch-val">Central managed section (between governance markers) owned by this repo. Repo override section always preserved. Overrides may add local context, never weaken security or compliance rules.</div>
+        </div>
+        <div class="arch-row">
+          <div class="arch-ico"><div class="arch-ring"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-dim)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div></div>
+          <div class="arch-lbl">CLI Commands</div>
+          <div class="arch-val"><code>doctor</code> · <code>validate</code> · <code>audit</code> · <code>sync --dry-run</code> · <code>sync --apply</code> · <code>prompt &lt;name&gt;</code> · <code>rewrite "&lt;text&gt;"</code> · <code>report</code> · <code>install-hooks</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PHASES TIMELINE -->
+<section id="phases" class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Delivery</div>
+    <h2 class="sec-title">MVP Phases</h2>
+    <p class="sec-desc">This table is the platform's authoritative phase numbering. "Phase 2" in interception-programme documents maps to Phase 5 here.</p>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-done">0</div></div>
+        <div class="tl-label-col"><div class="tl-name">Foundation</div><div class="status-pill sp-done">Delivered</div></div>
+        <div class="tl-content-col"><div class="tl-box">Repository structure, templates, CODEOWNERS, and initial instruction files established. <strong>Output: governance baseline ready for pilot.</strong></div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-done">1</div></div>
+        <div class="tl-label-col"><div class="tl-name">Baseline Instructions</div><div class="status-pill sp-done">Delivered</div></div>
+        <div class="tl-content-col"><div class="tl-box">Security, code-quality, testing, PR-review, and stack-specific instruction packs authored and validated. <strong>Output: governed instruction library.</strong></div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-done">2</div></div>
+        <div class="tl-label-col"><div class="tl-name">Sync Engine</div><div class="status-pill sp-done">Delivered</div></div>
+        <div class="tl-content-col"><div class="tl-box">PR-based sync with manifest tracking and override preservation. Two live bugs found and fixed: first-time onboarding was silently skipped; deleted rules were never removed downstream. <strong>Output: safe, repeatable sync.</strong></div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-done">3</div></div>
+        <div class="tl-label-col"><div class="tl-name">Local CLI</div><div class="status-pill sp-done">Delivered</div></div>
+        <div class="tl-content-col"><div class="tl-box">Pre-commit hook enforces token budgets and blocks unresolved placeholders or hardcoded secrets in governance content. <strong>Output: local developer toolchain.</strong></div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-done">4</div></div>
+        <div class="tl-label-col"><div class="tl-name">GitHub Automation</div><div class="status-pill sp-done">Delivered</div></div>
+        <div class="tl-content-col"><div class="tl-box">Governance scales across repos via scheduled workflow. Drift detected and corrected on next sync. <strong>Output: org-wide automation ready.</strong></div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-active">5</div></div>
+        <div class="tl-label-col"><div class="tl-name">Prompt Interception</div><div class="status-pill sp-active">In Progress</div></div>
+        <div class="tl-content-col"><div class="tl-box">Every prompt governed before the model sees it on every hook-capable surface. Running in <strong>shadow mode</strong> — deny rules logged but never blocking, until pilot data justifies enforcement per rule. JetBrains gap is a named accepted risk.</div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-future">6</div></div>
+        <div class="tl-label-col"><div class="tl-name">Pilot Rollout</div><div class="status-pill sp-future">Not Started</div></div>
+        <div class="tl-content-col"><div class="tl-box">Four pilot repos covering all three governed surfaces and at least one IntelliJ Java team. Deny rules graduate from shadow to enforcing one at a time based on real data.</div></div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-num-col"><div class="tl-circle tl-future">7</div></div>
+        <div class="tl-label-col"><div class="tl-name">Wave Rollout</div><div class="status-pill sp-future">Not Started</div></div>
+        <div class="tl-content-col"><div class="tl-box">4 → 20–25 → 50–75 → remaining repos. Weekly audit and sync steady state. Pilot feedback refines the baseline before Wave 1.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PHASE 5 INTERCEPTION DETAIL -->
+<section id="interception" class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Phase 5 — Engineering Leadership Brief</div>
+    <h2 class="sec-title">Prompt Interception Kernel</h2>
+    <p class="sec-desc">Until Phase 5, governance worked by publishing standards and hoping developers followed them. Now every prompt is rewritten before the AI sees it — with no change required from the developer.</p>
+
+    <div class="w-scroll" style="margin-bottom:2rem">
+      <table class="ba-table">
+        <thead><tr><th>Dimension</th><th>Before Phase 5</th><th>After Phase 5</th></tr></thead>
+        <tbody>
+          <tr><td>What the developer types</td><td>Free-form prompt</td><td>Unchanged — exactly what they typed</td></tr>
+          <tr><td>What the AI receives</td><td>Whatever was typed</td><td>Developer's exact words + security rules + matched workflow</td></tr>
+          <tr><td>Prompts blocked</td><td>None</td><td>None yet — shadow mode. Advisories shown; prompt proceeds.</td></tr>
+          <tr><td>Telemetry</td><td>None — all numbers were estimates</td><td>Real counts: intent distribution, deny-rule hits per surface</td></tr>
+          <tr><td>Setup required from developer</td><td>None</td><td>None — arrives with the normal governance sync</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="eyebrow" style="margin-bottom:.75rem">Kernel Flow</div>
+    <div class="flow-diagram">
+      <div class="flow-step">
+        <div class="flow-box"><strong>Developer Prompt</strong><small>free-form text</small></div>
+        <div class="flow-arrow">→</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-box hl"><strong>UserPromptSubmit Hook</strong><code>prompt-interceptor.json</code></div>
+        <div class="flow-arrow">→</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-box hl"><strong>rewrite.mjs</strong><small>single file, zero deps</small></div>
+        <div class="flow-arrow">→</div>
+      </div>
+      <div class="flow-branch-box">
+        <div class="flow-branch-row">screen → <code>deny.json</code></div>
+        <div class="flow-branch-row">classify → <code>router.json</code></div>
+        <div class="flow-branch-row">compose → <code>core.md</code> + workflow</div>
+        <div class="flow-branch-row">log → <code>telemetry.jsonl</code></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box"><strong>AI Model</strong><small>additionalContext or<br>modifiedTransformedPrompt</small></div>
+    </div>
+
+    <div style="margin-top:2.5rem">
+      <div class="eyebrow" style="margin-bottom:.75rem">Surface Coverage Matrix</div>
+      <div class="w-scroll">
+        <table class="cov-table">
+          <thead><tr><th>Client</th><th>Governed</th><th>Can Rewrite</th><th>Can Block</th><th>Config</th></tr></thead>
+          <tbody>
+            <tr><td>VS Code Copilot</td><td><span class="badge b-yes">Yes — injection</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-yes">Yes — exit 2</span></td><td><code>prompt-interceptor.json</code></td></tr>
+            <tr><td>Copilot CLI / Agent</td><td><span class="badge b-yes">Yes — rewrite</span></td><td><span class="badge b-yes">Yes</span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
+            <tr><td>Claude Code</td><td><span class="badge b-yes">Yes — injection</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-yes">Yes — decision</span></td><td><code>claude-code-settings.fragment.json</code></td></tr>
+            <tr><td>JetBrains / IntelliJ</td><td><span class="badge b-no">No — files only</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-no">No</span></td><td>None — no hook support</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:.85rem;font-size:12.5px;color:var(--text-mid);line-height:1.7"><strong style="color:var(--text)">Key constraint:</strong> No single surface can both rewrite and block. The union of surfaces provides full coverage; no individual developer's setup does. Always report the per-client position.</p>
+    </div>
+
+    <div style="margin-top:2.5rem">
+      <div class="eyebrow" style="margin-bottom:.75rem">Known Gaps</div>
+      <div class="gap-list">
+        <div class="gap-item critical">
+          <div class="gap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <p><strong>JetBrains has no hook support.</strong> Java and Spring Boot teams in IntelliJ get instruction files only — no rewriting, no injection, no deny rules, no telemetry. These are also the teams carrying <code>java-security</code>, the only high-risk intent requiring human security review. The teams with the highest-risk prompts have the weakest coverage. Raise with Java teams by name; carry as a named accepted risk with an owner.</p>
+        </div>
+        <div class="gap-item">
+          <div class="gap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <p><strong>Hooks are a guardrail, not a security control.</strong> A developer can disable hooks; a timeout always fails open. Real enforcement requires an MDM policy push — a desktop-engineering workstream this repo cannot deliver alone. Treat interception as strong assistance, not an auditable control.</p>
+        </div>
+        <div class="gap-item">
+          <div class="gap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <p><strong>No central telemetry collection.</strong> <code>report</code> reads only the local machine's file — deliberate for privacy, but the platform cannot demonstrate estate-wide that interception is running. Central collection is a Wave 1 prerequisite and carries its own employee-monitoring questions.</p>
+        </div>
+        <div class="gap-item">
+          <div class="gap-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <p><strong>Hook APIs are Preview — re-verify quarterly.</strong> The v1 kernel was built against a schema that did not exist; nothing caught it for a full phase. <code>surfaces.json</code> carries a <code>verifiedOn</code> date — treat it as an expiry, not a footnote. Last verified: 2026-08-02.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:2.5rem">
+      <div class="eyebrow" style="margin-bottom:.75rem">Decisions Required Before Pilot Briefing</div>
+      <div class="w-scroll">
+        <table class="dec-table">
+          <thead><tr><th>#</th><th>Decision</th><th>Why It Matters</th></tr></thead>
+          <tbody>
+            <tr><td class="dec-num">1</td><td><strong>IntelliJ coverage</strong> — move Java teams to VS Code for Copilot work, formally accept instructions-only coverage, or wait for JetBrains hook support?</td><td>Determines whether coverage can be described as complete. Decision 1 must be resolved before briefing risk or audit.</td></tr>
+            <tr><td class="dec-num">2</td><td><strong>Argus integration</strong> — can the CWE ruleset export format be shared?</td><td>Deny rules are currently hand-authored placeholders. Wiring to Argus keeps one source of truth; without the export format this cannot proceed.</td></tr>
+            <tr><td class="dec-num">3</td><td><strong>Device policy</strong> — is desktop engineering willing to push the MDM setting preventing developers from disabling hooks?</td><td>The difference between a guardrail and an auditable control.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY GUARDRAILS -->
+<section id="security" class="sec-dark">
+  <div class="wrap">
+    <div class="eyebrow">Security</div>
+    <h2 class="sec-title">Non-Negotiable Guardrails</h2>
+    <p class="sec-desc">These rules are enforced at the prompt layer. They cannot be weakened by repo overrides.</p>
+    <div class="gr-grid">
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><p><strong>No Hardcoded Secrets</strong>Never generate passwords, tokens, API keys, certificates, connection strings, or session identifiers. Approved secret-management patterns only.</p></div>
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><p><strong>No PII Logging</strong>Never log customer data, account numbers, card numbers, secrets, session IDs, request payloads, or auth headers — regardless of log level.</p></div>
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><p><strong>No Bypass Instructions</strong>Never suggest bypassing auth, MFA, dual-control, audit logging, SAST, dependency scanning, linting, or tests.</p></div>
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><p><strong>Input Validation</strong>Validate and sanitize all external input. Prevent SQL injection, XSS, CSRF, path traversal, unsafe deserialization, and CORS misconfigurations.</p></div>
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p><strong>Secure Error Handling</strong>Never expose stack traces, internal paths, or sensitive system internals to end users. Errors explain what went wrong, not how the system works.</p></div>
+      <div class="gr-item"><div class="gr-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><p><strong>Human Review Flags</strong>Flag auth, encryption, payment processing, audit logging, and PII-related changes for mandatory security review.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HALLUCINATION PREVENTION -->
+<section class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Hallucination Prevention</div>
+    <h2 class="sec-title">What Copilot Must Refuse</h2>
+    <p class="sec-desc">Four categories of hallucination with the anti-patterns to refuse and the approved alternatives. Used by developers and as audit criteria for PR reviews.</p>
+    <div class="halu-grid">
+      <div class="halu-card">
+        <div class="halu-head sec"><h3>Security Hallucinations</h3><span class="risk">Highest Risk</span></div>
+        <div class="halu-body">
+          <div class="halu-row-head"><span>Refuse</span><span>Use Instead</span></div>
+          <div class="halu-row"><div class="bad"><code>jwt.sign({userId}, secretKey)</code> — weak key management</div><div class="good"><code>@org/auth-guard</code> decorator</div></div>
+          <div class="halu-row"><div class="bad"><code>encrypt(data, password)</code> — weak cipher</div><div class="good">Org-approved crypto lib only</div></div>
+          <div class="halu-row"><div class="bad"><code>PASSWORD = "secret123"</code> in config</div><div class="good"><code>config.secrets.get()</code> vault API</div></div>
+          <div class="halu-row"><div class="bad"><code>logger.log("token:", token)</code></div><div class="good"><code>logger.log("auth success")</code></div></div>
+          <div class="halu-row"><div class="bad"><code>"SELECT * FROM users WHERE id=" + userId</code></div><div class="good">Parameterized queries only</div></div>
+        </div>
+      </div>
+      <div class="halu-card">
+        <div class="halu-head high"><h3>API / Framework Hallucinations</h3><span class="risk">High Risk</span></div>
+        <div class="halu-body">
+          <div class="halu-row-head"><span>Refuse</span><span>Use Instead</span></div>
+          <div class="halu-row"><div class="bad">Inventing function names that don't exist</div><div class="good">Verify with <code>grep -r "name" src/</code> first</div></div>
+          <div class="halu-row"><div class="bad"><code>require('request')</code> — deprecated</div><div class="good"><code>axios</code> or org-approved HTTP lib</div></div>
+          <div class="halu-row"><div class="bad">Wrong import path for known module</div><div class="good">Check actual location before suggesting</div></div>
+          <div class="halu-row"><div class="bad"><code>SimpleDateFormat</code> — thread-unsafe</div><div class="good"><code>java.time.LocalDate</code>, <code>Instant</code></div></div>
+          <div class="halu-row"><div class="bad">Making up config keys</div><div class="good">Check actual keys in <code>.env.example</code></div></div>
+        </div>
+      </div>
+      <div class="halu-card">
+        <div class="halu-head med"><h3>Pattern Hallucinations</h3><span class="risk">Medium Risk</span></div>
+        <div class="halu-body">
+          <div class="halu-row-head"><span>Refuse</span><span>Use Instead</span></div>
+          <div class="halu-row"><div class="bad"><code>catch (e) { }</code> — silent failure</div><div class="good">Meaningful catch with logging and rethrow</div></div>
+          <div class="halu-row"><div class="bad"><code>function process(data: any)</code></div><div class="good">Specific type: <code>data: MyType</code></div></div>
+          <div class="halu-row"><div class="bad">Commented-out code</div><div class="good">Delete it — git preserves history</div></div>
+          <div class="halu-row"><div class="bad"><code>const API_URL = "https://prod.example.com"</code></div><div class="good"><code>process.env.API_URL</code></div></div>
+          <div class="halu-row"><div class="bad"><code>test.skip("should work")</code></div><div class="good">Write the real test; use <code>only</code> temporarily</div></div>
+        </div>
+      </div>
+      <div class="halu-card">
+        <div class="halu-head low"><h3>Performance Hallucinations</h3><span class="risk">Lower Risk</span></div>
+        <div class="halu-body">
+          <div class="halu-row-head"><span>Refuse</span><span>Use Instead</span></div>
+          <div class="halu-row"><div class="bad"><code>for (item of items) { await fetch() }</code> — N+1</div><div class="good"><code>Promise.all(items.map(fetch))</code></div></div>
+          <div class="halu-row"><div class="bad"><code>SELECT * FROM users</code> — all rows</div><div class="good">Pagination: <code>LIMIT 100 OFFSET 0</code></div></div>
+          <div class="halu-row"><div class="bad"><code>setState(data)</code> in expensive loop</div><div class="good"><code>useMemo</code>, <code>useCallback</code></div></div>
+          <div class="halu-row"><div class="bad"><code>eval(userInput)</code></div><div class="good"><code>JSON.parse()</code> for data</div></div>
+          <div class="halu-row"><div class="bad">Repeated string concatenation</div><div class="good">Template literals with input validation</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOWS -->
+<section id="workflows" class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Prompt Governance</div>
+    <h2 class="sec-title">Approved Reusable Workflows</h2>
+    <p class="sec-desc">Developers invoke these from the IDE or CLI instead of writing long prompts from scratch. Each workflow references the repo's governance instructions and security baseline.</p>
+    <div class="wf-grid">
+      <span class="wf-chip">/fix-pr-review</span>
+      <span class="wf-chip">/fix-security-finding</span>
+      <span class="wf-chip">/fix-console-logs</span>
+      <span class="wf-chip">/fix-sonarqube-issue</span>
+      <span class="wf-chip">/fix-eslint-issue</span>
+      <span class="wf-chip">/fix-test-failure</span>
+      <span class="wf-chip">/fix-build-failure</span>
+      <span class="wf-chip">/fix-typescript-error</span>
+      <span class="wf-chip">/fix-angular-migration</span>
+      <span class="wf-chip">/fix-react-code-quality</span>
+      <span class="wf-chip">/fix-java-springboot-security</span>
+      <span class="wf-chip">/generate-unit-tests</span>
+      <span class="wf-chip">/document-repo</span>
+      <span class="wf-chip">/explain-legacy-code</span>
+    </div>
+    <div class="wf-rules">
+      <div class="wf-rule">Each workflow must reference the repo's Copilot instructions and the security baseline.</div>
+      <div class="wf-rule">Each workflow must include task scope, rules, verification expectations, and summary format.</div>
+      <div class="wf-rule">Workflows must not instruct developers to bypass tests, linting, scans, review, or compliance gates.</div>
+      <div class="wf-rule">Security-sensitive workflows must include human review callouts.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLLOUT -->
+<section id="rollout" class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Deployment</div>
+    <h2 class="sec-title">Rollout Waves</h2>
+    <p class="sec-desc">Pilot repos must cover all three governed surfaces and at least one IntelliJ Java team, so the coverage gap is measured during the pilot — not discovered at wave rollout.</p>
+    <div class="wave-row">
+      <div class="wave-card active">
+        <div class="wave-num">4</div>
+        <div class="wave-name">Pilot</div>
+        <div class="wave-scope">alerts · react-feature-template · backend-api · web-dashboard</div>
+      </div>
+      <div class="wave-card future">
+        <div class="wave-num">20–25</div>
+        <div class="wave-name">Wave 1</div>
+        <div class="wave-scope">Active repos; refine baseline from pilot feedback first</div>
+      </div>
+      <div class="wave-card future">
+        <div class="wave-num">50–75</div>
+        <div class="wave-name">Wave 2</div>
+        <div class="wave-scope">Broader estate; enforcement rules graduated per pilot data</div>
+      </div>
+      <div class="wave-card future">
+        <div class="wave-num">All</div>
+        <div class="wave-name">Wave 3</div>
+        <div class="wave-scope">Remaining active repos onboarded</div>
+      </div>
+      <div class="wave-card future">
+        <div class="wave-num">∞</div>
+        <div class="wave-name">Steady State</div>
+        <div class="wave-scope">Weekly audit and sync; drift fixed within one cycle</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2.5rem">
+      <div class="eyebrow" style="margin-bottom:.75rem">Pilot Validation Checklist</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem 2rem">
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Does Copilot follow security instructions consistently?</div>
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are repeated prompts reduced? By how much?</div>
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are PR fixes measurably faster?</div>
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are console/debug findings caught earlier?</div>
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are repo overrides preserved across sync cycles?</div>
+        <div style="font-size:13px;color:var(--text-mid);display:flex;gap:.6rem;align-items:flex-start"><span style="color:var(--teal);flex-shrink:0;font-weight:700">—</span>Are developers comfortable using prompt workflows?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROVEN VS TARGET -->
+<section id="demo" class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Demo Guide</div>
+    <h2 class="sec-title">Proven vs. Target</h2>
+    <p class="sec-desc">Read this before quoting any numbers from Phase 1 documents in a demo. Numbers marked Target are estimates until a real pilot runs and counts real fixes.</p>
+    <div class="w-scroll">
+      <table class="pv-table">
+        <thead><tr><th>Claim</th><th>Status</th><th>How to Verify</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Sync preserves repo overrides and opens PRs</td>
+            <td><span class="pv-badge pv-proven">Proven</span></td>
+            <td><code>DRY_RUN=true scripts/sync-copilot-instructions.sh</code></td>
+          </tr>
+          <tr>
+            <td><code>validate</code> catches missing markers and required files</td>
+            <td><span class="pv-badge pv-proven">Proven</span></td>
+            <td><code>scripts/copilot-gov.sh validate</code></td>
+          </tr>
+          <tr>
+            <td>Auto-injected files stay under enforced word budget</td>
+            <td><span class="pv-badge pv-enforced">Proven &amp; Enforced</span></td>
+            <td><code>copilot-gov.sh validate</code> — blocks commit if exceeded</td>
+          </tr>
+          <tr>
+            <td>Governance content free of unresolved placeholders / literal secrets</td>
+            <td><span class="pv-badge pv-enforced">Proven &amp; Enforced</span></td>
+            <td>Deny-pattern checks in validate, also blocks commit</td>
+          </tr>
+          <tr>
+            <td>Prompt files are shorter to type than free-form prompts</td>
+            <td><span class="pv-badge pv-proven">Proven</span></td>
+            <td>Character count — measurable without a pilot</td>
+          </tr>
+          <tr>
+            <td>Custom instructions auto-apply in Copilot Chat</td>
+            <td><span class="pv-badge pv-proven">Real Copilot feature</span></td>
+            <td>Ask Copilot to <code>console.log</code> — should push back citing the instruction file</td>
+          </tr>
+          <tr>
+            <td>40–60% Copilot-side token reduction</td>
+            <td><span class="pv-badge pv-target">Target — not measured</span></td>
+            <td>Requires pilot usage data over 4–6 weeks</td>
+          </tr>
+          <tr>
+            <td>85%+ hallucination refusal rate</td>
+            <td><span class="pv-badge pv-target">Target — not measured</span></td>
+            <td>Requires tracking outcomes across many real fixes in pilot repos</td>
+          </tr>
+          <tr>
+            <td>20–30% faster PR fix speed</td>
+            <td><span class="pv-badge pv-target">Target — not measured</span></td>
+            <td>Requires PR cycle time measurement across pilot repos</td>
+          </tr>
+          <tr>
+            <td>Governed prompt is smaller than raw prompt</td>
+            <td><span class="pv-badge pv-target">Incorrect</span></td>
+            <td>Governed prompt is <em>larger</em> — it inlines the workflow. Efficiency shows in fewer wrong answers and review round-trips, not request size. Do not repeat the "70–80% token reduction" figure.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section id="metrics" class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Success Criteria</div>
+    <h2 class="sec-title">Metrics &amp; Targets</h2>
+    <p class="sec-desc">IntelliJ repos must be counted separately as uncovered — never counted as onboarded into runtime interception coverage.</p>
+    <div class="w-scroll">
+      <table class="met-table">
+        <thead><tr><th>Metric</th><th>Target</th></tr></thead>
+        <tbody>
+          <tr><td>Repo onboarding</td><td>100% active repos receive governance files</td></tr>
+          <tr><td>Runtime interception coverage</td><td>100% on hook-capable clients — IntelliJ repos counted separately as uncovered</td></tr>
+          <tr><td>Token reduction</td><td>40–60% less repeated manual prompt context</td></tr>
+          <tr><td>Security baseline coverage</td><td>100% repos include security guardrails</td></tr>
+          <tr><td>Console / debug noise reduction</td><td>80% reduction in unwanted review comments</td></tr>
+          <tr><td>PR fix speed</td><td>20–30% faster fixes for common issues</td></tr>
+          <tr><td>Override safety</td><td>Zero repo override loss across all sync cycles</td></tr>
+          <tr><td>Drift resolution</td><td>Governance drift fixed within one sync cycle</td></tr>
+          <tr><td>Prompt reuse</td><td>Approved workflows used for all common fix categories</td></tr>
+          <tr><td>Compliance PR approval</td><td>100% governance changes reviewed by required owners</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="doc-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">Copilot Governance Platform</div>
+        <div style="margin-top:.3rem">naresh-fd/copilot-governance &nbsp;·&nbsp; August 2026</div>
+      </div>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+        <span>Phases 0–4 Delivered</span>
+        <span>Phase 5 In Shadow Mode</span>
+        <span>4 Pilot Repositories</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const links = document.querySelectorAll('.nav-links a');
+const sections = document.querySelectorAll('section[id], header[id]');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { threshold: 0.25 });
+sections.forEach(s => obs.observe(s));
+</script>
