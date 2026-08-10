@@ -6,7 +6,7 @@
     {
       "id": "bypass-verification",
       "severity": "high",
-      "enforce": true,
+      "enforce": false,
       "signals": [
         "--no-verify",
         "\\bskip (the |all |these )?(tests?|linting|lint|scans?|checks?|ci)\\b",
@@ -14,12 +14,13 @@
         "\\bnosonar\\b",
         "\\beslint-disable\\b",
         "\\b(it|test|describe)\\.skip\\b",
-        "\\b@suppresswarnings\\b",
+        "(?<!\\w)@suppresswarnings\\b",
         "\\bjust make (it|the (test|build|pipeline)) pass\\b"
       ],
       "reason": "Suppressing a check is not a fix. Use /fix-sonarqube-issue, /fix-eslint-issue, or /fix-test-failure to address the root cause.",
       "provenance": "hand-authored",
-      "notes": "Low expected false-positive rate. Likely the first rule to enforce. Watch for legitimate prompts discussing why a suppression already in the codebase exists."
+      "graduationBlocker": "Signals such as eslint-disable, it.skip, @SuppressWarnings and NOSONAR produce false positives on legitimate remediation prompts ('Remove this eslint-disable', 'Find and audit all NOSONAR usages', 'Explain why this it.skip exists'). The rule uses intent classification (hasBypassIntent in rewrite.mjs) to distinguish bypass introduction from bypass remediation, but the full negative-test suite must pass with zero blocks before enforcement. Gate: run tests/prompt-core.test.mjs bypass-verification section and confirm all remediation-negative cases produce no advisory.",
+      "notes": "Returns to shadow after false-positive evidence. Intent classifier in rewrite.mjs filters remediation-context hits. Re-graduate once the negative suite passes cleanly for 30 days of shadow data."
     },
     {
       "id": "hardcoded-secret",

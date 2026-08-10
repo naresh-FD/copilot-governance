@@ -17,6 +17,7 @@ INSTRUCTIONS_DIR="$SCRIPT_DIR/instructions"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
 PROMPT_CORE_DIR="$SCRIPT_DIR/prompt-core"
 HOOKS_DIR="$SCRIPT_DIR/hooks"
+REGISTRY_DIR="$SCRIPT_DIR/skill-registry"
 SKILLS_DIR="$SCRIPT_DIR/skill-registry/compact"
 TARGET_FILE=".github/copilot-instructions.md"
 MANIFEST_FILE=".github/.copilot-governance-manifest"
@@ -165,7 +166,18 @@ for repo in "${REPOS[@]}"; do
     copy_tree "$PROMPTS_DIR" ".github/prompts"
     copy_tree "$PROMPT_CORE_DIR" ".github/prompt-core"
     copy_tree "$HOOKS_DIR" ".github/hooks"
-    copy_tree "$SKILLS_DIR" ".github/skills"
+    # Deploy skill registry to .github/skill-registry/ so downstream layout
+    # matches what skill-selector.mjs and validate-skill-registry.mjs expect.
+    mkdir -p ".github/skill-registry"
+    cp "$REGISTRY_DIR/approved-skills.json" ".github/skill-registry/approved-skills.json"
+    cp "$REGISTRY_DIR/skill-lock.json" ".github/skill-registry/skill-lock.json"
+    copy_tree "$SKILLS_DIR" ".github/skill-registry/compact"
+
+    # Merge the Claude Code hook fragment into .claude/settings.json.
+    # This is a merge, not a copy — the developer's own settings are preserved.
+    node "$SCRIPT_DIR/scripts/install-claude-hook.mjs" \
+      --fragment "$HOOKS_DIR/claude-code-settings.fragment.json" \
+      --dest ".claude/settings.json"
 
     new_manifest="$(mktemp)"
     {
@@ -174,7 +186,10 @@ for repo in "${REPOS[@]}"; do
       list_tree "$PROMPTS_DIR" ".github/prompts"
       list_tree "$PROMPT_CORE_DIR" ".github/prompt-core"
       list_tree "$HOOKS_DIR" ".github/hooks"
-      list_tree "$SKILLS_DIR" ".github/skills"
+      printf '%s\n' ".github/skill-registry/approved-skills.json"
+      printf '%s\n' ".github/skill-registry/skill-lock.json"
+      list_tree "$SKILLS_DIR" ".github/skill-registry/compact"
+      printf '%s\n' ".claude/settings.json"
     } | LC_ALL=C sort > "$new_manifest"
 
     prune_stale "$new_manifest"
@@ -201,7 +216,8 @@ for repo in "${REPOS[@]}"; do
       .github/prompts \
       .github/prompt-core \
       .github/hooks \
-      .github/skills \
+      .github/skill-registry \
+      .claude/settings.json \
       "$MANIFEST_FILE"
     git -c user.name="copilot-governance-bot" \
       -c user.email="copilot-governance-bot@users.noreply.github.com" \

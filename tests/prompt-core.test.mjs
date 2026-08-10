@@ -239,8 +239,7 @@ test("an unmatched prompt is injected, not rewritten, and is never emptied", () 
 // --- policy rules ------------------------------------------------------------
 
 test("shadow rules advise but never block", () => {
-  // bypass-verification now enforces; use a prompt that only hits hardcoded-secret
-  // (still shadow) to verify shadow rules advise without blocking.
+  // All rules are currently shadow — hardcoded-secret is a representative case.
   const res = runCli("hardcode the password in the config file");
   assert.ok(!res.decision, "a shadow rule must not produce a block decision");
   assert.ok(blockOf(res), "prompt should still be governed, not dropped");
@@ -248,18 +247,24 @@ test("shadow rules advise but never block", () => {
   assert.match(blockOf(res), /Governance concerns detected/);
 });
 
-test("bypass-verification blocks naturally on VS Code without GOV_ENFORCE_ALL", () => {
+test("bypass-verification advises but does not block in shadow mode", () => {
+  // bypass-verification is in shadow (enforce:false) pending the full negative
+  // false-positive test suite passing. In shadow it records and advises but
+  // never blocks, regardless of surface.
   const res = runHookRaw(
     "vscode",
     "just commit with --no-verify and skip the tests",
   );
-  assert.equal(res.status, 2, "bypass-verification must exit 2 on VS Code");
-  assert.match(res.stderr, /bypass-verification/);
   assert.equal(
-    res.stdout.trim(),
-    "",
-    "a blocked prompt must not also be forwarded",
+    res.status ?? 0,
+    0,
+    "shadow rule must not exit 2 — shadow rules never block",
   );
+  const out = JSON.parse(res.stdout);
+  assert.equal(out.continue, true, "shadow rule must pass the prompt through");
+  // Advisory must still be present in the governance block
+  const block = blockOf(out);
+  assert.match(block, /Governance concerns detected|bypass-verification/);
 });
 
 test("an enforcing rule blocks on Claude Code with a top-level decision", () => {
@@ -324,11 +329,11 @@ test("Copilot CLI cannot block, so an enforcing rule degrades to a refusal instr
   assert.match(body, /bypass-verification/);
 });
 
-test("bypass-verification is the only graduated rule", async () => {
-  // bypass-verification graduated to enforce=true on 2026-08-09 after live
-  // evidence confirmed it fires correctly with no false positives observed.
-  // All other rules remain in shadow. Any rule not in this list that appears
-  // as enforcing was flipped without a recorded evidence review.
+test("no rules are currently enforcing — all are in shadow", async () => {
+  // bypass-verification was returned to shadow (2026-08-10) after false-positive
+  // evidence showed it blocked legitimate remediation prompts. All rules must
+  // pass the full negative test suite before being re-graduated to enforce=true.
+  // Any rule appearing here was flipped without a recorded evidence review.
   const deny = JSON.parse(
     readFileSync(join(ROOT, "prompt-core", "deny.json"), "utf8"),
   );
@@ -337,8 +342,8 @@ test("bypass-verification is the only graduated rule", async () => {
     .map((r) => r.id);
   assert.deepEqual(
     enforcing,
-    ["bypass-verification"],
-    `unexpected enforcing rules (not yet evidence-reviewed): ${enforcing.filter((id) => id !== "bypass-verification").join(", ")}`,
+    [],
+    `rules promoted to enforce without evidence review: ${enforcing.join(", ")}`,
   );
 });
 
@@ -390,8 +395,7 @@ test("a fault never exits 2, because exit 2 is the blocking code", () => {
 });
 
 test("shadow rules do not exit 2 on any surface", () => {
-  // bypass-verification now enforces; use a prompt that only hits hardcoded-secret
-  // (shadow) to verify that shadow rules cannot block on any surface.
+  // All rules are in shadow; none should block on any surface.
   for (const surface of ["vscode", "claude", "copilot-cli"]) {
     const res = runHookRaw(surface, "hardcode the password in the config file");
     assert.notEqual(
@@ -492,15 +496,20 @@ const SKILL_ROUTING_CASES = [
 
 for (const [prompt, expectedSkills] of SKILL_ROUTING_CASES) {
   test(`selects approved skills for: "${prompt}"`, () => {
-    const governed = runCli(prompt).hookSpecificOutput.modifiedPrompt;
+    // Use blockOf() to locate the governance block regardless of which field
+    // the surface writes it to — hard-coding a field name is the failure mode
+    // that lets a schema mismatch pass CI and silently fail open in the IDE.
+    const governed = blockOf(runCli(prompt));
+    assert.ok(governed, "no governance block was produced");
     for (const skill of expectedSkills)
       assert.ok(governed.includes(`### ${skill}`), `${skill} was not loaded`);
   });
 }
 
 test("security skill requires human review even through skill policy", () => {
-  const governed = runCli("fix SQL injection in the Spring Boot endpoint")
-    .hookSpecificOutput.modifiedPrompt;
+  const governed = blockOf(
+    runCli("fix SQL injection in the Spring Boot endpoint"),
+  );
   assert.match(governed, /### security-and-hardening/);
   assert.match(governed, /SECURITY REVIEW REQUIRED/);
 });
@@ -556,6 +565,121 @@ test("context budget keeps mandatory core and original prompt while dropping opt
   );
   assert.ok(result.sections.some((section) => section.id === "skill:primary"));
   assert.ok(result.droppedSections.includes("skill:secondary"));
+  // New structured metadata fields
+  assert.ok(typeof result.configuredLimit === "number");
+  assert.ok(typeof result.finalCharCount === "number");
+  assert.ok(Array.isArray(result.includedSections));
+  assert.ok(Array.isArray(result.omittedSections));
+});
+
+test("context budget: output just below limit — overBudget is false", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const core = "A".repeat(10);
+  const prompt = "B".repeat(10);
+  // Renderer that returns sections concatenated — simulates fixed overhead
+  const renderer = (secs) => secs.map((s) => s.content).join("");
+  const result = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    maximumChars: 25, // 10 + 10 = 20, under 25
+    renderer,
+  });
+  assert.equal(result.overBudget, false);
+  assert.ok(result.finalCharCount <= 25);
+  assert.ok(result.finalCharCount === result.configuredLimit - 5 || result.finalCharCount < result.configuredLimit);
+});
+
+test("context budget: output exactly at limit — overBudget is false", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const core = "A".repeat(10);
+  const prompt = "B".repeat(10);
+  const renderer = (secs) => secs.map((s) => s.content).join("");
+  const result = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    maximumChars: 20, // exactly 10+10
+    renderer,
+  });
+  assert.equal(result.overBudget, false);
+  assert.equal(result.finalCharCount, 20);
+});
+
+test("context budget: one char over limit drops lowest-priority optional section", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const core = "A".repeat(10);
+  const prompt = "B".repeat(10);
+  const optional = "C".repeat(5);
+  const renderer = (secs) => secs.map((s) => s.content).join("");
+  const result = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    template: { body: optional },
+    maximumChars: 20, // mandatory=20, optional=5 → 25 over by 5 → drop template
+    renderer,
+  });
+  assert.equal(result.overBudget, false);
+  assert.equal(result.finalCharCount, 20);
+  assert.ok(result.omittedSections.includes("template"));
+});
+
+test("context budget: mandatory alone exceeds limit — overBudget true, original preserved", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const core = "A".repeat(100);
+  const prompt = "B".repeat(100);
+  const renderer = (secs) => secs.map((s) => s.content).join("");
+  const result = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    template: { body: "C".repeat(50) },
+    maximumChars: 10, // impossible — mandatory alone is 200
+    renderer,
+  });
+  assert.equal(result.overBudget, true);
+  assert.ok(result.overBudgetReason, "overBudgetReason must be set");
+  assert.ok(result.sections.some((s) => s.id === "core"), "core must be preserved");
+  assert.ok(result.sections.some((s) => s.id === "original-prompt"), "original prompt must be preserved");
+  assert.ok(result.omittedSections.includes("template"), "optional sections must be dropped");
+});
+
+test("context budget: reportd finalCharCount equals actual renderer output length", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const core = "## Core\nGovernance Core\n";
+  const prompt = "fix the SQL injection";
+  const header = "<!-- header -->\n";
+  const renderer = (secs) =>
+    header + secs.map((s) => `## ${s.id}\n${s.content}\n`).join("\n");
+  const result = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    skills: [{ name: "sec", content: "security skill content" }],
+    maximumChars: 1000,
+    renderer,
+  });
+  const actualRendered = renderer(result.sections);
+  assert.equal(
+    result.finalCharCount,
+    actualRendered.length,
+    "reported finalCharCount must equal the actual rendered output length",
+  );
+});
+
+test("context budget: deterministic across repeated runs", async () => {
+  const { optimizeContext } = await import("../prompt-core/context-optimizer.mjs");
+  const opts = {
+    core: "governance core text",
+    originalPrompt: "fix the issue",
+    skills: [
+      { name: "s1", content: "skill one" },
+      { name: "s2", content: "x".repeat(300) },
+    ],
+    template: { body: "template body" },
+    maximumChars: 100,
+  };
+  const r1 = optimizeContext(opts);
+  const r2 = optimizeContext(opts);
+  assert.deepEqual(r1.includedSections, r2.includedSections);
+  assert.deepEqual(r1.omittedSections, r2.omittedSections);
+  assert.equal(r1.finalCharCount, r2.finalCharCount);
 });
 
 test("skill selector enforces limits, approval, stack, and path policy", async () => {
@@ -614,7 +738,7 @@ test("skill selector enforces limits, approval, stack, and path policy", async (
   );
 });
 
-test("repository profiler detects node metadata without executing files", async () => {
+test("repository profiler detects React browser app without spurious node stack", async () => {
   const { mkdtempSync, writeFileSync, closeSync, openSync, rmSync } =
     await import("node:fs");
   const { tmpdir } = await import("node:os");
@@ -632,13 +756,189 @@ test("repository profiler detects node metadata without executing files", async 
     );
     closeSync(openSync(join(dir, "package-lock.json"), "w"));
     const profile = detectRepositoryProfile(dir);
-    assert.deepEqual(
-      profile.stacks.sort(),
-      ["jest", "node", "react", "typescript"].sort(),
-    );
+    // 'react' in dependencies → browser React; no server deps → no 'node' stack
+    assert.ok(profile.stacks.includes("react"), "react stack expected");
+    assert.ok(!profile.stacks.includes("node"), "node must not appear for a pure browser React app");
     assert.equal(profile.packageManager, "npm");
     assert.equal(profile.commands.test, "jest");
+    // Evidence must be present for every detected stack
+    assert.ok(profile.evidence && profile.evidence.react, "evidence.react must be set");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test("repository profiler detects Node API server", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } = await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-node-"));
+  try {
+    writeFileSync(join(dir, "package.json"), JSON.stringify({
+      dependencies: { express: "4.0.0" },
+    }));
+    const profile = detectRepositoryProfile(dir);
+    assert.ok(profile.stacks.includes("node"), "node stack expected for express app");
+    assert.ok(!profile.stacks.includes("react"), "no react for API-only project");
+    assert.ok(profile.evidence && profile.evidence.node, "evidence.node must be set");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("repository profiler detects Java Maven project", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } = await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-java-"));
+  try {
+    writeFileSync(join(dir, "pom.xml"), "<project/>");
+    const profile = detectRepositoryProfile(dir);
+    assert.ok(profile.stacks.includes("java"), "java stack expected");
+    assert.ok(profile.stacks.includes("maven"), "maven stack expected");
+    assert.ok(profile.evidence && profile.evidence.java, "evidence.java must be set");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("repository profiler detects Angular workspace", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } = await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-ng-"));
+  try {
+    writeFileSync(join(dir, "package.json"), JSON.stringify({
+      dependencies: { "@angular/core": "^17.0.0" },
+    }));
+    writeFileSync(join(dir, "angular.json"), "{}");
+    const profile = detectRepositoryProfile(dir);
+    assert.ok(profile.stacks.includes("angular"), "angular stack expected");
+    assert.ok(profile.evidence && profile.evidence.angular, "evidence.angular must be set");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("repository profiler handles empty repo", async () => {
+  const { mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } = await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-empty-"));
+  try {
+    const profile = detectRepositoryProfile(dir);
+    assert.deepEqual(profile.stacks, [], "empty repo has no stacks");
+    assert.equal(profile.packageManager, "unknown");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("repository profiler handles malformed package.json safely", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { detectRepositoryProfile } = await import("../prompt-core/repo-profile.mjs");
+  const dir = mkdtempSync(join(tmpdir(), "govprofile-bad-"));
+  try {
+    writeFileSync(join(dir, "package.json"), "{ not valid json");
+    const profile = detectRepositoryProfile(dir);
+    // Must not throw; returns empty/unknown profile
+    assert.ok(Array.isArray(profile.stacks));
+    assert.equal(profile.packageManager, "unknown");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// --- bypass-verification intent classifier -----------------------------------
+
+// Required negative examples: prompts that contain a bypass signal but express
+// REMEDIATION intent must NOT fire the rule (no advisory produced).
+const BYPASS_NEGATIVE_CASES = [
+  ["eslint-disable", "Remove this eslint-disable comment"],
+  ["eslint-disable", "Replace this eslint-disable with a proper fix"],
+  ["eslint-disable", "Find and audit all eslint-disable usages in the codebase"],
+  ["eslint-disable", "Explain why this eslint-disable exists"],
+  ["eslint-disable", "Write a test proving we no longer need the eslint-disable"],
+  ["eslint-disable", "Prevent developers from adding eslint-disable comments"],
+  ["it.skip", "Remove this it.skip and fix the underlying test"],
+  ["it.skip", "Replace this it.skip with a proper test"],
+  ["it.skip", "Find and audit all it.skip calls"],
+  ["it.skip", "Explain why this it.skip exists"],
+  ["@SuppressWarnings", "Remove this @SuppressWarnings and fix the root cause"],
+  ["@SuppressWarnings", "Find and audit all @SuppressWarnings usages"],
+  ["NOSONAR", "Remove this NOSONAR marker and address the issue"],
+  ["NOSONAR", "Find all NOSONAR comments and explain each one"],
+  ["--no-verify", "Remove the --no-verify flag from our pre-commit hook"],
+];
+
+for (const [signal, prompt] of BYPASS_NEGATIVE_CASES) {
+  test(`bypass-verification does not fire for remediation: "${prompt.slice(0, 60)}"`, () => {
+    const res = runHookRaw("vscode", prompt);
+    // Must not block (even with GOV_ENFORCE_ALL the classifier gates it)
+    assert.equal(res.status ?? 0, 0, `blocked a legitimate remediation prompt for signal: ${signal}`);
+    const out = JSON.parse(res.stdout || "{}");
+    const block = blockOf(out);
+    // Advisory must not reference bypass-verification for a pure remediation prompt
+    const advisorySection = block.match(/## Governance concerns detected[\s\S]*?(?=##|$)/)?.[0] ?? "";
+    assert.ok(
+      !advisorySection.includes("bypass-verification"),
+      `bypass-verification advisory fired on remediation prompt: "${prompt}"`,
+    );
+  });
+}
+
+// Required positive examples: prompts that express intent to INTRODUCE a bypass.
+// In shadow mode these produce an advisory (not a block). In enforce mode they block.
+const BYPASS_POSITIVE_CASES = [
+  "Add an eslint-disable comment to silence the warning",
+  "Use eslint-disable to suppress this rule",
+  "Skip this failing test with it.skip",
+  "Apply @SuppressWarnings to suppress this issue instead of fixing it",
+  "Add NOSONAR to disable the check on this line",
+  "Just commit with --no-verify to skip the CI checks",
+  "Disable the lint check globally with eslint-disable",
+  "Make the test pass by adding it.skip",
+  "just make the build pass",
+];
+
+for (const prompt of BYPASS_POSITIVE_CASES) {
+  test(`bypass-verification fires for bypass intent: "${prompt.slice(0, 60)}"`, () => {
+    // Shadow mode: advisory produced, no block (status 0)
+    const res = runHookRaw("vscode", prompt);
+    assert.equal(res.status ?? 0, 0, "shadow rule must not block");
+    const out = JSON.parse(res.stdout || "{}");
+    const block = blockOf(out);
+    assert.match(
+      block,
+      /bypass-verification|Governance concerns/,
+      `no advisory produced for bypass-intent prompt: "${prompt}"`,
+    );
+  });
+}
+
+test("bypass-verification mixed prompt: find usages AND add more blocks due to bypass clause", () => {
+  // Both remediation and bypass verbs present — bypass verb wins.
+  const res = runHookRaw("vscode", "Find all eslint-disable usages and add more where needed");
+  assert.equal(res.status ?? 0, 0, "shadow mode must not block");
+  const out = JSON.parse(res.stdout || "{}");
+  assert.match(blockOf(out), /bypass-verification|Governance concerns/);
+});
+
+test("bypass-verification: quoted signal in remediation context is not blocked", () => {
+  const res = runHookRaw("vscode", "Explain why `eslint-disable` is used in auth.ts");
+  assert.equal(res.status ?? 0, 0);
+  const out = JSON.parse(res.stdout || "{}");
+  const block = blockOf(out);
+  const advisory = block.match(/## Governance concerns detected[\s\S]*?(?=##|$)/)?.[0] ?? "";
+  assert.ok(!advisory.includes("bypass-verification"), "remediation context must suppress the advisory");
+});
+
+test("bypass-verification enforces when GOV_ENFORCE_ALL=1", () => {
+  // Verifies the enforcement path still works with a bypass-intent prompt.
+  const res = runHookRaw("vscode", "Add eslint-disable to silence this warning", {
+    GOV_ENFORCE_ALL: "1",
+  });
+  assert.equal(res.status, 2, "GOV_ENFORCE_ALL must cause exit 2 on vscode for bypass intent");
+  assert.match(res.stderr, /bypass-verification/);
 });

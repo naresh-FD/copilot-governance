@@ -125,6 +125,51 @@ function classify(prompt, router) {
   return best;
 }
 
+// Determines whether a prompt that matched the bypass-verification signals
+// actually expresses intent to INTRODUCE a bypass (block/advise) vs. intent
+// to REMOVE, AUDIT, EXPLAIN, or PREVENT one (skip the rule).
+//
+// Algorithm: after the signal fires, look for bypass-action verbs in the
+// prompt. If only remediation verbs are present and no bypass-action verbs,
+// the prompt is a remediation request and the rule should not fire. If bypass
+// verbs are present (even alongside remediation verbs), the rule fires because
+// the prompt contains an actual bypass instruction.
+//
+// This is intentionally conservative: ambiguous prompts (neither set of verbs)
+// do NOT fire the rule, because failing open on ambiguity is safer than
+// blocking legitimate work.
+function hasBypassIntent(prompt) {
+  // Context: called only when a deny-rule signal has already fired, confirming a
+  // bypass keyword (eslint-disable, it.skip, @SuppressWarnings, NOSONAR, etc.)
+  // is in the prompt. The question: does the context express introduction of the
+  // bypass (advise/block) or remediation/investigation of it (pass through)?
+  //
+  // Identifier pitfalls to avoid:
+  //   "eslint-disable" — `disable` has a word boundary before it (hyphen → d)
+  //      → use (?<!-) to exclude `disable` inside tool-name identifiers.
+  //   "it.skip" — `skip` has a word boundary before it (period → s)
+  //      → use (?<!\.) to exclude `skip` inside method-reference identifiers.
+  //   "@SuppressWarnings" — `suppress` is part of a camelCase compound word
+  //      → use (?<!@) and (?!warnings) to exclude the annotation identifier.
+  //
+  // Since the signal guarantees the bypass keyword is present, bypass verbs do
+  // not need to appear adjacent to or after the keyword — they may appear
+  // anywhere in the prompt.
+
+  const bypassVerbRe =
+    /\b(add|insert|put|place|introduce|use|apply|employ|just|simply|quickly|bypass|silence|ignore|comment.?out)\b|(?<!-)\bdisable\b|(?<!@)\bsuppress(?!warnings)\b|(?<!\.)\bskip\b|\bmake.{0,20}(?:it|the\s+(?:test|build|pipeline)).{0,10}pass\b/i;
+
+  const remediationVerbRe =
+    /\b(remove|delete|eliminate|get rid of|clean up|replace|refactor|fix|rewrite|find|locate|search|audit|list|show|grep|explain|understand|describe|document|why|what is|what does|how does|prevent|stop|disallow|ban|no longer need|write.{0,20}test|prov(?:e|ing)|ensures?|validates?)\b/i;
+
+  const hasBypass = bypassVerbRe.test(prompt);
+  const hasRemediation = remediationVerbRe.test(prompt);
+
+  if (hasBypass) return true;         // bypass verb present → fire the rule
+  if (hasRemediation) return false;   // only remediation verbs → skip the rule
+  return false;                       // ambiguous → fail open (do not fire)
+}
+
 function screen(prompt, deny) {
   // GOV_ENFORCE_ALL promotes every rule to enforcing. It only ever makes the
   // kernel stricter, so it is safe to expose; it exists so tests can exercise
@@ -133,15 +178,19 @@ function screen(prompt, deny) {
   const hits = [];
   for (const rule of deny.rules || []) {
     const matched = (rule.signals || []).filter((r) => matches(r, prompt));
-    if (matched.length > 0) {
-      hits.push({
-        id: rule.id,
-        severity: rule.severity || "medium",
-        enforce: forceAll || rule.enforce === true,
-        reason: rule.reason || "This request conflicts with governance policy.",
-        matchedCount: matched.length,
-      });
-    }
+    if (matched.length === 0) continue;
+    // The bypass-verification rule has context-dependent signals: the same
+    // keywords appear in both bypass requests ("add eslint-disable") and
+    // remediation requests ("remove the eslint-disable comment"). Apply the
+    // intent classifier to suppress false positives before recording a hit.
+    if (rule.id === "bypass-verification" && !hasBypassIntent(prompt)) continue;
+    hits.push({
+      id: rule.id,
+      severity: rule.severity || "medium",
+      enforce: forceAll || rule.enforce === true,
+      reason: rule.reason || "This request conflicts with governance policy.",
+      matchedCount: matched.length,
+    });
   }
   return hits;
 }
@@ -621,17 +670,13 @@ function govern(prompt, surface, cwd = process.cwd()) {
       })
     : { selected: [], rejected: [] };
   const skills = skillSelection.selected || [];
+  const integrityError = skillSelection.integrityError || false;
   const anchors = loadAnchors(chosen.anchors || []);
-  const contextDecision = optimizeContext({
-    core,
-    originalPrompt: prompt,
-    skills,
-    anchors,
-    template,
-    maximumChars: 18000,
-  });
 
-  const governed = compose({
+  // Build a renderer that produces the actual serialized governance block for a
+  // given section list, so the budget optimizer can measure the real output
+  // length rather than just the sum of section body lengths.
+  const baseComposeParams = {
     core,
     prompt,
     mode,
@@ -642,13 +687,26 @@ function govern(prompt, surface, cwd = process.cwd()) {
     requireHumanReview: chosen.requireHumanReview === true,
     guidance: chosen.guidance || [],
     shadowHits,
-    // Enforcing rules that could not be blocked because this surface has no
-    // block mechanism. They become an in-prompt refusal instruction.
     unenforceableHits: canBlock ? [] : enforced,
-    // Only embed the original when this block will replace the prompt.
     includeOriginal: canReplace,
     repositoryProfile,
     skills,
+  };
+  const renderer = (sectionList) =>
+    compose({ ...baseComposeParams, contextDecision: { sections: sectionList } });
+
+  const contextDecision = optimizeContext({
+    core,
+    originalPrompt: prompt,
+    skills,
+    anchors,
+    template,
+    maximumChars: 18000,
+    renderer,
+  });
+
+  const governed = compose({
+    ...baseComposeParams,
     contextDecision,
   });
 
@@ -664,6 +722,7 @@ function govern(prompt, surface, cwd = process.cwd()) {
     template,
     selectedSkills: skills.map((skill) => skill.name),
     contextDecision,
+    integrityError,
   };
 }
 
@@ -767,8 +826,10 @@ function handle(prompt, { surface, event, payload, cwd, sessionId }) {
     score: decision.match ? Number(decision.match.score.toFixed(2)) : 0,
     signalsMatched: decision.match ? decision.match.matchedCount : 0,
     selectedSkills: decision.selectedSkills || [],
-    contextBudgetChars: 18000,
-    contextUsedChars: decision.contextDecision?.usedChars ?? 0,
+    contextBudgetChars: decision.contextDecision?.configuredLimit ?? 18000,
+    contextUsedChars: decision.contextDecision?.finalCharCount ?? decision.contextDecision?.usedChars ?? 0,
+    contextOverBudget: decision.contextDecision?.overBudget ?? false,
+    integrityError: decision.integrityError ?? false,
     template:
       decision.mode === "rewrite" ? (decision.chosen?.template ?? null) : null,
     blocked: decision.mode === "block",
