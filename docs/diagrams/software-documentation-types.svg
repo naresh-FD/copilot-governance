@@ -1,0 +1,98 @@
+<svg viewBox="0 0 1240 740" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif" role="img" aria-label="Software Documentation Types hierarchy diagram">
+  <title>Software Documentation Types</title>
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0,9 3.5,0 7" fill="#5b8fa8"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1240" height="740" fill="#0b1a2e"/>
+
+  <!-- Title -->
+  <text x="620" y="42" text-anchor="middle" fill="#ffffff" font-size="21" font-weight="700" letter-spacing="4" font-family="'Segoe UI', Arial, sans-serif">SOFTWARE DOCUMENTATION TYPES</text>
+
+  <!-- ═══════════════════════════════════════════
+       Row 1 – Project documentation
+  ═══════════════════════════════════════════ -->
+  <rect x="460" y="58" width="240" height="48" rx="10" fill="#0e2038" stroke="#3a7ca5" stroke-width="1.8"/>
+  <text x="580" y="87" text-anchor="middle" fill="#e8f0f6" font-size="14.5">Project documentation</text>
+
+  <!-- Connector: Project → Product -->
+  <polyline points="540,106 300,155" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- Connector: Project → Process (right side) -->
+  <polyline points="700,106 990,155" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════════════════
+       Row 2 – Product documentation
+  ═══════════════════════════════════════════ -->
+  <rect x="170" y="155" width="260" height="48" rx="10" fill="#0e2038" stroke="#3a7ca5" stroke-width="1.8"/>
+  <text x="300" y="184" text-anchor="middle" fill="#e8f0f6" font-size="14.5">Product documentation</text>
+
+  <!-- Connector: Product → System documentation -->
+  <polyline points="230,203 170,268" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- Connector: Product → User documentation -->
+  <polyline points="370,203 590,268" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════════════════
+       Row 2 – Process documentation  (large container, right)
+  ═══════════════════════════════════════════ -->
+  <rect x="855" y="155" width="340" height="420" rx="16" fill="none" stroke="#3a7ca5" stroke-width="1.8"/>
+  <rect x="890" y="155" width="270" height="34" rx="8" fill="#0e2038" stroke="none"/>
+  <text x="1025" y="178" text-anchor="middle" fill="#e8f0f6" font-size="14.5">Process documentation</text>
+
+  <text x="882" y="220" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="220" fill="#b8d4e4" font-size="13">Plans</text>
+  <text x="882" y="252" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="252" fill="#b8d4e4" font-size="13">Estimates</text>
+  <text x="882" y="284" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="284" fill="#b8d4e4" font-size="13">Schedules</text>
+  <text x="882" y="316" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="316" fill="#b8d4e4" font-size="13">Reports and metrics</text>
+  <text x="882" y="348" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="348" fill="#b8d4e4" font-size="13">Working papers</text>
+  <text x="882" y="380" fill="#5fcfef" font-size="13.5">✓</text><text x="903" y="380" fill="#b8d4e4" font-size="13">Standards</text>
+
+  <!-- ═══════════════════════════════════════════
+       Row 3 – System documentation (large container, left)
+  ═══════════════════════════════════════════ -->
+  <rect x="30" y="268" width="320" height="440" rx="16" fill="none" stroke="#3a7ca5" stroke-width="1.8"/>
+  <rect x="68" y="268" width="245" height="34" rx="8" fill="#0e2038" stroke="none"/>
+  <text x="190" y="291" text-anchor="middle" fill="#e8f0f6" font-size="14.5">System documentation</text>
+
+  <text x="62" y="342" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="342" fill="#b8d4e4" font-size="13">Product requirement document</text>
+  <text x="62" y="377" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="377" fill="#b8d4e4" font-size="13">Design and architecture</text>
+  <text x="62" y="412" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="412" fill="#b8d4e4" font-size="13">Agile product roadmaps</text>
+  <text x="62" y="447" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="447" fill="#b8d4e4" font-size="13">Source code document</text>
+  <text x="62" y="482" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="482" fill="#b8d4e4" font-size="13">User experience design</text>
+  <text x="83" y="500" fill="#b8d4e4" font-size="13">     documentation</text>
+  <text x="62" y="535" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="535" fill="#b8d4e4" font-size="13">Testing documents</text>
+  <text x="62" y="570" fill="#5fcfef" font-size="13.5">✓</text><text x="83" y="570" fill="#b8d4e4" font-size="13">Help and maintenance</text>
+
+  <!-- ═══════════════════════════════════════════
+       Row 3 – User documentation
+  ═══════════════════════════════════════════ -->
+  <rect x="465" y="268" width="260" height="48" rx="10" fill="#0e2038" stroke="#3a7ca5" stroke-width="1.8"/>
+  <text x="595" y="297" text-anchor="middle" fill="#e8f0f6" font-size="14.5">User documentation</text>
+
+  <!-- Connector: User → End-users -->
+  <polyline points="548,316 495,385" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- Connector: User → System admin -->
+  <polyline points="642,316 705,385" fill="none" stroke="#5b8fa8" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════════════════
+       Row 4 – End-users documentation
+  ═══════════════════════════════════════════ -->
+  <rect x="375" y="385" width="220" height="58" rx="10" fill="#0e2038" stroke="#3a7ca5" stroke-width="1.8"/>
+  <text x="485" y="410" text-anchor="middle" fill="#e8f0f6" font-size="13.5">End-users</text>
+  <text x="485" y="432" text-anchor="middle" fill="#e8f0f6" font-size="13.5">documentation</text>
+
+  <!-- ═══════════════════════════════════════════
+       Row 4 – System admin documentation
+  ═══════════════════════════════════════════ -->
+  <rect x="625" y="385" width="220" height="58" rx="10" fill="#0e2038" stroke="#3a7ca5" stroke-width="1.8"/>
+  <text x="735" y="410" text-anchor="middle" fill="#e8f0f6" font-size="13.5">System admin</text>
+  <text x="735" y="432" text-anchor="middle" fill="#e8f0f6" font-size="13.5">documentation</text>
+
+  <!-- Footer -->
+  <text x="1230" y="730" text-anchor="end" fill="#2a4a64" font-size="11">copilot-governance · software-documentation-types.svg</text>
+</svg>
