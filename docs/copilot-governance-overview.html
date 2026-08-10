@@ -1,0 +1,998 @@
+<title>Copilot Governance Platform</title>
+<style>
+/* === TOKENS === */
+:root {
+  --teal:       #1FAAA5;
+  --teal-dim:   #178F8A;
+  --teal-bg:    #C4ECEB;
+  --navy:       #1D3364;
+  --navy-dim:   #162550;
+  --blue:       #3A6BB2;
+  --blue-bg:    #CAD8EE;
+  --green:      #2DBD8A;
+  --bg:         #F2F6FB;
+  --surface:    #FFFFFF;
+  --surf-alt:   #EBF1F9;
+  --text:       #142035;
+  --text-mid:   #4A5D72;
+  --text-light: #7A8FA6;
+  --border:     #D4DDE9;
+  --r:          12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --teal:       #26C5BF;
+    --teal-dim:   #1DADA8;
+    --teal-bg:    #0E3332;
+    --navy:       #2B4C8C;
+    --navy-dim:   #1E3870;
+    --blue:       #4F7EC5;
+    --blue-bg:    #182C48;
+    --green:      #35D49A;
+    --bg:         #0E1520;
+    --surface:    #141E2D;
+    --surf-alt:   #1A2840;
+    --text:       #E5EDF7;
+    --text-mid:   #8EA5BF;
+    --text-light: #5A7690;
+    --border:     #243348;
+  }
+}
+:root[data-theme="dark"] {
+  --teal:       #26C5BF;
+  --teal-dim:   #1DADA8;
+  --teal-bg:    #0E3332;
+  --navy:       #2B4C8C;
+  --navy-dim:   #1E3870;
+  --blue:       #4F7EC5;
+  --blue-bg:    #182C48;
+  --green:      #35D49A;
+  --bg:         #0E1520;
+  --surface:    #141E2D;
+  --surf-alt:   #1A2840;
+  --text:       #E5EDF7;
+  --text-mid:   #8EA5BF;
+  --text-light: #5A7690;
+  --border:     #243348;
+}
+
+/* === BASE === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+}
+h1,h2,h3,h4 { font-weight: 700; line-height: 1.25; text-wrap: balance; }
+code {
+  font-family: 'Cascadia Code','Fira Code',Consolas,monospace;
+  font-size: 0.83em;
+  background: var(--surf-alt);
+  padding: .15em .4em;
+  border-radius: 4px;
+  color: var(--teal-dim);
+}
+
+/* === LAYOUT === */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+.sec-white { background: var(--surface); padding: 4rem 0; }
+.sec-bg    { background: var(--bg);      padding: 4rem 0; }
+.sec-dark  { background: var(--navy-dim); padding: 4rem 0; }
+.w-scroll  { overflow-x: auto; }
+
+.eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--teal-dim);
+  margin-bottom: .45rem;
+  display: flex; align-items: center; gap: .7rem;
+}
+.eyebrow::before {
+  content: ''; display: block; width: 24px; height: 2px; background: var(--teal);
+}
+.sec-dark .eyebrow { color: var(--teal); }
+.sec-dark .eyebrow::before { background: var(--teal); }
+
+.sec-title { font-size: 1.75rem; color: var(--navy); margin-bottom: .55rem; }
+.sec-dark .sec-title { color: #fff; }
+
+.sec-desc {
+  font-size: .9rem; color: var(--text-mid); max-width: 560px;
+  line-height: 1.75; margin-bottom: 2.5rem;
+}
+.sec-dark .sec-desc { color: rgba(255,255,255,.62); }
+
+/* === HERO === */
+.hero { background: var(--navy); padding: 4.5rem 0 3.75rem; }
+.hero-eye {
+  font-size: 11px; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--teal); margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .7rem;
+}
+.hero-eye::before { content: ''; width: 28px; height: 2px; background: var(--teal); }
+.hero h1 { font-size: 2.55rem; color: #fff; max-width: 700px; margin-bottom: 1.1rem; }
+.hero-sub {
+  font-size: 1.05rem; color: rgba(255,255,255,.72);
+  max-width: 600px; line-height: 1.8; margin-bottom: 2.25rem;
+}
+.chips { display: flex; flex-wrap: wrap; gap: .65rem; }
+.chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+  border-radius: 20px; padding: .28rem .85rem;
+  font-size: 12px; color: rgba(255,255,255,.88); font-weight: 500;
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.chip-dot.active { background: var(--teal); }
+.chip-dot.future { background: var(--text-light); }
+
+/* === SVG ICON HELPER === */
+.ico { display: flex; align-items: center; justify-content: center; }
+.ico svg { display: block; }
+
+/* === MODES (3 cards) === */
+.modes { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; }
+.mode-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.75rem;
+  border-top: 4px solid var(--teal);
+}
+.mode-card:nth-child(2) { border-top-color: var(--navy); }
+.mode-card:nth-child(3) { border-top-color: var(--blue); }
+.icon-circle {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.1rem; flex-shrink: 0;
+}
+.ic-teal { background: var(--teal); }
+.ic-navy { background: var(--navy); }
+.ic-blue { background: var(--blue); }
+.icon-circle svg { width: 20px; height: 20px; }
+.mode-card h3 { font-size: 1rem; color: var(--navy); margin-bottom: .4rem; }
+.sec-dark .mode-card h3, :root[data-theme="dark"] .mode-card h3 { color: var(--teal); }
+.mode-card p { font-size: 13px; color: var(--text-mid); line-height: 1.65; }
+
+/* === CAPABILITIES GRID (4×2, image-1 style) === */
+.cap-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1.2rem; }
+.cap-card {
+  border-radius: var(--r); padding: 1.5rem 1.25rem 1.85rem;
+  position: relative; overflow: hidden;
+}
+.cap-card.ct { background: var(--teal-bg); }
+.cap-card.cb { background: var(--blue-bg); }
+.cap-icon {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem;
+}
+.ct .cap-icon { background: var(--teal-dim); }
+.cb .cap-icon { background: var(--navy); }
+.cap-icon svg { width: 22px; height: 22px; }
+.cap-card h3 {
+  font-size: .9rem; font-weight: 700; color: var(--navy);
+  margin-bottom: .4rem; line-height: 1.3;
+}
+.cap-card p { font-size: 12.5px; color: var(--text-mid); line-height: 1.55; }
+.cap-bar {
+  position: absolute; bottom: 0; left: 1.25rem; right: 1.25rem;
+  height: 3px; border-radius: 2px 2px 0 0;
+}
+.ct .cap-bar { background: var(--teal-dim); }
+.cb .cap-bar { background: var(--navy); }
+
+/* === ARCH TABLE (image-2 style) === */
+.arch-wrap {
+  border: 1px solid var(--border); border-radius: var(--r); overflow: hidden;
+  background: var(--surface);
+}
+.arch-row {
+  display: grid; grid-template-columns: 62px 230px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.arch-row:last-child { border-bottom: none; }
+.arch-ico-cell {
+  background: var(--surface); display: flex;
+  align-items: center; justify-content: center;
+  padding: .9rem .5rem; border-right: 1px solid var(--border);
+}
+.arch-ring {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 2px solid var(--teal); display: flex;
+  align-items: center; justify-content: center;
+}
+.arch-ring svg { width: 14px; height: 14px; }
+.arch-lbl {
+  background: var(--navy); color: #fff; font-weight: 700;
+  font-size: 12.5px; display: flex; align-items: center;
+  padding: .9rem 1.1rem; border-right: 1px solid rgba(255,255,255,.08);
+  letter-spacing: .01em;
+}
+.arch-val {
+  background: var(--surface); padding: .9rem 1.1rem;
+  font-size: 13px; color: var(--text-mid);
+  display: flex; align-items: center; flex-wrap: wrap; gap: .35rem;
+}
+
+/* === TIMELINE (image-3 style) === */
+.timeline { display: flex; flex-direction: column; position: relative; }
+.tl-row {
+  display: grid; grid-template-columns: 52px 160px 1fr;
+  gap: 0 1.5rem; position: relative;
+}
+.tl-num-col {
+  display: flex; flex-direction: column; align-items: center; z-index: 1;
+  padding-top: .1rem;
+}
+.tl-num-col::after {
+  content: ''; flex: 1; width: 2px; background: var(--border);
+  margin-top: .4rem; min-height: 2rem;
+}
+.tl-row:last-child .tl-num-col::after { display: none; }
+.tl-circle {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .9rem; color: #fff; flex-shrink: 0;
+}
+.tl-done   { background: var(--green); }
+.tl-active { background: var(--teal); }
+.tl-future { background: var(--border); color: var(--text-light); }
+
+.tl-label-col { padding: .6rem 0 2.25rem; }
+.tl-name { font-weight: 700; font-size: .88rem; color: var(--navy); line-height: 1.3; }
+.sec-dark .tl-name { color: #fff; }
+.status-pill {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  padding: .18rem .55rem; border-radius: 4px; margin-top: .35rem;
+}
+.sp-done   { background: rgba(45,189,138,.15); color: #178E62; }
+.sp-active { background: rgba(31,170,165,.15); color: var(--teal-dim); }
+.sp-future { background: var(--surf-alt); color: var(--text-light); }
+.sec-dark .sp-done   { background: rgba(45,189,138,.22); color: #35D49A; }
+.sec-dark .sp-active { background: rgba(38,197,191,.22); color: var(--teal); }
+.sec-dark .sp-future { background: rgba(255,255,255,.07); color: var(--text-light); }
+
+.tl-content-col { padding: .5rem 0 2.25rem; }
+.tl-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: .9rem 1.1rem;
+  font-size: 13px; color: var(--text-mid); line-height: 1.65;
+}
+.tl-box strong { color: var(--text); }
+
+/* === COVERAGE TABLE === */
+.cov-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cov-table thead th {
+  background: var(--navy); color: #fff;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
+  padding: .75rem 1rem; text-align: left;
+}
+.cov-table thead th:first-child { border-radius: var(--r) 0 0 0; }
+.cov-table thead th:last-child  { border-radius: 0 var(--r) 0 0; }
+.cov-table td {
+  padding: .7rem 1rem; border-bottom: 1px solid var(--border);
+  color: var(--text-mid); vertical-align: middle;
+}
+.cov-table tr:last-child td { border-bottom: none; }
+.cov-table tr:nth-child(even) td { background: var(--surf-alt); }
+.cov-table td:first-child { font-weight: 600; color: var(--text); }
+.badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: 11px; font-weight: 700; padding: .2rem .6rem; border-radius: 4px;
+}
+.b-yes     { background: rgba(45,189,138,.15); color: #178E62; }
+.b-no      { background: rgba(200,40,40,.1);   color: #A83030; }
+.b-partial { background: rgba(58,107,178,.12); color: var(--blue); }
+.sec-dark .b-yes { background: rgba(53,212,154,.2); color: #35D49A; }
+.sec-dark .b-no  { background: rgba(220,60,60,.2);  color: #E07070; }
+
+/* === GUARDRAILS (dark grid) === */
+.gr-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+.gr-item {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px; padding: 1.1rem 1.25rem;
+  display: flex; gap: .9rem; align-items: flex-start;
+}
+.gr-icon {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: rgba(31,170,165,.25); display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.gr-icon svg { width: 15px; height: 15px; }
+.gr-item p { font-size: 12.5px; color: rgba(255,255,255,.72); line-height: 1.6; }
+.gr-item strong { color: rgba(255,255,255,.95); display: block; margin-bottom: .2rem; font-size: 13px; }
+
+/* === WORKFLOWS === */
+.wf-grid { display: flex; flex-wrap: wrap; gap: .6rem; }
+.wf-chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--teal-bg); border: 1px solid rgba(31,170,165,.3);
+  border-radius: 6px; padding: .32rem .8rem;
+  font-size: 12.5px; font-weight: 600; color: var(--teal-dim);
+  font-family: 'Cascadia Code','Fira Code',Consolas,monospace;
+}
+
+/* === METRICS TABLE === */
+.met-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.met-table thead th {
+  background: var(--teal); color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; padding: .7rem 1.1rem; text-align: left;
+}
+.met-table thead th:first-child { border-radius: var(--r) 0 0 0; }
+.met-table thead th:last-child  { border-radius: 0 var(--r) 0 0; }
+.met-table td {
+  padding: .72rem 1.1rem; border-bottom: 1px solid var(--border);
+  color: var(--text-mid);
+}
+.met-table tr:last-child td { border-bottom: none; }
+.met-table td:first-child { font-weight: 600; color: var(--text); }
+.met-table td:last-child  { font-weight: 700; color: var(--teal-dim); font-variant-numeric: tabular-nums; }
+.met-table tr:nth-child(even) td { background: var(--surf-alt); }
+
+/* === FOOTER === */
+.doc-footer {
+  background: var(--navy-dim); padding: 2rem 0;
+  font-size: 12.5px; color: rgba(255,255,255,.5);
+}
+.footer-inner {
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 1rem;
+}
+.footer-brand { font-weight: 700; font-size: 14px; color: #fff; }
+.footer-meta  { display: flex; gap: 1.5rem; }
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  .cap-grid  { grid-template-columns: repeat(2,1fr); }
+  .modes     { grid-template-columns: 1fr; }
+  .gr-grid   { grid-template-columns: repeat(2,1fr); }
+  .hero h1   { font-size: 2rem; }
+  .tl-row    { grid-template-columns: 48px 1fr; }
+  .tl-content-col { grid-column: 2; }
+}
+@media (max-width: 600px) {
+  .cap-grid  { grid-template-columns: 1fr; }
+  .gr-grid   { grid-template-columns: 1fr; }
+  .arch-row  { grid-template-columns: 52px 1fr; }
+  .arch-lbl  { grid-column: 1 / -1; border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .wrap      { padding: 0 1.25rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<!-- ═══════════════════════════════════════════ HERO ═══ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-eye">Platform Overview</div>
+    <h1>Copilot Governance Platform</h1>
+    <p class="hero-sub">
+      A hybrid prompt governance and optimization platform that enforces secure coding guardrails,
+      reduces repeated AI token waste, and gives development teams reusable prompt workflows —
+      synced across every repository in the organization through PR-based automation.
+    </p>
+    <div class="chips">
+      <span class="chip"><span class="chip-dot"></span>Phases 0–4 Delivered</span>
+      <span class="chip"><span class="chip-dot active"></span>Phase 5 In Progress</span>
+      <span class="chip"><span class="chip-dot future"></span>4 Pilot Repositories</span>
+      <span class="chip"><span class="chip-dot future"></span>3 Governed IDE Surfaces</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════ MODES ═══ -->
+<section class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Deployment Modes</div>
+    <h2 class="sec-title">Three Ways to Govern</h2>
+    <p class="sec-desc">
+      The platform operates across local developer tooling, GitHub automation, and an optional
+      visibility layer — meeting teams where they work without requiring a new process.
+    </p>
+    <div class="modes">
+
+      <div class="mode-card">
+        <div class="icon-circle ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+          </svg>
+        </div>
+        <h3>Local Developer CLI</h3>
+        <p>Validate governance, preview prompt rewrites, run dry-run syncs, and catch compliance issues before they reach a PR — entirely from the terminal with <code>copilot-gov.sh</code>.</p>
+      </div>
+
+      <div class="mode-card">
+        <div class="icon-circle ic-navy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+            <path d="M18 9a9 9 0 0 1-9 9"/>
+          </svg>
+        </div>
+        <h3>GitHub PR Automation</h3>
+        <p>Central governance synced to target repositories through PR-based automation. Drift detection, manifest-tracked removals, and override preservation on every sync cycle.</p>
+      </div>
+
+      <div class="mode-card">
+        <div class="icon-circle ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+        </div>
+        <h3>Coverage Dashboard</h3>
+        <p>Optional visibility layer for the platform team — repo onboarding coverage, governance drift, deny-rule violations, and prompt workflow usage in one place.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ CAPABILITIES ═══ -->
+<section class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Core Capabilities</div>
+    <h2 class="sec-title">What the Platform Does</h2>
+    <p class="sec-desc">
+      Eight interlocking capabilities that together make AI-assisted development safe, consistent,
+      and auditable across every team in the organization.
+    </p>
+    <div class="cap-grid">
+
+      <!-- Row 1 -->
+      <div class="cap-card ct">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+        </div>
+        <h3>Instruction Sync</h3>
+        <p>Central governance baseline synced to every target repo. Manifest-tracked so removed files are cleaned up on the next cycle — no orphaned rules.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card cb">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+        </div>
+        <h3>Prompt Interception</h3>
+        <p>Every prompt governed by the interception kernel before the model sees it. Developer wording is always preserved verbatim; only context and rules are injected.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card ct">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3>Security Guardrails</h3>
+        <p>Non-negotiable rules: no hardcoded secrets, no PII logging, no auth bypass, OWASP injection prevention — enforced at the prompt layer, not just in review.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card cb">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h3>Code Quality Gates</h3>
+        <p>Automated guardrails against unwanted console logs, debug artifacts, and common linting anti-patterns — 80% reduction in review comment noise targeted.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <!-- Row 2 -->
+      <div class="cap-card cb">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h3>Local CLI Tooling</h3>
+        <p>Developers run <code>doctor</code>, <code>validate</code>, <code>audit</code>, and <code>rewrite</code> locally. Token budget enforcement and placeholder detection happen before the pre-commit hook.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card ct">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </div>
+        <h3>Reusable Workflows</h3>
+        <p>14 approved <code>.prompt.md</code> workflows for common fixes — security findings, test failures, build errors, migrations — reducing repeated long prompts by 40–60%.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card cb">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h3>Override Safety</h3>
+        <p>Repo-specific override sections are always preserved across sync cycles. Overrides can extend rules but cannot weaken security, compliance, or testing guardrails.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+      <div class="cap-card ct">
+        <div class="cap-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+          </svg>
+        </div>
+        <h3>Audit &amp; Reporting</h3>
+        <p>Governance drift detected within one sync cycle. CODEOWNERS gates every governance PR. Telemetry tracks interception events, deny-rule hits, and workflow usage.</p>
+        <div class="cap-bar"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ ARCH TABLE ═══ -->
+<section class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Platform Architecture</div>
+    <h2 class="sec-title">Design at a Glance</h2>
+    <p class="sec-desc">
+      Key structural decisions and the reasoning behind them — from the central baseline to
+      the interception kernel to the override model.
+    </p>
+    <div class="w-scroll">
+      <div class="arch-wrap">
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Platform</div>
+          <div class="arch-val">Copilot Governance Platform — hybrid governance and prompt optimization, deployed via the <code>naresh-fd/copilot-governance</code> central repository.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Purpose</div>
+          <div class="arch-val">Reduce repeated AI token usage, enforce secure coding guardrails, and give teams reusable prompt workflows for common fixes.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Governance Files</div>
+          <div class="arch-val">
+            <code>copilot-instructions.md</code>&nbsp;(repo-wide baseline) &nbsp;·&nbsp;
+            <code>instructions/*.instructions.md</code>&nbsp;(path-specific packs) &nbsp;·&nbsp;
+            <code>prompts/*.prompt.md</code>&nbsp;(approved workflows)
+          </div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Sync Engine</div>
+          <div class="arch-val">PR-based sync from the central repo to each target. A <code>.copilot-governance-manifest</code> tracks what was shipped so deleted files are cleaned up on the next cycle without touching repo-added content.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+                <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+                <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+                <line x1="20" y1="9" x2="23" y2="9"/><line x1="1" y1="9" x2="4" y2="9"/>
+                <line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="14" x2="4" y2="14"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Interception Kernel</div>
+          <div class="arch-val"><code>prompt-core/</code> and <code>hooks/</code> intercept every prompt via <code>UserPromptSubmit</code>. Developer wording is carried verbatim; governance context is injected. Deny rules start in shadow mode — logged, never blocking, until pilot data justifies enforcement.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Security Layer</div>
+          <div class="arch-val">No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, secure error handling — all enforced at prompt time in addition to code review.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">Override Model</div>
+          <div class="arch-val">A central managed section (between governance markers) is owned by this repo. A repo override section is always preserved. Overrides may add local context but cannot weaken security or compliance rules.</div>
+        </div>
+
+        <div class="arch-row">
+          <div class="arch-ico-cell">
+            <div class="arch-ring">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="var(--teal-dim)">
+                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+            </div>
+          </div>
+          <div class="arch-lbl">CLI Commands</div>
+          <div class="arch-val">
+            <code>doctor</code>&nbsp;·&nbsp;<code>validate</code>&nbsp;·&nbsp;<code>audit</code>&nbsp;·&nbsp;
+            <code>sync --dry-run</code>&nbsp;·&nbsp;<code>sync --apply</code>&nbsp;·&nbsp;
+            <code>prompt &lt;name&gt;</code>&nbsp;·&nbsp;<code>rewrite "&lt;text&gt;"</code>&nbsp;·&nbsp;
+            <code>report</code>&nbsp;·&nbsp;<code>install-hooks</code>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ PHASES TIMELINE ═══ -->
+<section class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Delivery</div>
+    <h2 class="sec-title">MVP Phases</h2>
+    <p class="sec-desc">
+      Phase numbering is the platform's authoritative sequence. "Phase 2" in interception-programme
+      documents maps to Phase 5 here. This table is the single source of truth.
+    </p>
+    <div class="timeline">
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-done">0</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Foundation</div>
+          <div class="status-pill sp-done">Delivered</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Governance baseline established. Repository structure, templates, CODEOWNERS, and initial instruction files ready for pilot. <strong>Output: governance baseline ready.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-done">1</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Baseline Instructions</div>
+          <div class="status-pill sp-done">Delivered</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Reusable Copilot governance baseline ready. Security, code-quality, testing, PR-review, and stack-specific instruction packs authored and validated. <strong>Output: governed instruction library.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-done">2</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Sync Engine</div>
+          <div class="status-pill sp-done">Delivered</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Central governance can be safely synced to target repos through PR automation. Manifest tracking prevents orphaned files; override sections are never touched. <strong>Output: safe, repeatable sync.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-done">3</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Local CLI</div>
+          <div class="status-pill sp-done">Delivered</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Developers validate, audit, and preview locally before opening PRs. Pre-commit hook enforces token budgets and blocks unresolved placeholders or hardcoded secrets in governance content. <strong>Output: local developer toolchain.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-done">4</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">GitHub Automation</div>
+          <div class="status-pill sp-done">Delivered</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Governance scales across repositories through PR-based automation on a workflow schedule. Drift is detected and corrected on the next sync cycle. <strong>Output: org-wide automation ready.</strong></div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-active">5</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Prompt Interception</div>
+          <div class="status-pill sp-active">In Progress</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Every prompt governed against the governance core before the model sees it — on every surface that supports hooks. Running in <strong>shadow mode</strong>: deny rules are logged and surfaced, never blocking, until pilot data justifies enforcement per rule. JetBrains gap is a named accepted risk.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-future">6</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Pilot Rollout</div>
+          <div class="status-pill sp-future">Not Started</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Four pilot repos — covering all three governed surfaces and at least one IntelliJ Java team — capture real telemetry. Deny rules graduate from shadow to enforcing one at a time based on pilot data.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-num-col">
+          <div class="tl-circle tl-future">7</div>
+        </div>
+        <div class="tl-label-col">
+          <div class="tl-name">Wave Rollout</div>
+          <div class="status-pill sp-future">Not Started</div>
+        </div>
+        <div class="tl-content-col">
+          <div class="tl-box">Three waves: 4 pilot repos → 20–25 active repos → 50–75 repos → remaining active estate. Weekly audit and sync steady state. Pilot feedback refines the baseline before Wave 1 begins.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ SURFACE COVERAGE ═══ -->
+<section class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Runtime Interception</div>
+    <h2 class="sec-title">Surface Coverage Matrix</h2>
+    <p class="sec-desc">
+      No single client can both rewrite and block. The platform enforces as a union of surfaces —
+      the per-client position must be reported honestly, not netted off.
+    </p>
+    <div class="w-scroll">
+      <table class="cov-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Governed</th>
+            <th>Can Rewrite</th>
+            <th>Can Block</th>
+            <th>Hook Config</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>VS Code Copilot</td>
+            <td><span class="badge b-yes">Yes — by injection</span></td>
+            <td><span class="badge b-no">No</span></td>
+            <td><span class="badge b-yes">Yes — exit 2</span></td>
+            <td><code>prompt-interceptor.json</code></td>
+          </tr>
+          <tr>
+            <td>Copilot CLI / Agent</td>
+            <td><span class="badge b-yes">Yes — by rewrite</span></td>
+            <td><span class="badge b-yes">Yes</span></td>
+            <td><span class="badge b-no">No</span></td>
+            <td><code>copilot-cli-interceptor.json</code></td>
+          </tr>
+          <tr>
+            <td>Claude Code</td>
+            <td><span class="badge b-yes">Yes — by injection</span></td>
+            <td><span class="badge b-no">No</span></td>
+            <td><span class="badge b-yes">Yes — decision</span></td>
+            <td><code>claude-code-settings.fragment.json</code></td>
+          </tr>
+          <tr>
+            <td>JetBrains / IntelliJ</td>
+            <td><span class="badge b-no">No — instructions only</span></td>
+            <td><span class="badge b-no">No</span></td>
+            <td><span class="badge b-no">No</span></td>
+            <td>None — no hook support</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:1rem;font-size:12.5px;color:var(--text-mid);line-height:1.7;">
+      <strong style="color:var(--text);">JetBrains gap:</strong> IntelliJ has no hook support.
+      Java and Spring Boot repositories — the estate with the highest-risk intents — receive published
+      governance files only. No prompt rewriting, no context injection, no deny-rule evaluation, and
+      no telemetry. This must be raised with Java teams by name and carried as a named accepted risk
+      with an owner, not netted off against the three surfaces that do work.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ GUARDRAILS (DARK) ═══ -->
+<section class="sec-dark">
+  <div class="wrap">
+    <div class="eyebrow">Security</div>
+    <h2 class="sec-title">Non-Negotiable Guardrails</h2>
+    <p class="sec-desc">
+      These rules are enforced at the prompt layer in addition to code review.
+      They cannot be weakened by repo overrides.
+    </p>
+    <div class="gr-grid">
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <p><strong>No Hardcoded Secrets</strong>Never generate or suggest passwords, tokens, API keys, certificates, connection strings, or session identifiers. Approved secret-management patterns only.</p>
+      </div>
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <p><strong>No PII Logging</strong>Never log customer data, account numbers, card numbers, secrets, session IDs, request payloads, or authentication headers — regardless of log level.</p>
+      </div>
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <p><strong>No Bypass Instructions</strong>Never suggest bypassing auth, authorization, MFA, dual-control, change-approval workflows, audit logging, SAST, dependency scanning, linting, or tests.</p>
+      </div>
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <p><strong>Input Validation</strong>Validate and sanitize all external input. Prevent SQL injection, XSS, CSRF, path traversal, unsafe deserialization, insecure redirects, and CORS misconfigurations.</p>
+      </div>
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <p><strong>Secure Error Handling</strong>Use error handling that never exposes stack traces, internal paths, or sensitive system internals to end users. Error messages explain what went wrong, not how the system is built.</p>
+      </div>
+
+      <div class="gr-item">
+        <div class="gr-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <p><strong>Human Review Flags</strong>Flag auth, encryption, payment processing, audit logging, and PII-related changes for mandatory security review. These cannot be approved without a security team sign-off.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ WORKFLOWS ═══ -->
+<section class="sec-bg">
+  <div class="wrap">
+    <div class="eyebrow">Prompt Workflows</div>
+    <h2 class="sec-title">Approved Reusable Workflows</h2>
+    <p class="sec-desc">
+      Developers invoke these from the IDE or CLI instead of writing fresh prompts from scratch.
+      Each workflow references the repository's governance instructions and security baseline.
+      Workflows may not instruct developers to bypass tests, linting, scans, or review gates.
+    </p>
+    <div class="wf-grid">
+      <span class="wf-chip">/fix-pr-review</span>
+      <span class="wf-chip">/fix-security-finding</span>
+      <span class="wf-chip">/fix-console-logs</span>
+      <span class="wf-chip">/fix-sonarqube-issue</span>
+      <span class="wf-chip">/fix-eslint-issue</span>
+      <span class="wf-chip">/fix-test-failure</span>
+      <span class="wf-chip">/fix-build-failure</span>
+      <span class="wf-chip">/fix-typescript-error</span>
+      <span class="wf-chip">/fix-angular-migration</span>
+      <span class="wf-chip">/fix-react-code-quality</span>
+      <span class="wf-chip">/fix-java-springboot-security</span>
+      <span class="wf-chip">/generate-unit-tests</span>
+      <span class="wf-chip">/document-repo</span>
+      <span class="wf-chip">/explain-legacy-code</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ METRICS ═══ -->
+<section class="sec-white">
+  <div class="wrap">
+    <div class="eyebrow">Success Criteria</div>
+    <h2 class="sec-title">Metrics &amp; Targets</h2>
+    <p class="sec-desc">
+      Pilot repos must cover all three governed surfaces and at least one IntelliJ Java team,
+      so the coverage gap is measured during the pilot rather than discovered at wave rollout.
+    </p>
+    <div class="w-scroll">
+      <table class="met-table">
+        <thead>
+          <tr><th>Metric</th><th>Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Repo onboarding</td><td>100% active repos receive governance files</td></tr>
+          <tr><td>Runtime interception coverage</td><td>100% on hook-capable clients — IntelliJ repos counted separately as uncovered</td></tr>
+          <tr><td>Token reduction</td><td>40–60% less repeated manual prompt context</td></tr>
+          <tr><td>Security baseline coverage</td><td>100% repos include security guardrails</td></tr>
+          <tr><td>Console / debug noise reduction</td><td>80% reduction in unwanted review comments</td></tr>
+          <tr><td>PR fix speed</td><td>20–30% faster fixes for common issues</td></tr>
+          <tr><td>Override safety</td><td>Zero repo override loss across all sync cycles</td></tr>
+          <tr><td>Drift resolution</td><td>Governance drift fixed within one sync cycle</td></tr>
+          <tr><td>Prompt reuse</td><td>Approved workflows used for all common fix categories</td></tr>
+          <tr><td>Compliance PR approval</td><td>100% governance changes reviewed by required owners</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ FOOTER ═══ -->
+<footer class="doc-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">Copilot Governance Platform</div>
+        <div style="margin-top:.3rem;">naresh-fd/copilot-governance &nbsp;·&nbsp; August 2026</div>
+      </div>
+      <div class="footer-meta">
+        <span>Phases 0–4 Delivered</span>
+        <span>Phase 5 In Shadow Mode</span>
+        <span>4 Pilot Repositories</span>
+      </div>
+    </div>
+  </div>
+</footer>
