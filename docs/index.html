@@ -195,23 +195,37 @@ h3.h3{font-size:1.02rem;margin-bottom:.6rem}
 .block>.lede{margin-bottom:1.6rem}
 .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-/* HERO */
-.hero{display:flex;align-items:center;gap:2.25rem;flex-wrap:wrap}
-.hero h1{font-size:2.15rem;margin-bottom:.6rem}
-.hero-txt{flex:1;min-width:260px}
-.chips{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.15rem}
-.chip{
-  display:inline-flex;align-items:center;gap:.42rem;font-size:12px;font-weight:600;
-  padding:.32rem .75rem;border-radius:20px;border:1px solid var(--accent-line);
-  background:var(--accent-soft);color:var(--accent-fg);
+/* HERO — two-column product hero */
+.hero2{display:grid;grid-template-columns:1.15fr 1fr;gap:3.25rem;align-items:center}
+.hero2-left h1{font-size:2.5rem;line-height:1.22;margin:.7rem 0 1.1rem;color:var(--ink)}
+.hero2-sub{font-size:1rem;color:var(--body);line-height:1.75;max-width:44ch;margin-bottom:1.8rem}
+.hero2-cta{display:flex;flex-wrap:wrap;gap:.9rem}
+.btn{display:inline-flex;align-items:center;gap:.5rem;font-size:14px;font-weight:700;padding:.8rem 1.4rem;border-radius:var(--r-sm);cursor:pointer}
+.btn:hover{text-decoration:none}
+.btn-primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+.btn-primary:hover{background:var(--accent-2)}
+.btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn-secondary:hover{background:var(--raise)}
+
+/* HERO — right-side transformation panel */
+.hero-panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.6rem 1.5rem;box-shadow:var(--shadow-pop)}
+.hp-step{display:flex;gap:1rem;align-items:flex-start}
+.hp-num{width:30px;height:30px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line);color:var(--muted);display:grid;place-items:center;font-size:13px;font-weight:800;flex-shrink:0}
+.hp-step.final .hp-num{background:var(--accent);border-color:var(--accent);color:#fff}
+.hp-step b{display:block;font-size:14.5px;color:var(--ink);margin-bottom:.4rem}
+.hp-step p{font-size:12.8px;color:var(--body);line-height:1.6;margin:0}
+.hp-quote{font-family:ui-monospace,'Cascadia Code','SF Mono',Consolas,monospace;font-style:italic;color:var(--ink)}
+.hp-connector{width:2px;height:22px;background:var(--line);margin-left:14px}
+.hp-status{
+  margin-top:1.3rem;display:flex;align-items:center;gap:.55rem;padding:.7rem .9rem;
+  background:var(--warn-bg);border:1px solid rgba(224,148,58,.3);border-radius:var(--r-sm);
+  font-size:12.5px;font-weight:700;color:var(--warn-fg);
 }
-.chip-ico{width:13px;height:13px;flex-shrink:0}
-.hero-status{margin-top:.95rem;font-size:12px;color:var(--muted)}
-.hero-status a{color:var(--muted);text-decoration:underline;text-decoration-color:var(--line)}
-.hero-status a:hover{color:var(--accent-fg)}
+.hp-status svg{width:16px;height:16px;flex-shrink:0}
 
 /* STATS */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.25rem}
+.stats,.proof-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.25rem}
+.proof-strip{grid-template-columns:repeat(3,1fr)}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.1rem}
 .stat b{display:block;font-size:1.6rem;font-weight:800;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
 .stat span{font-size:11.5px;color:var(--muted);font-weight:600}
@@ -386,22 +400,6 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 .list-h{display:flex;align-items:center;gap:.5rem;font-size:1.02rem;font-weight:700;color:var(--ink);margin-bottom:.9rem}
 .list-h svg{width:16px;height:16px;color:var(--accent)}
 
-/* HERO — tagline, feature row, CTA */
-.hero-tagline{font-size:1.32rem;font-weight:700;color:var(--ink);line-height:1.45;margin:.7rem 0 .8rem;max-width:52ch}
-.feat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-top:1.4rem}
-.feat-row .f{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:1rem 1.05rem;display:flex;flex-direction:column;gap:.55rem}
-.feat-row .f .ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
-.feat-row .f .ico svg{width:16px;height:16px}
-.feat-row .f b{font-size:12.5px;color:var(--ink);font-weight:700}
-.feat-row .f span:not(.ico){font-size:11.5px;color:var(--muted);line-height:1.55}
-.feat-row .f:nth-child(1) .ico{background:var(--accent-soft);color:var(--accent-fg)}
-.feat-row .f:nth-child(2) .ico{background:var(--danger-bg);color:var(--danger-fg)}
-.feat-row .f:nth-child(3) .ico{background:var(--warn-bg);color:var(--warn-fg)}
-.feat-row .f:nth-child(4) .ico{background:var(--ok-bg);color:var(--ok-fg)}
-.hero-cta{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.3rem}
-.hero-cta a{display:inline-flex;align-items:center;gap:.4rem;font-size:13.5px;font-weight:700;color:var(--accent-fg)}
-.hero-cta a svg{width:15px;height:15px}
-
 /* DEMO — outcome cards */
 .outcome-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
 .outcome{display:flex;gap:1rem;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.25rem}
@@ -501,7 +499,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 /* ===================== RESPONSIVE ===================== */
 @media(max-width:1080px){
   .stats{grid-template-columns:repeat(2,1fr)}
-  .feat-row{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:900px){
+  .hero2{grid-template-columns:1fr}
+  .hero2-sub{max-width:none}
 }
 @media(max-width:1023px){
   .menu-btn{display:grid}
@@ -514,14 +515,15 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 }
 @media(max-width:760px){
   .wrap{padding:1.75rem 1.15rem 3.5rem}
-  .cards,.grid2,.docs-2,.checks,.feat-row,.outcome-row{grid-template-columns:1fr}
+  .cards,.grid2,.docs-2,.checks,.outcome-row,.proof-strip{grid-template-columns:1fr}
   .mal-demo{flex-direction:column}
   .mal-mid{width:100%;flex-direction:row;border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .waves{grid-template-columns:repeat(2,1fr)}
   .row{grid-template-columns:1fr}
   .row dt{border-right:0;border-bottom:1px solid var(--line)}
-  .hero{gap:1.5rem}
-  .hero h1{font-size:1.75rem}
+  .hero2-left h1{font-size:1.9rem}
+  .hero2-cta{width:100%}
+  .hero2-cta .btn{flex:1;justify-content:center}
   .halu td{font-size:11.8px;padding:.45rem .7rem}
   .brand span{display:none}
   .search{margin-left:0}
@@ -664,44 +666,44 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 
   <!-- HERO -->
   <section id="overview" class="block">
-    <div class="hero">
-      <div class="hero-txt hero-txt-full">
-        <h1>Documentation</h1>
-        <p class="hero-tagline">Stops Copilot from writing insecure or invented code — before the AI ever sees your prompt.</p>
-        <p class="lede">Every prompt sent to a governed surface is intercepted and rewritten in real time: your wording stays untouched, but security rules and verified patterns get injected automatically. No copy-pasting instructions. No hoping developers remember the rules.</p>
-        <ul class="checks hero-checks">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>No per-prompt setup once repository governance is enabled</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Original prompt text stays verbatim while approved context is added around it</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Shadow mode today; enforcement moves rule-by-rule after pilot validation</li>
-        </ul>
-        <div class="feat-row">
-          <div class="f">
-            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg></span>
-            <b>Prompt Interception</b>
-            <span>On governed surfaces, approved security and repository context is added before the model responds.</span>
-          </div>
-          <div class="f">
-            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
-            <b>Security Guardrails</b>
-            <span>Eight baseline rules provide consistent security guidance across participating repositories.</span>
-          </div>
-          <div class="f">
-            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
-            <b>Hallucination Controls</b>
-            <span>Known invention patterns are flagged across four documented risk categories.</span>
-          </div>
-          <div class="f">
-            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg></span>
-            <b>PR-Based Sync</b>
-            <span>Versioned governance updates are distributed as reviewable pull requests.</span>
-          </div>
+    <div class="hero2">
+      <div class="hero2-left">
+        <div class="eyebrow">Copilot Governance · Shadow Mode</div>
+        <h1>Govern the prompt before Copilot generates the code.</h1>
+        <p class="hero2-sub">Every prompt sent to a governed surface is intercepted and rewritten in real time — your wording stays untouched, but approved security context is added before the model ever responds.</p>
+        <div class="hero2-cta">
+          <a class="btn btn-primary" href="#demo">See it in action</a>
+          <a class="btn btn-secondary" href="#architecture">View architecture</a>
         </div>
-        <div class="hero-cta">
-          <a href="#demo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>See it in action</a>
-          <a href="#architecture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Read the architecture</a>
-        </div>
-        <p class="hero-status">Phases 0–4 delivered · Phase 5 running in shadow mode · Phases 6–7 not started — see <a href="#phases">MVP Phases</a>. Questions? <a href="https://github.com/naresh-FD/copilot-governance/issues" target="_blank" rel="noopener">Open an issue</a>.</p>
       </div>
+      <div class="hero2-right">
+        <div class="hero-panel">
+          <div class="hp-step">
+            <span class="hp-num">1</span>
+            <div><b>Original developer request</b><p class="hp-quote">"add a login endpoint for the new signup flow"</p></div>
+          </div>
+          <div class="hp-connector"></div>
+          <div class="hp-step">
+            <span class="hp-num">2</span>
+            <div><b>Approved context added</b><p>Security instructions and the matched workflow are injected — your wording stays untouched.</p></div>
+          </div>
+          <div class="hp-connector"></div>
+          <div class="hp-step final">
+            <span class="hp-num">3</span>
+            <div><b>Governed request sent to Copilot</b><p>Same request, now carrying repository-approved patterns and constraints.</p></div>
+          </div>
+          <div class="hp-status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Advisory in shadow mode — flagged, not yet blocking
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="proof-strip">
+      <div class="stat"><b>8</b><span>Security Guardrails</span></div>
+      <div class="stat"><b>4</b><span>Hallucination-Risk Categories</span></div>
+      <div class="stat"><b>PR-Based</b><span>Versioned Distribution</span></div>
     </div>
 
     <div class="outcome-row" style="margin-top:2.5rem">
