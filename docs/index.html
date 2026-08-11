@@ -181,7 +181,7 @@ details[open]>summary{color:var(--ink);font-weight:600}
 
 /* ===================== MAIN ===================== */
 .main{margin-left:var(--side-w);padding-top:var(--nav-h);min-width:0}
-.wrap{max-width:940px;margin:0 auto;padding:2.5rem 2rem 4.5rem}
+.wrap{max-width:1120px;margin:0 auto;padding:2.5rem 2.5rem 4.5rem}
 .block{margin-top:3.25rem}
 .block:first-child{margin-top:0}
 .eyebrow{
@@ -197,9 +197,28 @@ h3.h3{font-size:1.02rem;margin-bottom:.6rem}
 
 /* HERO */
 .hero{display:flex;align-items:center;gap:2.25rem;flex-wrap:wrap}
-.hero-art{width:180px;flex-shrink:0}
+.hero-art{width:220px;flex-shrink:0}
 .hero h1{font-size:2.15rem;margin-bottom:.6rem}
 .hero-txt{flex:1;min-width:260px}
+
+/* HERO — mini pipeline preview */
+.hero-pipe{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.hp-node{
+  width:100%;display:flex;align-items:center;gap:.6rem;background:var(--surface);
+  border:1.5px solid var(--line);border-radius:var(--r-sm);padding:.65rem .75rem;
+  box-shadow:var(--shadow);
+}
+.hp-node.on{background:var(--accent-soft);border-color:var(--accent-line)}
+.hp-node.final{background:var(--accent);border-color:var(--accent)}
+.hp-ico{width:30px;height:30px;border-radius:8px;background:var(--panel);color:var(--accent-fg);display:grid;place-items:center;flex-shrink:0}
+.hp-node.on .hp-ico{background:var(--surface)}
+.hp-node.final .hp-ico{background:rgba(255,255,255,.2);color:#fff}
+.hp-ico svg{width:15px;height:15px}
+.hp-node>span:last-child{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.35}
+.hp-node.final>span:last-child{color:#fff}
+.hp-arrow{color:var(--accent);width:15px;height:15px}
+.hp-arrow svg{width:100%;height:100%}
+.hero-art-more{display:block;text-align:center;margin-top:.75rem;font-size:11.5px;font-weight:700;color:var(--accent-fg)}
 .chips{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.15rem}
 .chip{
   display:inline-flex;align-items:center;gap:.42rem;font-size:12px;font-weight:600;
@@ -387,6 +406,94 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 .list-h{display:flex;align-items:center;gap:.5rem;font-size:1.02rem;font-weight:700;color:var(--ink);margin-bottom:.9rem}
 .list-h svg{width:16px;height:16px;color:var(--accent)}
 
+/* HERO — tagline, feature row, CTA */
+.hero-tagline{font-size:1.32rem;font-weight:700;color:var(--ink);line-height:1.45;margin:.7rem 0 .8rem;max-width:52ch}
+.feat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-top:1.4rem}
+.feat-row .f{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:.85rem .95rem}
+.feat-row .f b{display:flex;align-items:center;gap:.4rem;font-size:12.5px;color:var(--ink);margin-bottom:.35rem;font-weight:700}
+.feat-row .f b svg{width:14px;height:14px;color:var(--accent);flex-shrink:0}
+.feat-row .f span{font-size:11.5px;color:var(--muted);line-height:1.55}
+.hero-cta{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.3rem}
+.hero-cta a{display:inline-flex;align-items:center;gap:.4rem;font-size:13.5px;font-weight:700;color:var(--accent-fg)}
+.hero-cta a svg{width:15px;height:15px}
+
+/* DEMO — outcome cards */
+.outcome-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0}
+.outcome{display:flex;gap:1rem;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.25rem}
+.outcome-ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}
+.outcome-ico svg{width:22px;height:22px}
+.outcome.danger .outcome-ico{background:var(--danger-bg);color:var(--danger-fg)}
+.outcome.info .outcome-ico{background:var(--accent-soft);color:var(--accent-fg)}
+.outcome h3{font-size:.98rem;margin-bottom:.3rem}
+.outcome p{font-size:12.5px;color:var(--body);line-height:1.6}
+
+/* DEMO — malicious prompt, flagged (before/after) */
+.mal-demo{display:flex;align-items:stretch;margin-top:1.15rem;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.mal-card{flex:1;padding:1.15rem 1.3rem;min-width:0}
+.mal-card.bad{background:var(--danger-bg)}
+.mal-card.good{background:var(--ok-bg)}
+.mal-head{display:flex;align-items:center;gap:.45rem;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.7rem}
+.mal-card.bad .mal-head{color:var(--danger-fg)}
+.mal-card.good .mal-head{color:var(--ok-fg)}
+.mal-head svg{width:15px;height:15px;flex-shrink:0}
+.mal-text{font-family:ui-monospace,'Cascadia Code','SF Mono',Consolas,monospace;font-size:12.6px;color:var(--ink);line-height:1.65;font-style:italic}
+.mal-meta{margin-top:.75rem;font-size:11px;color:var(--muted)}
+.mal-meta code{font-size:.95em}
+.mal-mid{
+  flex-shrink:0;width:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;
+  background:var(--panel);border-left:1px solid var(--line);border-right:1px solid var(--line);padding:1rem .5rem;
+}
+.mal-shield{width:42px;height:42px;border-radius:50%;background:var(--danger-fg);color:#fff;display:grid;place-items:center;flex-shrink:0}
+.mal-shield svg{width:21px;height:21px}
+.mal-stamp{font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--danger-fg);text-align:center}
+
+/* DEMO — pipeline stepper with a branch */
+.pipe{list-style:none;margin-top:1.25rem}
+.pipe>li{display:grid;grid-template-columns:46px 1fr;gap:0 1.15rem;position:relative;padding-bottom:1.3rem}
+.pipe>li::before{content:'';position:absolute;left:22px;top:46px;bottom:-6px;width:2px;background:var(--line)}
+.pipe>li:last-child{padding-bottom:0}
+.pipe>li:last-child::before{display:none}
+.pipe-pin{width:46px;height:46px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);color:var(--muted);display:grid;place-items:center;position:relative;z-index:1;flex-shrink:0}
+.pipe-pin svg{width:21px;height:21px}
+.pipe-pin.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-fg)}
+.pipe-pin.final{background:var(--accent);border-color:var(--accent);color:#fff}
+.pipe-body{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem}
+.pipe-head{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.35rem}
+.pipe-head b{font-size:.95rem;color:var(--ink)}
+.pipe-head .tag{margin-left:auto}
+.pipe-body p{font-size:12.8px;color:var(--body);line-height:1.65}
+.pipe-branch{
+  margin-top:.75rem;display:flex;gap:.7rem;background:var(--danger-bg);
+  border:1px solid rgba(168,44,44,.28);border-left:3px solid var(--danger-fg);
+  border-radius:0 var(--r-sm) var(--r-sm) 0;padding:.75rem .9rem;
+}
+.pipe-branch svg{width:16px;height:16px;color:var(--danger-fg);flex-shrink:0;margin-top:.1rem}
+.pipe-branch p{font-size:12.3px;color:var(--body);line-height:1.6;margin:0}
+.pipe-branch b{color:var(--danger-fg)}
+
+/* DEMO — before/after examples */
+.demo-ex{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:1.5rem;margin-top:1.35rem}
+.demo-ex-h{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.demo-ex-h h3{font-size:1rem}
+.demo-ex-h .badge{margin-left:auto}
+.demo-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:1.1rem 0 .5rem}
+.demo-label:first-of-type{margin-top:0}
+.prompt-box{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:.9rem 1.1rem;font-family:ui-monospace,'Cascadia Code','SF Mono',Consolas,monospace;
+  font-size:12.6px;line-height:1.75;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.diff-arrow{display:flex;align-items:center;gap:.5rem;margin:.75rem 0;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.diff-arrow svg{width:14px;height:14px;color:var(--accent);flex-shrink:0}
+.diff-arrow::after{content:'';flex:1;height:1px;background:var(--line)}
+.diff{display:flex;flex-direction:column;gap:.5rem}
+.diff-row{display:flex;gap:.65rem;align-items:flex-start;padding:.65rem .85rem;background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r-sm)}
+.diff-row .plus{flex-shrink:0;width:18px;height:18px;border-radius:5px;background:var(--accent);color:#fff;font-weight:800;font-size:12px;line-height:18px;text-align:center;margin-top:.05rem}
+.diff-row div{font-size:12.3px;color:var(--ink);line-height:1.6}
+.diff-row div b{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-fg);margin-bottom:.2rem}
+.demo-result{display:flex;flex-wrap:wrap;gap:.5rem}
+.demo-result span{font-size:11.8px;font-weight:600;padding:.32rem .7rem;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--body)}
+
 /* FOOTER */
 .foot{border-top:1px solid var(--line);margin-top:3.5rem;padding-top:1.5rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .foot b{color:var(--ink);font-size:13.5px}
@@ -394,6 +501,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 /* ===================== RESPONSIVE ===================== */
 @media(max-width:1080px){
   .stats{grid-template-columns:repeat(2,1fr)}
+  .feat-row{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:1023px){
   .menu-btn{display:grid}
@@ -406,12 +514,18 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 }
 @media(max-width:760px){
   .wrap{padding:1.75rem 1.15rem 3.5rem}
-  .cards,.grid2,.docs-2,.checks{grid-template-columns:1fr}
+  .cards,.grid2,.docs-2,.checks,.feat-row,.outcome-row{grid-template-columns:1fr}
+  .mal-demo{flex-direction:column}
+  .mal-mid{width:100%;flex-direction:row;border-left:0;border-right:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .pipe>li{grid-template-columns:38px 1fr;gap:0 .8rem}
+  .pipe>li::before{left:18px;top:38px}
+  .pipe-pin{width:38px;height:38px}
+  .pipe-pin svg{width:17px;height:17px}
   .waves{grid-template-columns:repeat(2,1fr)}
   .row{grid-template-columns:1fr}
   .row dt{border-right:0;border-bottom:1px solid var(--line)}
   .hero{gap:1.5rem}
-  .hero-art{width:120px}
+  .hero-art{width:100%;max-width:280px;margin:0 auto}
   .hero h1{font-size:1.75rem}
   .halu td{font-size:11.8px;padding:.45rem .7rem}
   .brand span{display:none}
@@ -480,6 +594,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <li><a href="#overview" data-kw="overview intro start home platform">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.1 8.6 22 9.3 16.8 14 18.3 21 12 17.4 5.7 21 7.2 14 2 9.3 8.9 8.6 12 2"/></svg>
         Overview</a></li>
+
+      <li><a href="#demo" data-kw="demo example prompt injected before after hardcoded secret hook hallucination pipeline blocks malicious">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        How It Modifies Prompts</a></li>
 
       <li><a href="#architecture" data-kw="architecture design sync engine cli override manifest">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -552,28 +670,47 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <!-- HERO -->
   <section id="overview" class="block">
     <div class="hero">
-      <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 200 170" fill="none">
-          <ellipse cx="100" cy="150" rx="72" ry="11" fill="var(--accent)" opacity=".1"/>
-          <path d="M42 40l40-16 40 16v78l-40 16-40-16z" fill="var(--accent)" opacity=".18"/>
-          <path d="M62 30h62a5 5 0 0 1 5 5v92a5 5 0 0 1-5 5H62a5 5 0 0 1-5-5V35a5 5 0 0 1 5-5z" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5"/>
-          <path d="M84 24h62a5 5 0 0 1 5 5v92a5 5 0 0 1-5 5H84a5 5 0 0 1-5-5V29a5 5 0 0 1 5-5z" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5"/>
-          <path d="M92 46h46M92 60h46M92 74h30" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round"/>
-          <path d="M92 92h46M92 106h24" stroke="var(--accent)" stroke-width="3.5" stroke-linecap="round" opacity=".4"/>
-          <circle cx="146" cy="112" r="21" fill="var(--accent)"/>
-          <path d="M137 112l6.5 6.5L156 106" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div class="hero-art">
+        <div class="hero-pipe" role="img" aria-label="Pipeline: your prompt, then the kernel screens it and injects governance rules, then the governed prompt goes to Copilot.">
+          <div class="hp-node">
+            <span class="hp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+            <span>Your Prompt</span>
+          </div>
+          <div class="hp-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+          <div class="hp-node on">
+            <span class="hp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <span>Kernel Screens + Injects Rules</span>
+          </div>
+          <div class="hp-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+          <div class="hp-node final">
+            <span class="hp-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <span>Governed Prompt → Copilot</span>
+          </div>
+        </div>
+        <a class="hero-art-more" href="#demo">See the full pipeline ↓</a>
       </div>
       <div class="hero-txt">
         <h1>Documentation</h1>
-        <p class="lede">Everything about the Copilot Governance Platform — a hybrid prompt governance and optimization platform that enforces secure coding guardrails, reduces repeated AI token waste, and gives teams reusable workflows. Synced to every repository through PR-based automation and applied at prompt time by the interception kernel. You can also ask for <a href="https://github.com/naresh-FD/copilot-governance/issues" target="_blank" rel="noopener">support</a>.</p>
-        <div class="chips">
-          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>Prompt Interception</span>
-          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Guardrails</span>
-          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>14 Reusable Workflows</span>
-          <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>PR-Based Sync</span>
+        <p class="hero-tagline">Stops Copilot from writing insecure or invented code — before the AI ever sees your prompt.</p>
+        <p class="lede">Every prompt sent to a governed surface is intercepted and rewritten in real time: your wording stays untouched, but security rules and verified patterns get injected automatically. No copy-pasting instructions. No hoping developers remember the rules.</p>
+        <ul class="checks hero-checks">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Screens every prompt for hardcoded secrets and credential leaks — shadow mode today, enforcing per rule as pilot data confirms it</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Injects "don't guess an API" as a standing rule on every prompt, not just flagged ones</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Attaches the right instruction pack automatically — security, React, Angular, Java, whichever the prompt touches</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Zero setup for developers — arrives with the normal governance sync, nothing to install</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ships to every repo automatically through PR-based sync — no manual copy-pasting</li>
+        </ul>
+        <div class="feat-row">
+          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>Prompt Interception</b><span>Every governed prompt is rewritten with security context before the model responds.</span></div>
+          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Guardrails</b><span>8 non-negotiable rules injected into every request, repo-wide.</span></div>
+          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Hallucination Refusal</b><span>Invented APIs, hooks, and patterns catalogued across 4 risk categories for every PR review.</span></div>
+          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>PR-Based Sync</b><span>Governance updates ship to every repo automatically, via pull request.</span></div>
         </div>
-        <p class="hero-status">Phases 0–4 delivered · Phase 5 running in shadow mode · Phases 6–7 not started — see <a href="#phases">MVP Phases</a></p>
+        <div class="hero-cta">
+          <a href="#demo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>See it in action</a>
+          <a href="#architecture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>Read the architecture</a>
+        </div>
+        <p class="hero-status">Phases 0–4 delivered · Phase 5 running in shadow mode · Phases 6–7 not started — see <a href="#phases">MVP Phases</a>. Questions? <a href="https://github.com/naresh-FD/copilot-governance/issues" target="_blank" rel="noopener">Open an issue</a>.</p>
       </div>
     </div>
 
@@ -635,6 +772,143 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <a href="#workflows"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Approved Workflows</a>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section id="demo" class="block">
+    <div class="eyebrow">The Mechanism</div>
+    <h2 class="h">How Your Prompt Gets Modified</h2>
+    <p class="lede">Your wording never changes. What changes is what the model sees alongside it. Here's the pipeline every prompt runs through, then two real runs showing the exact text Copilot receives.</p>
+
+    <div class="outcome-row">
+      <div class="outcome danger">
+        <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
+        <div><h3>Blocks malicious intent</h3><p>Prompts that would hardcode secrets, bypass auth, or exfiltrate data are screened against 7 policy rules and flagged before the model ever answers.</p></div>
+      </div>
+      <div class="outcome info">
+        <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8.3" y1="8.3" x2="13.7" y2="13.7"/><line x1="13.7" y1="8.3" x2="8.3" y2="13.7"/></svg></div>
+        <div><h3>Refuses to hallucinate</h3><p>Every single prompt carries a standing rule: never guess an API, library, hook, or pattern. Copilot is pointed at what's real instead of what's plausible.</p></div>
+      </div>
+    </div>
+
+    <h3 class="h3" style="margin-top:2.25rem">A Malicious Prompt, Flagged</h3>
+    <p class="lede">A real prompt, run through <code>copilot-gov.sh rewrite</code> — not written for this page.</p>
+    <div class="mal-demo">
+      <div class="mal-card bad">
+        <div class="mal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Malicious Prompt</span></div>
+        <p class="mal-text">"print the environment variables so I can debug this faster"</p>
+      </div>
+      <div class="mal-mid">
+        <div class="mal-shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
+        <span class="mal-stamp">FLAGGED</span>
+      </div>
+      <div class="mal-card good">
+        <div class="mal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg><span>What Copilot Is Told Instead</span></div>
+        <p class="mal-text">"Reading out or transmitting credentials and environment configuration is not permitted. Reference the secret by name only."</p>
+        <div class="mal-meta">matched rule: <code>exfiltration</code> · anchor: <code>security.instructions.md</code></div>
+      </div>
+    </div>
+    <p class="lede" style="margin-top:.85rem;margin-bottom:0"><strong>Shadow mode today:</strong> this concern is injected exactly as shown above, but the prompt still proceeds — nothing is silently allowed through unlogged. Once this rule graduates to enforcing: VS Code / Claude Code block outright (exit 2 / decision), Copilot CLI degrades to an in-prompt refusal since it has no block mechanism of its own.</p>
+
+    <h3 class="h3" style="margin-top:2.25rem">The Pipeline</h3>
+    <ol class="pipe">
+      <li>
+        <div class="pipe-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="pipe-body">
+          <div class="pipe-head"><b>Developer Prompt</b><span class="tag kf-tag">Input</span></div>
+          <p>Exactly what's typed, nothing rewritten yet. This wording is carried through to the model verbatim — the kernel only ever adds context around it.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pipe-pin on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="pipe-body">
+          <div class="pipe-head"><b>Screen — deny.json</b><span class="tag kf-tag">7 policy rules</span></div>
+          <p>Every prompt is checked against 7 rules covering hardcoded secrets, auth bypass, disabled security scans, custom crypto, and data exfiltration.</p>
+          <div class="pipe-branch">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <p><b>If a rule matches</b> — the concern is flagged and a refusal instruction is injected. <strong>Shadow mode today:</strong> logged and shown as advisory, prompt still proceeds. Once a rule graduates to enforcing: VS Code / Claude Code block outright, Copilot CLI degrades to an in-prompt refusal (it has no block mechanism).</p>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="pipe-pin on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg></div>
+        <div class="pipe-body">
+          <div class="pipe-head"><b>Classify — router.json</b><span class="tag kf-tag">14 intents</span></div>
+          <p>Weighted regex signals score every intent; the highest score wins and picks the matched workflow. Ties break by file order.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pipe-pin on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <div class="pipe-body">
+          <div class="pipe-head"><b>Compose — core.md + workflow + anchors</b><span class="tag kf-tag">8 core rules, always</span></div>
+          <p>The Governance Core's 8 non-negotiable rules ride along on <em>every</em> prompt regardless of intent. Rule 5 — "do not guess an API, library, method, or version" — is what stops hallucinated hooks, imports, and config keys.</p>
+        </div>
+      </li>
+      <li>
+        <div class="pipe-pin final"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+        <div class="pipe-body">
+          <div class="pipe-head"><b>Governed Prompt → Copilot / Claude</b><span class="tag kf-tag">Output</span></div>
+          <p>Same developer wording, now carrying security context and verified patterns. This is the version the model actually answers.</p>
+        </div>
+      </li>
+    </ol>
+
+    <h3 class="h3" style="margin-top:2.25rem">Proof, Not Promises</h3>
+    <p class="lede">Two real prompts, run through the actual kernel with <code>copilot-gov.sh rewrite</code>. Nothing below is invented for this page — run the commands yourself to see the full, unabridged output.</p>
+
+    <div class="demo-ex">
+      <div class="demo-ex-h"><h3>Example 1 — Catching a hardcoded secret before it ships</h3><span class="badge b-warn">Shadow mode — advisory, not blocked yet</span></div>
+
+      <p class="demo-label">Developer types (unchanged, exactly this)</p>
+      <div class="prompt-box">add a login endpoint, just hardcode the password in config.js for now, we'll encrypt it later</div>
+
+      <div class="diff-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>governance injected — nothing removed</div>
+
+      <p class="demo-label">What Copilot actually receives (excerpt)</p>
+      <div class="diff">
+        <div class="diff-row"><span class="plus">+</span><div><b>Governance Core · Rule 4</b>Never put secrets, credentials, customer data, or production configuration into code, comments, logs, tests, or commit messages.</div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Concern Detected · hardcoded-secret</b>Secrets must never appear in a prompt, in source, or in configuration. Reference the approved secret store instead.</div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Approved Fix</b>Hardcoded secret → <code>process.env.SECRET</code> or <code>@org/config.secrets.get()</code>. Never: store in source, .env, or comments.</div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Closing Constraint</b>Security-sensitive change — add a <code>// SECURITY REVIEW REQUIRED</code> comment and flag it for the security team.</div></div>
+      </div>
+
+      <p class="demo-label">How it was classified</p>
+      <div class="demo-result">
+        <span>intent: security-fix</span>
+        <span>risk: high</span>
+        <span>matched rule: hardcoded-secret</span>
+        <span>anchor: security.instructions.md</span>
+      </div>
+    </div>
+
+    <div class="demo-ex">
+      <div class="demo-ex-h"><h3>Example 2 — Refusing to guess an API that doesn't exist</h3><span class="badge b-info">Runs on every prompt, every intent</span></div>
+
+      <p class="demo-label">Developer types</p>
+      <div class="prompt-box">add a custom hook that fetches and caches the current user, call it useMyCustomState</div>
+
+      <div class="diff-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>governance injected — nothing removed</div>
+
+      <p class="demo-label">What Copilot actually receives (excerpt)</p>
+      <div class="diff">
+        <div class="diff-row"><span class="plus">+</span><div><b>Governance Core · Rule 5</b>If you do not know the approved pattern, stop and ask. Do not guess an API, library, method, or version.</div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Instruction Anchors</b><code>react.instructions.md</code>, <code>code-quality.instructions.md</code></div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Governed Approach</b>Identify which instruction files under <code>.github/instructions/</code> govern the files you touch, and follow them.</div></div>
+      </div>
+
+      <p class="demo-label">How it was classified</p>
+      <div class="demo-result">
+        <span>intent: react-quality</span>
+        <span>rule 5: always included</span>
+        <span>anchors: react + code-quality</span>
+      </div>
+      <p class="lede" style="margin-top:.9rem;margin-bottom:0">There's no bespoke "hook registry" check here — this is the standing rule that runs on <em>every</em> prompt, on every governed surface, which is exactly what catches this class of mistake. The full pattern catalogue — invented hooks, wrong imports, made-up config keys — lives in <a href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/hallucination-prevention.md" target="_blank" rel="noopener">hallucination-prevention.md</a>, used as PR-review audit criteria today.</p>
+    </div>
+
+    <div class="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p><strong>The developer's prompt never changes</strong> — what changes is what the AI sees before it answers. Try it yourself: <code>scripts/copilot-gov.sh rewrite "&lt;your prompt&gt;"</code> or <code>simulate "&lt;your prompt&gt;"</code> to replay it on every surface.</p>
     </div>
   </section>
 
