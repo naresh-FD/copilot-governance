@@ -389,10 +389,15 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 /* HERO — tagline, feature row, CTA */
 .hero-tagline{font-size:1.32rem;font-weight:700;color:var(--ink);line-height:1.45;margin:.7rem 0 .8rem;max-width:52ch}
 .feat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-top:1.4rem}
-.feat-row .f{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:.85rem .95rem}
-.feat-row .f b{display:flex;align-items:center;gap:.4rem;font-size:12.5px;color:var(--ink);margin-bottom:.35rem;font-weight:700}
-.feat-row .f b svg{width:14px;height:14px;color:var(--accent);flex-shrink:0}
-.feat-row .f span{font-size:11.5px;color:var(--muted);line-height:1.55}
+.feat-row .f{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:1rem 1.05rem;display:flex;flex-direction:column;gap:.55rem}
+.feat-row .f .ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.feat-row .f .ico svg{width:16px;height:16px}
+.feat-row .f b{font-size:12.5px;color:var(--ink);font-weight:700}
+.feat-row .f span:not(.ico){font-size:11.5px;color:var(--muted);line-height:1.55}
+.feat-row .f:nth-child(1) .ico{background:var(--accent-soft);color:var(--accent-fg)}
+.feat-row .f:nth-child(2) .ico{background:var(--danger-bg);color:var(--danger-fg)}
+.feat-row .f:nth-child(3) .ico{background:var(--warn-bg);color:var(--warn-fg)}
+.feat-row .f:nth-child(4) .ico{background:var(--ok-bg);color:var(--ok-fg)}
 .hero-cta{display:flex;flex-wrap:wrap;gap:1.5rem;margin-top:1.3rem}
 .hero-cta a{display:inline-flex;align-items:center;gap:.4rem;font-size:13.5px;font-weight:700;color:var(--accent-fg)}
 .hero-cta a svg{width:15px;height:15px}
@@ -665,17 +670,31 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <p class="hero-tagline">Stops Copilot from writing insecure or invented code — before the AI ever sees your prompt.</p>
         <p class="lede">Every prompt sent to a governed surface is intercepted and rewritten in real time: your wording stays untouched, but security rules and verified patterns get injected automatically. No copy-pasting instructions. No hoping developers remember the rules.</p>
         <ul class="checks hero-checks">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Screens every prompt for hardcoded secrets and credential leaks — shadow mode today, enforcing per rule as pilot data confirms it</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Injects "don't guess an API" as a standing rule on every prompt, not just flagged ones</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Attaches the right instruction pack automatically — security, React, Angular, Java, whichever the prompt touches</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Zero setup for developers — arrives with the normal governance sync, nothing to install</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Ships to every repo automatically through PR-based sync — no manual copy-pasting</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>No per-prompt setup once repository governance is enabled</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Original prompt text stays verbatim while approved context is added around it</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Shadow mode today; enforcement moves rule-by-rule after pilot validation</li>
         </ul>
         <div class="feat-row">
-          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>Prompt Interception</b><span>Every governed prompt is rewritten with security context before the model responds.</span></div>
-          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Guardrails</b><span>8 non-negotiable rules injected into every request, repo-wide.</span></div>
-          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Hallucination Refusal</b><span>Invented APIs, hooks, and patterns catalogued across 4 risk categories for every PR review.</span></div>
-          <div class="f"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>PR-Based Sync</b><span>Governance updates ship to every repo automatically, via pull request.</span></div>
+          <div class="f">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg></span>
+            <b>Prompt Interception</b>
+            <span>On governed surfaces, approved security and repository context is added before the model responds.</span>
+          </div>
+          <div class="f">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <b>Security Guardrails</b>
+            <span>Eight baseline rules provide consistent security guidance across participating repositories.</span>
+          </div>
+          <div class="f">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
+            <b>Hallucination Controls</b>
+            <span>Known invention patterns are flagged across four documented risk categories.</span>
+          </div>
+          <div class="f">
+            <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg></span>
+            <b>PR-Based Sync</b>
+            <span>Versioned governance updates are distributed as reviewable pull requests.</span>
+          </div>
         </div>
         <div class="hero-cta">
           <a href="#demo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>See it in action</a>
