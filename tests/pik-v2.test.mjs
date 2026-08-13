@@ -190,6 +190,9 @@ test("every asserted rule-corpus fixture matches its expected rule outcome", () 
             GOV_TELEMETRY: "0",
             GOV_POLICY_CACHE: "0",
             GOV_ROLLBACK_STATE: "0",
+            // This corpus evaluates signal classification, not enforcement.
+            // Roll mandatory blockers to shadow so stdout remains inspectable.
+            GOV_EMERGENCY_SHADOW: "1",
           },
         },
       );
@@ -390,6 +393,7 @@ test("soft-block is distinct from enforce and explains correction or exception",
         GOV_ALLOW_TEST_OVERRIDES: "1",
         GOV_TEST_RULE_MODES: JSON.stringify({
           "bypass-verification": "soft-block",
+          "QA-004": "shadow",
         }),
         GOV_TELEMETRY: "1",
         GOV_TELEMETRY_DIR: directory,

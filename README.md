@@ -93,7 +93,7 @@ docs/
 
 `prompt-core/` and `hooks/` are the Phase 5 interception kernel. The kernel
 preserves the developer prompt byte-for-byte on replacement-capable paths,
-evaluates all seven policy contracts independently, selects one of 14 workflows,
+evaluates 28 policy contracts independently, selects one of 14 workflows,
 and writes metadata-only events through an asynchronous bounded local buffer.
 Raw prompts and prompt-derived content hashes are not stored. Policy inputs are
 checksummed under an expiring Ed25519-signed manifest with validated LKG fallback.
@@ -112,13 +112,19 @@ Coverage is capability- and evidence-based, not inferred from the client name:
 - JetBrains remains unsupported for interception and is not included in governed
   coverage.
 
-All seven rules are currently `shadow`. Modes are configured per rule in
-`prompt-core/control-plane.json`; named ownership, a ratified threshold ledger,
-and per-rule evidence approval are also required, so a mode-only edit cannot
-promote a rule. The removed global enable-all switch is ignored.
+Twenty-one mandatory baseline rules now block by default. They cover authentication
+bypass, exposed and hardcoded secrets, weak cryptography, debug and sensitive
+logging, hardcoded values, SQL/command/XSS/template injection, customer data,
+exfiltration, SSRF, path traversal, open redirects, unsafe deserialization, XXE,
+session/cookie/CSRF/CORS weakening, error leakage, governance/tool bypass, supply
+chain weakening, DoS-control removal, silent exceptions, and type/lint suppression.
+The seven legacy broad-signal rules remain `shadow` and continue to require
+named ownership, a ratified threshold ledger, and per-rule evidence approval;
+a mode-only edit cannot promote them. The removed global enable-all switch is
+ignored. Mandatory blockers retain per-rule and global rollback-to-shadow controls.
 The emergency control can only roll enforced rules back to shadow. See
 `docs/adapter-capability-matrix.md` and `docs/phase5-p0-implementation.md` for the
-implemented controls and the evidence still required before a pilot or enforcement.
+implemented controls and the evidence still required before promoting legacy rules.
 The corrected delivery audit is tracked in `docs/pik-v2-delivery-status.md`.
 
 Quick verification:

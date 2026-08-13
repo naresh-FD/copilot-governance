@@ -78,6 +78,30 @@ function matches(source, text) {
   return re ? re.test(text) : false;
 }
 
+function containsLuhnCardNumber(text) {
+  const candidates = String(text).match(/(?:\d[ -]?){13,19}/g) || [];
+  return candidates.some((candidate) => {
+    const digits = candidate.replace(/\D/g, "");
+    if (digits.length < 13 || digits.length > 19) return false;
+    let sum = 0;
+    let doubleDigit = false;
+    for (let index = digits.length - 1; index >= 0; index -= 1) {
+      let value = Number(digits[index]);
+      if (doubleDigit) {
+        value *= 2;
+        if (value > 9) value -= 9;
+      }
+      sum += value;
+      doubleDigit = !doubleDigit;
+    }
+    return sum % 10 === 0;
+  });
+}
+
+const RULE_VALIDATORS = Object.freeze({
+  "luhn-card": containsLuhnCardNumber,
+});
+
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
@@ -179,6 +203,11 @@ function screen(prompt, deny, control, context) {
     let result = "not-matched";
     try {
       matched = (rule.signals || []).filter((source) => matches(source, prompt));
+      for (const validator of rule.validators || []) {
+        if (RULE_VALIDATORS[validator]?.(prompt)) {
+          matched.push(`validator:${validator}`);
+        }
+      }
       if (
         matched.length > 0 &&
         rule.id === "bypass-verification" &&
@@ -1287,6 +1316,12 @@ async function selftest() {
           note(
             `${where}: needs a "reason" — it is shown to the developer when blocking`,
           );
+        if (
+          rule.priority !== undefined &&
+          !["standard", "mandatory"].includes(rule.priority)
+        ) {
+          note(`${where}: priority must be standard or mandatory`);
+        }
         if (!["argus-cwe", "hand-authored"].includes(rule.provenance)) {
           note(
             `${where}: "provenance" must be "argus-cwe" or "hand-authored" so graduation order is auditable`,
@@ -1302,9 +1337,14 @@ async function selftest() {
           );
         }
         if (!Array.isArray(rule.signals) || rule.signals.length === 0) {
-          note(`${where}: needs at least one signal`);
+          if (!Array.isArray(rule.validators) || rule.validators.length === 0)
+            note(`${where}: needs at least one signal or validator`);
         }
         for (const src of rule.signals || []) strictCompile(src, where);
+        for (const validator of rule.validators || []) {
+          if (!Object.hasOwn(RULE_VALIDATORS, validator))
+            note(`${where}: unknown validator ${validator}`);
+        }
       }
     }
   }
@@ -1330,6 +1370,7 @@ async function selftest() {
 
     for (const [id, configured] of Object.entries(control.rules || {})) {
       const where = `control rule ${id}`;
+      const denyRule = deny.rules.find((rule) => rule.id === id);
       const percentage = Number(configured.rolloutPercentage ?? 100);
       if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100)
         note(`${where}: rolloutPercentage must be between 0 and 100`);
@@ -1352,6 +1393,23 @@ async function selftest() {
         !Number.isFinite(Date.parse(configured.candidateBlockDate || ""))
       ) {
         note(`${where}: candidate mode requires a valid candidateBlockDate`);
+      }
+      if (configured.mandatoryBlock !== undefined) {
+        const approval = configured.mandatoryBlock;
+        if (configured.mode !== "enforce")
+          note(`${where}: mandatoryBlock requires enforce mode`);
+        if (denyRule?.priority !== "mandatory")
+          note(`${where}: mandatoryBlock requires a mandatory deny rule`);
+        if (denyRule?.graduationBlocker)
+          note(`${where}: mandatoryBlock cannot bypass a graduationBlocker`);
+        if (approval?.approved !== true)
+          note(`${where}: mandatoryBlock.approved must be true`);
+        if (!approval?.approvalRef)
+          note(`${where}: mandatoryBlock.approvalRef is required`);
+        if (!Number.isFinite(Date.parse(approval?.approvedAt || "")))
+          note(`${where}: mandatoryBlock.approvedAt must be a valid date`);
+        if (!approval?.rationale)
+          note(`${where}: mandatoryBlock.rationale is required`);
       }
     }
 

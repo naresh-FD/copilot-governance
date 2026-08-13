@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "status": "unratified",
   "thresholds": {
     "minimumReviewedMatches": 210,
@@ -15,7 +15,7 @@
     "maximumDisagreementRate": 0.02,
     "gameDayMaximumAgeDays": 30
   },
-  "_comment": "A mode change alone cannot promote a rule. Candidate, soft-block, and enforce require their corresponding evidence approval plus a named rule owner. These thresholds are proposed until the change board ratifies them.",
+  "_comment": "A mode change alone cannot promote a standard rule. Candidate, soft-block, and enforce require their corresponding evidence approval plus a named rule owner. Mandatory baseline blockers use an explicit source approval in control-plane.json and retain independent rollback controls. These thresholds remain proposed until the change board ratifies them.",
   "rules": {
     "bypass-verification": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
     "hardcoded-secret": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
@@ -23,6 +23,27 @@
     "custom-crypto": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
     "customer-data-in-prompt": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
     "exfiltration": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
-    "production-mutation": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" }
+    "production-mutation": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "SEC-001": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-002": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-003": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "QA-001": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "QA-002": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-004": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-005": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-006": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-007": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-008": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-009": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-010": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-011": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-012": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-013": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-014": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "GOV-001": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "DEP-001": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "SEC-015": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "QA-003": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" },
+    "QA-004": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "mandatory-baseline" }
   }
 }

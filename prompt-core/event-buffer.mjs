@@ -126,7 +126,9 @@ async function acquireLock(path, { attempts = 20, delayMs = 5, signal } = {}) {
     try {
       return await open(path, "wx");
     } catch (error) {
-      if (error.code !== "EEXIST") throw error;
+      // Windows can report EPERM rather than EEXIST when another writer holds
+      // the just-created lock file. Both codes represent retryable contention.
+      if (!["EEXIST", "EPERM"].includes(error.code)) throw error;
       try {
         const lockStatus = await stat(path);
         if (Date.now() - lockStatus.mtimeMs > 5_000) {

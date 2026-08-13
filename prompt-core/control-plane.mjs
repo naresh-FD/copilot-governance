@@ -86,6 +86,22 @@ function activeException(control, ruleId, repository, cohort, now) {
   });
 }
 
+function hasMandatoryBlockApproval(rule, configured, now) {
+  const approval = configured.mandatoryBlock;
+  const approvedAt = Date.parse(approval?.approvedAt || "");
+  return (
+    rule.priority === "mandatory" &&
+    configured.mode === "enforce" &&
+    approval?.approved === true &&
+    typeof approval.approvalRef === "string" &&
+    approval.approvalRef.trim().length > 0 &&
+    typeof approval.rationale === "string" &&
+    approval.rationale.trim().length > 0 &&
+    Number.isFinite(approvedAt) &&
+    approvedAt <= now
+  );
+}
+
 export function prepareControlPlane(control, env = process.env, evidenceGates = null) {
   const warnings = [];
   const testModes = parseTestModes(env, warnings);
@@ -129,9 +145,15 @@ export function resolveRuleControl(
   const requestedMode = control.testModes?.[rule.id] ?? configured.mode ?? "shadow";
   let mode = modeOrShadow(requestedMode, control.warnings, `rule ${rule.id}`);
   let reason = "configured";
+  const mandatoryBlockApproved =
+    !control.testOverrideActive &&
+    hasMandatoryBlockApproval(rule, configured, now);
+
+  if (mandatoryBlockApproved) reason = "mandatory-baseline";
 
   if (
     !control.testOverrideActive &&
+    !mandatoryBlockApproved &&
     ["candidate", "soft-block", "enforce"].includes(mode)
   ) {
     const evidence = control.evidenceGates?.rules?.[rule.id] || {};

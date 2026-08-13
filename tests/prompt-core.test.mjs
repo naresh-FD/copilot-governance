@@ -258,11 +258,11 @@ test("an unmatched prompt is injected, not rewritten, and is never emptied", () 
 // --- policy rules ------------------------------------------------------------
 
 test("shadow rules advise but never block", () => {
-  // All rules are currently shadow — hardcoded-secret is a representative case.
-  const res = runCli("hardcode the password in the config file");
+  // disable-security-scan remains a representative broad-signal shadow rule.
+  const res = runCli("disable the SAST security scan");
   assert.ok(!res.decision, "a shadow rule must not produce a block decision");
   assert.ok(blockOf(res), "prompt should still be governed, not dropped");
-  assert.match(res.systemMessage || "", /hardcoded-secret/);
+  assert.match(res.systemMessage || "", /disable-security-scan/);
   assert.match(blockOf(res), /Governance concerns detected/);
 });
 
@@ -348,11 +348,9 @@ test("Copilot CLI cannot block, so an enforcing rule degrades to a refusal instr
   assert.match(body, /bypass-verification/);
 });
 
-test("no rules are currently enforcing — all are independently shadow", async () => {
-  // bypass-verification was returned to shadow (2026-08-10) after false-positive
-  // evidence showed it blocked legitimate remediation prompts. All rules must
-  // pass the full negative test suite before being promoted to enforce.
-  // Any rule appearing here was flipped without a recorded evidence review.
+test("only the twenty-one mandatory baseline rules enforce by default", async () => {
+  // Legacy rules remain evidence-gated and shadow-only. Mandatory SEC/QA/GOV/DEP
+  // baseline rules carry explicit source approvals and block independently.
   const control = JSON.parse(
     readFileSync(join(ROOT, "prompt-core", "control-plane.json"), "utf8"),
   );
@@ -361,8 +359,13 @@ test("no rules are currently enforcing — all are independently shadow", async 
     .map(([id]) => id);
   assert.deepEqual(
     enforcing,
-    [],
-    `rules promoted to enforce without evidence review: ${enforcing.join(", ")}`,
+    [
+      "SEC-001", "SEC-002", "SEC-003", "QA-001", "QA-002", "SEC-004", "SEC-005",
+      "SEC-006", "SEC-007", "SEC-008", "SEC-009", "SEC-010", "SEC-011",
+      "SEC-012", "SEC-013", "SEC-014", "GOV-001", "DEP-001", "SEC-015",
+      "QA-003", "QA-004",
+    ],
+    `unexpected default enforcement set: ${enforcing.join(", ")}`,
   );
 });
 
@@ -416,9 +419,9 @@ test("a fault never exits 2, because exit 2 is the blocking code", () => {
 });
 
 test("shadow rules do not exit 2 on any surface", () => {
-  // All rules are in shadow; none should block on any surface.
+  // The broad disable-security-scan rule remains in shadow.
   for (const surface of ["vscode", "claude", "copilot-cli"]) {
-    const res = runHookRaw(surface, "hardcode the password in the config file");
+    const res = runHookRaw(surface, "disable the SAST security scan");
     assert.notEqual(
       res.status,
       2,
@@ -493,6 +496,7 @@ test("telemetry records no prompt text by default", async () => {
         GOV_TELEMETRY_DIR: dir,
         GOV_POLICY_CACHE: "0",
         GOV_ROLLBACK_STATE: "0",
+        GOV_EMERGENCY_SHADOW: "1",
       },
     });
     const log = readFileSync(join(dir, "telemetry.jsonl"), "utf8");
@@ -504,8 +508,8 @@ test("telemetry records no prompt text by default", async () => {
     assert.ok(!log.includes("promptHash"), "content-derived prompt hash must not be stored");
     const row = JSON.parse(log.trim());
     assert.match(row.eventId, /^[0-9a-f-]{36}$/i);
-    assert.equal(row.policyResults.length, 7);
-    assert.equal(row.policyPackVersion, "3.0.0");
+    assert.equal(row.policyResults.length, 28);
+    assert.equal(row.policyPackVersion, "3.2.0");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -961,7 +965,7 @@ const BYPASS_NEGATIVE_CASES = [
 
 for (const [signal, prompt] of BYPASS_NEGATIVE_CASES) {
   test(`bypass-verification does not fire for remediation: "${prompt.slice(0, 60)}"`, () => {
-    const res = runHookRaw("vscode", prompt);
+    const res = runHookRaw("vscode", prompt, { GOV_EMERGENCY_SHADOW: "1" });
     // Must not block; the remediation classifier gates the rule.
     assert.equal(res.status ?? 0, 0, `blocked a legitimate remediation prompt for signal: ${signal}`);
     const out = JSON.parse(res.stdout || "{}");
@@ -992,7 +996,7 @@ const BYPASS_POSITIVE_CASES = [
 for (const prompt of BYPASS_POSITIVE_CASES) {
   test(`bypass-verification fires for bypass intent: "${prompt.slice(0, 60)}"`, () => {
     // Shadow mode: advisory produced, no block (status 0)
-    const res = runHookRaw("vscode", prompt);
+    const res = runHookRaw("vscode", prompt, { GOV_EMERGENCY_SHADOW: "1" });
     assert.equal(res.status ?? 0, 0, "shadow rule must not block");
     const out = JSON.parse(res.stdout || "{}");
     const block = blockOf(out);
@@ -1006,7 +1010,11 @@ for (const prompt of BYPASS_POSITIVE_CASES) {
 
 test("bypass-verification mixed prompt: find usages AND add more blocks due to bypass clause", () => {
   // Both remediation and bypass verbs present — bypass verb wins.
-  const res = runHookRaw("vscode", "Find all eslint-disable usages and add more where needed");
+  const res = runHookRaw(
+    "vscode",
+    "Find all eslint-disable usages and add more where needed",
+    { GOV_EMERGENCY_SHADOW: "1" },
+  );
   assert.equal(res.status ?? 0, 0, "shadow mode must not block");
   const out = JSON.parse(res.stdout || "{}");
   assert.match(blockOf(out), /bypass-verification|Governance concerns/);

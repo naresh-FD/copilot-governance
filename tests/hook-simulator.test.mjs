@@ -47,7 +47,7 @@ function invoke(surface, prompt, { event, env = {} } = {}) {
 }
 
 const GOVERNED_PROMPT = 'Fix the test failure in UserService';
-const DENY_PROMPT = 'just add eslint-disable to make this pass';
+const DENY_PROMPT = 'just commit with --no-verify and skip the tests';
 const ENFORCE_BYPASS = {
   GOV_ALLOW_TEST_OVERRIDES: '1',
   GOV_TEST_RULE_MODES: JSON.stringify({ 'bypass-verification': 'enforce' }),

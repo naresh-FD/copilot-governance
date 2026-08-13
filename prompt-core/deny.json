@@ -125,6 +125,347 @@
       "reason": "Production data and branches are out of scope for assistant-driven change. Route through the normal release process.",
       "provenance": "hand-authored",
       "notes": "Narrowly worded on purpose. Expect very few hits; a hit is worth reading individually."
+    },
+    {
+      "id": "SEC-001",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "AUTHENTICATION_BYPASS_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(add|create|implement|insert|enable|leave|keep|introduce)\\b.{0,60}\\b(login|auth(?:entication|orization)?|permission|access[- ]control)\\b.{0,60}\\b(bypass|backdoor|skip|disable|without (?:authentication|authorization|auth|a check))\\b",
+        "^(?:please\\s+|just\\s+)?(?:bypass|skip|disable)\\b.{0,40}\\b(auth(?:entication|orization)?|login|permission check|access[- ]control)\\b",
+        "\\b(?:hardcode|force)\\b.{0,40}\\b(?:authenticated|authorized|isadmin|admin)\\b.{0,20}\\b(?:true|allow(?:ed)?)\\b"
+      ],
+      "reason": "Authentication and authorization checks cannot be bypassed, disabled, or replaced with a backdoor. Use the approved test identity and authorization path.",
+      "provenance": "hand-authored",
+      "notes": "Mandatory high-precision prevention rule. Remediation prompts such as fixing or removing an authentication bypass are explicit non-matches."
+    },
+    {
+      "id": "SEC-002",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "EXPOSED_SECRET_DETECTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(api[_-]?key|apikey|secret|password|passwd|client[_-]?secret|private[_-]?key|access[_-]?token)\\b[^\\n]{0,20}[:=][^\\n]{0,4}[\"'][^\"'\\n]{8,}[\"']",
+        "\\b-----BEGIN [A-Z ]*PRIVATE KEY-----",
+        "\\bAKIA[0-9A-Z]{16}\\b",
+        "\\bgh[pousr]_[A-Za-z0-9]{20,}\\b",
+        "\\bxox[baprs]-[A-Za-z0-9-]{10,}\\b",
+        "\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\."
+      ],
+      "reason": "The prompt contains a literal-looking secret. Remove it, rotate the credential if it is real, and reference the approved secret store by name only.",
+      "provenance": "hand-authored",
+      "notes": "Literal secret material is blocked even in remediation context because submitting the credential is itself the exposure."
+    },
+    {
+      "id": "SEC-003",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "WEAK_CRYPTOGRAPHY_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:use|implement|add|choose|switch to)\\b.{0,40}\\b(?:md5|sha-?1|des|3des|rc4|ecb(?: mode)?)\\b",
+        "\\b(?:write|implement|build|create|roll|design)\\b.{0,30}\\b(?:my|our|a|your)?\\s*own\\s+(?:crypto\\w*|encryption|cipher|hash\\w*)\\b"
+      ],
+      "reason": "Weak or custom cryptography is not permitted. Use the organization-approved cryptographic library and current approved algorithms.",
+      "provenance": "hand-authored",
+      "notes": "Signals require an authoring verb so requests to remove or migrate away from weak cryptography remain allowed."
+    },
+    {
+      "id": "QA-001",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "DEBUG_LOGGING_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:add|insert|leave|keep|enable|ship|commit)\\b.{0,50}\\b(?:console\\.log|debugger|debug logging|trace logging|system\\.out\\.print(?:ln)?|print statements?)\\b",
+        "\\b(?:ship|commit|deploy)\\b.{0,40}\\b(?:with|including)\\b.{0,20}\\b(?:debug|trace)\\s+log(?:ging|s)?\\b"
+      ],
+      "reason": "Do not add or ship debug logging. Use the approved structured logger at the minimum necessary level and remove temporary diagnostics before commit.",
+      "provenance": "hand-authored",
+      "notes": "Removal, audit, and cleanup prompts do not match because the signals require introduction or retention verbs."
+    },
+    {
+      "id": "QA-002",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "HARDCODED_VALUE_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:hardcode|hard-code|inline|embed)\\b(?![^\\n]{0,60}\\b(?:secret|password|passwd|credential|api[_ -]?key|token|private key)\\b).{0,60}\\b(?:value|url|uri|endpoint|hostname|host|port|timeout|tenant|region|environment|config(?:uration)?|path)\\b",
+        "\\b(?:url|uri|endpoint|hostname|host|port|timeout|tenant|region|environment|config(?:uration)?|path)\\b.{0,30}\\b(?:hardcoded|hard-coded|inlined|embedded)\\b"
+      ],
+      "reason": "Environment-specific and operational values must not be hardcoded. Move the value to typed configuration or a named constant with an approved default.",
+      "provenance": "hand-authored",
+      "notes": "Secret literals remain covered by SEC-002; this rule covers non-secret magic and environment-specific values."
+    },
+    {
+      "id": "SEC-004",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SQL_INJECTION_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:build|write|create|construct|assemble)\\b.{0,60}\\b(?:sql|query)\\b.{0,60}\\b(?:concatenat\\w*|interpolat\\w*|append\\w*)\\b.{0,30}\\b(?:user|request|input|parameter|id|value)\\b",
+        "\\b(?:concatenat\\w*|interpolat\\w*|append\\w*)\\b.{0,30}\\b(?:user|request|input|parameter|id|value)\\b.{0,60}\\b(?:sql|query)\\b",
+        "\\buse\\b.{0,25}\\b(?:user|request)\\s+input\\b.{0,25}\\bdirectly\\b.{0,25}\\b(?:in|inside|for)\\s+(?:sql|the query)\\b"
+      ],
+      "reason": "User-controlled values cannot be concatenated or interpolated into SQL. Use parameterized queries, prepared statements, or an approved ORM binding API.",
+      "provenance": "hand-authored",
+      "notes": "The signals target requests to introduce unsafe query construction, not requests to fix an existing SQL injection."
+    },
+    {
+      "id": "SEC-005",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SENSITIVE_LOGGING_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:log|print|trace|dump|record|write)\\b.{0,50}\\b(?:password|passwd|secret|token|api[_ -]?key|authorization header|cookie|session id|request body|pii|ssn|credit card|customer data)\\b",
+        "\\b(?:add|enable|keep)\\b.{0,40}\\b(?:logging|logs?)\\b.{0,40}\\b(?:password|passwd|secret|token|api[_ -]?key|authorization header|cookie|session id|request body|pii|ssn|credit card|customer data)\\b"
+      ],
+      "reason": "Sensitive data must not be written to logs. Redact or omit credentials, tokens, personal data, request bodies, and authentication headers.",
+      "provenance": "hand-authored",
+      "notes": "The signal order allows prompts that remove, redact, or audit sensitive fields in existing logs."
+    },
+    {
+      "id": "SEC-006",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "HARDCODED_SECRET_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:hardcode|hard-code|inline|embed|paste|store)\\b.{0,35}\\b(?:secret|password|passwd|credential|api[_ -]?key|token|private key|connection string)\\b",
+        "\\b(?:put|place|write|save)\\b.{0,25}\\b(?:secret|password|passwd|credential|api[_ -]?key|token|private key|connection string)\\b.{0,35}\\b(?:source|code|config|file|constant|frontend|repository)\\b"
+      ],
+      "reason": "Do not hardcode or embed credentials. Retrieve the secret from the approved secret store by name and keep the value out of prompts and source.",
+      "provenance": "hand-authored",
+      "notes": "Complements SEC-002: this rule blocks requests to create an exposure, while SEC-002 blocks literal secret material already present."
+    },
+    {
+      "id": "SEC-007",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "CUSTOMER_DATA_EXPOSURE_DETECTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+        "\\biban\\s*[:=]?\\s*[A-Z]{2}\\d{2}[A-Z0-9]{10,}\\b",
+        "\\b(?:here'?s|pasting|attached is|uploading|sending)\\b.{0,35}\\b(?:the )?(?:real|actual|prod(?:uction)?|live)\\b.{0,20}\\b(?:customer|client|user|account|member|cardholder)\\b.{0,20}\\b(?:data|record|details|list|export|dump)\\b"
+      ],
+      "validators": ["luhn-card"],
+      "reason": "Customer or regulated data must not be submitted to the model. Remove it and use synthetic or irreversibly anonymized fixtures.",
+      "provenance": "hand-authored",
+      "notes": "Card-like numbers require a Luhn-valid 13-19 digit value; generic long identifiers remain in the legacy shadow rule to avoid false positives."
+    },
+    {
+      "id": "SEC-008",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "DATA_EXFILTRATION_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:send|post|upload|curl|push|sync|email|exfil\\w*)\\b.{0,50}\\b(?:\\.env|secret|credential|api[_ -]?key|token|config dump|database dump)\\b.{0,35}\\b(?:to|at)\\b.{0,40}(?:https?://|[A-Z0-9._%+-]+@[A-Z0-9.-]+)",
+        "^(?:please\\s+|just\\s+)?(?:print|show|echo|reveal|dump)\\b.{0,30}\\b(?:all )?(?:environment variables|env vars|\\.env|secrets|credentials|tokens)\\b",
+        "^(?:please\\s+|just\\s+)?cat\\b.{0,20}\\.env\\b",
+        "\\b(?:add|write|create)\\b.{0,25}\\b(?:code|script|command)\\b.{0,50}\\b(?:print|show|dump|transmit|upload)\\b.{0,30}\\b(?:secrets|credentials|tokens|\\.env)\\b"
+      ],
+      "reason": "Do not reveal or transmit credentials, environment data, or database/configuration dumps. Reference approved resources by name only.",
+      "provenance": "hand-authored",
+      "notes": "Anchored read-out signals keep explanatory and remediation prompts from being blocked."
+    },
+    {
+      "id": "SEC-009",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "COMMAND_OR_CODE_INJECTION_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:build|construct|write|create|assemble)\\b.{0,50}\\b(?:shell|os|system|command line|bash|powershell)\\s+command\\b.{0,60}\\b(?:concatenat\\w*|interpolat\\w*|append\\w*)\\b.{0,30}\\b(?:user|request|untrusted)\\s+input\\b",
+        "\\b(?:concatenat\\w*|interpolat\\w*|append\\w*)\\b.{0,30}\\b(?:user|request|untrusted)\\s+input\\b.{0,60}\\b(?:shell|os|system|command line|bash|powershell)\\s+command\\b",
+        "\\b(?:use|call|run)\\b.{0,25}\\b(?:eval|new Function|child_process\\.exec|runtime\\.exec|processbuilder)\\b.{0,45}\\b(?:user|request|untrusted)\\s+input\\b"
+      ],
+      "reason": "Untrusted input cannot be evaluated or concatenated into operating-system commands. Use an allowlisted, parameterized API without invoking a shell.",
+      "provenance": "hand-authored",
+      "notes": "Covers command injection and dynamic-code execution; SQL construction remains SEC-004."
+    },
+    {
+      "id": "SEC-010",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "XSS_OR_TEMPLATE_INJECTION_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:put|insert|render|write|assign)\\b.{0,40}\\b(?:user|request|untrusted)\\s+input\\b.{0,40}\\b(?:innerhtml|outerhtml|dangerouslysetinnerhtml|v-html|document\\.write)\\b",
+        "\\b(?:use|set)\\b.{0,20}\\b(?:innerhtml|outerhtml|dangerouslysetinnerhtml|v-html|document\\.write)\\b.{0,40}\\b(?:with|to)\\b.{0,20}\\b(?:user|request|untrusted)\\s+input\\b",
+        "\\b(?:disable|bypass|skip|remove)\\b.{0,30}\\b(?:html|output|template)\\s+(?:escaping|encoding|sanitization)\\b",
+        "\\b(?:build|create|render)\\b.{0,35}\\b(?:html|template|markup)\\b.{0,45}\\b(?:concatenat\\w*|interpolat\\w*)\\b.{0,25}\\b(?:user|request|untrusted)\\s+input\\b"
+      ],
+      "reason": "Untrusted input must not be inserted into executable HTML or templates. Use framework output encoding and an approved sanitizer.",
+      "provenance": "hand-authored",
+      "notes": "Targets explicit unsafe rendering instructions while allowing XSS remediation and sanitizer adoption."
+    },
+    {
+      "id": "SEC-011",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SSRF_PATH_TRAVERSAL_OR_OPEN_REDIRECT_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:fetch|request|call|open)\\b.{0,35}\\b(?:any|arbitrary|user[- ]supplied|user provided|request supplied)\\s+(?:url|uri|endpoint)\\b.{0,40}\\b(?:from|on|using)\\b.{0,20}\\b(?:the )?(?:server|backend)\\b",
+        "\\bredirect\\b.{0,25}\\b(?:directly )?(?:to|using)\\b.{0,20}\\b(?:a )?(?:user[- ]supplied|user provided|request supplied)\\s+(?:url|uri)\\b",
+        "\\b(?:build|join|concatenate|append)\\b.{0,35}\\b(?:file|filesystem|directory|upload)\\s+path\\b.{0,40}\\b(?:with|from|using)\\b.{0,20}\\b(?:user|request|untrusted)\\s+input\\b",
+        "\\b(?:allow|accept|use)\\b.{0,20}(?:\\.\\./|dot[- ]dot[- ]slash).{0,30}\\b(?:path|filename|file|directory)\\b"
+      ],
+      "reason": "User-controlled destinations and paths require allowlisting, canonicalization, and boundary checks. Do not permit SSRF, open redirects, or traversal outside the approved root.",
+      "provenance": "hand-authored",
+      "notes": "Combines destination and filesystem boundary violations because their remediation is the same trust-boundary validation pattern."
+    },
+    {
+      "id": "SEC-012",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "UNSAFE_DESERIALIZATION_OR_XXE_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\bdeserialize\\b.{0,35}\\b(?:untrusted|user|request|external)\\b.{0,35}\\b(?:objectinputstream|pickle\\.loads|binaryformatter|yaml\\.load|marshal\\.load)\\b",
+        "\\b(?:use|call)\\b.{0,20}\\b(?:objectinputstream|pickle\\.loads|binaryformatter|yaml\\.load|marshal\\.load)\\b.{0,40}\\b(?:to )?deserialize\\b.{0,20}\\b(?:untrusted|user|request|external)\\b",
+        "\\b(?:enable|allow|turn on)\\b.{0,30}\\b(?:xml )?(?:dtds?|external entities|entity expansion)\\b",
+        "\\bparse\\b.{0,25}\\bxml\\b.{0,35}\\b(?:with|allowing)\\b.{0,20}\\b(?:dtds?|external entities)\\b"
+      ],
+      "reason": "Do not deserialize untrusted objects or enable XML external entities. Use schema-validated data formats and parsers with DTD/entity processing disabled.",
+      "provenance": "hand-authored",
+      "notes": "High-precision library and parser signals keep migration and remediation work allowed."
+    },
+    {
+      "id": "SEC-013",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SESSION_OR_BROWSER_SECURITY_WEAKENING_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:store|save|put|persist)\\b.{0,30}\\b(?:session token|access token|refresh token|jwt|session id)\\b.{0,30}\\b(?:in|to)\\s+(?:localstorage|sessionstorage)\\b",
+        "\\b(?:create|set|issue)\\b.{0,25}\\b(?:session |auth )?cookie\\b.{0,40}\\bwithout\\b.{0,25}\\b(?:httponly|secure|samesite)\\b",
+        "\\b(?:disable|bypass|skip|remove|turn off)\\b.{0,30}\\bcsrf\\b.{0,20}\\b(?:check|protection|token|validation)?\\b",
+        "\\b(?:allow|set|configure|enable)\\b.{0,30}\\bcors\\b.{0,35}(?:\\*|any origin|all origins).{0,35}\\bcredentials\\b",
+        "\\b(?:trust|accept|take|use)\\b.{0,30}\\b(?:role|user id|userid|account id|permissions?)\\b.{0,35}\\bfrom\\b.{0,20}\\b(?:the )?(?:client|request header|client header|frontend)\\b"
+      ],
+      "reason": "Session and browser security controls cannot be weakened. Keep tokens out of browser storage, enforce secure cookie attributes and CSRF protection, restrict CORS, and validate identity server-side.",
+      "provenance": "hand-authored",
+      "notes": "Covers explicit session, CSRF, CORS, and client-trust weakening requests."
+    },
+    {
+      "id": "SEC-014",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "INTERNAL_ERROR_LEAKAGE_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:return|show|expose|include|send)\\b.{0,40}\\b(?:full )?(?:stack trace|internal path|filesystem path|sql error|database error|exception details|raw exception)\\b.{0,40}\\b(?:to|in)\\b.{0,20}\\b(?:the )?(?:client|user|response|api response|frontend)\\b",
+        "\\b(?:return|send)\\b.{0,25}\\b(?:raw )?(?:error|exception)\\s+(?:message|object|details)\\b.{0,30}\\b(?:to|in)\\b.{0,20}\\b(?:the )?(?:client|user|response|frontend)\\b"
+      ],
+      "reason": "Internal errors, paths, stack traces, and database details must not be returned to clients. Use a business-safe error code and retain sanitized diagnostics server-side.",
+      "provenance": "hand-authored",
+      "notes": "Sensitive logging remains SEC-005; this rule covers disclosure through user-facing responses."
+    },
+    {
+      "id": "GOV-001",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "GOVERNANCE_OR_TOOL_APPROVAL_BYPASS_REQUESTED",
+      "severity": "critical",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:ignore|override|bypass|disregard|forget)\\b.{0,35}\\b(?:system|developer|governance|security|policy)\\s+(?:instructions|rules|guardrails|controls)\\b",
+        "\\b(?:auto[- ]approve|automatically approve|allow all|approve every)\\b.{0,30}\\b(?:tool calls?|tools?|permissions?|commands?|actions?)\\b",
+        "\\b(?:disable|bypass|remove|turn off)\\b.{0,35}\\b(?:prompt interceptor|policy hook|governance hook|governance check|policy check|approval gate)\\b",
+        "\\b(?:turn off|disable|remove)\\b.{0,25}\\b(?:all )?(?:safety|security)\\s+(?:guardrails|controls|checks)\\b"
+      ],
+      "reason": "Governance instructions, approval gates, and tool permissions cannot be bypassed or auto-approved. Keep least privilege and route exceptions through the approved review process.",
+      "provenance": "hand-authored",
+      "notes": "Protects the governance plane itself, including agentic tool approvals and prompt-policy tampering."
+    },
+    {
+      "id": "DEP-001",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SOFTWARE_SUPPLY_CHAIN_WEAKENING_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:install|add|use)\\b.{0,35}\\b(?:a |the )?(?:known )?(?:vulnerable|deprecated|unmaintained|unapproved|untrusted)\\b.{0,20}\\b(?:package|dependency|library|plugin)\\b",
+        "\\b(?:disable|skip|ignore|remove|bypass)\\b.{0,35}\\b(?:lockfile|checksum|signature|integrity|provenance)\\s+(?:check|verification|validation)\\b",
+        "\\b(?:install|bootstrap|add)\\b.{0,35}\\b(?:package|dependency|tool)\\b.{0,45}\\bcurl\\b.{0,40}\\|\\s*(?:sh|bash)\\b"
+      ],
+      "reason": "Do not add known vulnerable or unapproved dependencies or disable artifact integrity controls. Use approved registries, lockfiles, signatures, and SCA review.",
+      "provenance": "hand-authored",
+      "notes": "Prompt blocking covers explicit unsafe intent; current vulnerability status still requires SCA and registry policy enforcement."
+    },
+    {
+      "id": "SEC-015",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "DOS_PROTECTION_WEAKENING_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:disable|remove|bypass|skip|turn off)\\b.{0,35}\\b(?:rate limit(?:ing)?|throttling|circuit breaker|request limit|concurrency limit)\\b",
+        "\\b(?:set|make|change)\\b.{0,30}\\b(?:request|upload|body|payload|concurrency|connection)\\s+(?:size )?limit\\b.{0,25}\\b(?:to )?(?:unlimited|infinite|none|no limit)\\b",
+        "\\b(?:remove|disable|set)\\b.{0,25}\\b(?:request|connection|operation)\\s+timeout\\b.{0,25}\\b(?:entirely|to zero|to unlimited|off)?\\b"
+      ],
+      "reason": "Rate limits, bounded payloads, timeouts, and circuit breakers cannot be disabled. Tune them through reviewed configuration with capacity evidence.",
+      "provenance": "hand-authored",
+      "notes": "Targets explicit weakening, not ordinary tuning or incident-driven adjustment."
+    },
+    {
+      "id": "QA-003",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "SILENT_EXCEPTION_SWALLOWING_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:add|write|use|create)\\b.{0,35}\\bcatch\\b.{0,45}\\b(?:empty|ignores?|swallows?|do nothing|returns? null|returns? undefined)\\b",
+        "\\b(?:ignore|swallow|suppress)\\b.{0,25}\\b(?:all )?(?:errors|exceptions|failures|rejections)\\b",
+        "\\b(?:return|report)\\b.{0,20}\\bsuccess\\b.{0,35}\\b(?:after|on|when|despite)\\b.{0,20}\\b(?:an )?(?:error|exception|failure)\\b"
+      ],
+      "reason": "Errors must not be swallowed or converted into false success. Recover explicitly or propagate a typed, business-safe failure with sanitized diagnostics.",
+      "provenance": "hand-authored",
+      "notes": "Allows requests to find, remove, or remediate existing silent catch blocks."
+    },
+    {
+      "id": "QA-004",
+      "version": "1.0.0",
+      "owner": "security-governance",
+      "reasonCode": "TYPE_OR_LINT_SUPPRESSION_REQUESTED",
+      "severity": "high",
+      "priority": "mandatory",
+      "signals": [
+        "\\b(?:add|insert|use|apply)\\b.{0,30}(?:@ts-ignore|@ts-nocheck|eslint-disable|@suppresswarnings).{0,35}\\b(?:silence|suppress|bypass|ignore|fix|pass)\\b",
+        "\\b(?:cast|convert)\\b.{0,25}\\bas any\\b.{0,35}\\b(?:bypass|silence|ignore|fix)\\b.{0,20}\\b(?:type|typescript)\\s+(?:error|check)\\b",
+        "\\b(?:disable|turn off|remove)\\b.{0,30}\\b(?:typescript )?(?:strict mode|type checking|linting)\\b"
+      ],
+      "reason": "Do not suppress type or lint failures. Fix the underlying contract, type, or rule violation and keep strict checks enabled.",
+      "provenance": "hand-authored",
+      "notes": "High-precision mandatory counterpart to the broader legacy bypass-verification shadow rule."
     }
   ]
 }

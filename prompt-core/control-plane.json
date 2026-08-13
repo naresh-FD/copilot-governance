@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "defaultCohort": "unassigned",
   "emergencyRollbackToShadow": false,
   "rollbackThresholds": {
@@ -12,7 +12,7 @@
     "consecutiveLatencyWindows": 2,
     "stateTtlMinutes": 10
   },
-  "_comment": "Every rule is controlled independently. emergencyRollbackToShadow is rollback-only and can never enable rules. Runtime operations may set GOV_EMERGENCY_SHADOW=1 or GOV_RULE_ROLLBACK=<comma-separated rule IDs> without deploying code. GOV_ENFORCE_ALL is intentionally unsupported.",
+  "_comment": "Every rule is controlled independently. Twenty-one mandatory baseline rules are source-approved for immediate enforcement; seven legacy broad-signal rules remain evidence-gated in shadow. emergencyRollbackToShadow is rollback-only and can never enable rules. Runtime operations may set GOV_EMERGENCY_SHADOW=1 or GOV_RULE_ROLLBACK=<comma-separated rule IDs> without deploying code. GOV_ENFORCE_ALL is intentionally unsupported.",
   "rules": {
     "bypass-verification": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
     "hardcoded-secret": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
@@ -20,7 +20,238 @@
     "custom-crypto": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
     "customer-data-in-prompt": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
     "exfiltration": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
-    "production-mutation": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" }
+    "production-mutation": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "SEC-001": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Authentication bypass is a mandatory prevention control and must block before model execution."
+      }
+    },
+    "SEC-002": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Literal-looking exposed secrets are a mandatory prevention control and must block before model execution."
+      }
+    },
+    "SEC-003": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Weak or custom cryptography is a mandatory prevention control and must block before model execution."
+      }
+    },
+    "QA-001": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Introduction or retention of debug logging is a mandatory prevention control."
+      }
+    },
+    "QA-002": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Hardcoded operational and environment-specific values are a mandatory prevention control."
+      }
+    },
+    "SEC-004": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Requests to introduce SQL injection are a mandatory prevention control and must block before model execution."
+      }
+    },
+    "SEC-005": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Sensitive logging is a mandatory prevention control and must block before model execution."
+      }
+    },
+    "SEC-006": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Requests to hardcode credentials are a mandatory prevention control."
+      }
+    },
+    "SEC-007": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Customer and regulated data exposure is a mandatory prevention control."
+      }
+    },
+    "SEC-008": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Credential and environment-data exfiltration is a mandatory prevention control."
+      }
+    },
+    "SEC-009": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Command injection and dynamic execution of untrusted input are mandatory prevention controls."
+      }
+    },
+    "SEC-010": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "XSS and template injection are mandatory prevention controls."
+      }
+    },
+    "SEC-011": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "SSRF, open redirects, and path traversal are mandatory prevention controls."
+      }
+    },
+    "SEC-012": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Unsafe deserialization and XML external entities are mandatory prevention controls."
+      }
+    },
+    "SEC-013": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Session, cookie, CSRF, CORS, and server-side identity controls are mandatory."
+      }
+    },
+    "SEC-014": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Internal error and stack-trace disclosure is a mandatory prevention control."
+      }
+    },
+    "GOV-001": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Governance, approval, and least-privilege tool controls cannot be bypassed."
+      }
+    },
+    "DEP-001": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Explicit software supply-chain weakening is a mandatory prevention control."
+      }
+    },
+    "SEC-015": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Rate limits, timeouts, and bounded-resource controls cannot be disabled."
+      }
+    },
+    "QA-003": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Silent exception swallowing and false success are mandatory prevention controls."
+      }
+    },
+    "QA-004": {
+      "mode": "enforce",
+      "rolloutPercentage": 100,
+      "owner": "security-governance",
+      "mandatoryBlock": {
+        "approved": true,
+        "approvalRef": "source-priority-directive-2026-08-13",
+        "approvedAt": "2026-08-13T00:00:00.000Z",
+        "rationale": "Type and lint safety controls cannot be suppressed to bypass failures."
+      }
+    }
   },
   "exceptions": []
 }

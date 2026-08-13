@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "1.0.0",
-  "_comment": "Engineering inventory for the seven rules. Classification values are preliminary implementation assessments, not bank risk ratings. No Argus, DLP, or pipeline mapping is called verified until the owning team supplies evidence.",
+  "version": "1.2.0",
+  "_comment": "Engineering inventory for seven legacy shadow controls plus twenty-one mandatory baseline blockers. Classification values are implementation assessments, not bank risk ratings. No Argus, DLP, or pipeline mapping is called verified until the owning team supplies evidence.",
   "rules": [
     {
       "id": "bypass-verification",
@@ -64,6 +64,195 @@
       "nonMatches": ["Prepare a reviewed release plan", "Operate in a non-production test environment"],
       "remediation": "Use the normal reviewed release, branch, and production-change process.",
       "classification": { "determinism": "medium", "precisionCeiling": "requires-shadow-evidence", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-001",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to introduce an authentication or authorization bypass.",
+      "nonMatches": ["Fix or remove an authentication bypass", "Use an approved test identity"],
+      "remediation": "Use the approved identity, test fixture, and authorization path without disabling access checks.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-002",
+      "owner": "security-governance",
+      "policyIntent": "Block prompts containing literal-looking exposed secrets.",
+      "nonMatches": ["Reference a secret by store name", "Discuss rotation without including credential material"],
+      "remediation": "Remove and rotate exposed credentials, then reference the approved secret store by name only.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "SEC-003",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to introduce weak algorithms or custom cryptography.",
+      "nonMatches": ["Remove MD5 or SHA-1", "Migrate to an approved cryptographic library"],
+      "remediation": "Use the organization-approved cryptographic library and approved algorithms.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "QA-001",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to introduce, retain, or ship temporary debug logging.",
+      "nonMatches": ["Remove console logging", "Audit existing diagnostic logging"],
+      "remediation": "Use the approved structured logger and remove temporary diagnostic output before commit.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "medium", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "QA-002",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to hardcode environment-specific or operational values.",
+      "nonMatches": ["Extract a hardcoded value into configuration", "Introduce a named constant for a stable domain value"],
+      "remediation": "Move operational values to typed configuration or a named constant with an approved default.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "medium", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-004",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to construct SQL by concatenating or interpolating user-controlled values.",
+      "nonMatches": ["Fix SQL injection", "Parameterize an existing query"],
+      "remediation": "Use parameterized queries, prepared statements, or approved ORM bindings.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-005",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to write credentials, authentication data, personal data, or request bodies to logs.",
+      "nonMatches": ["Redact sensitive fields from logs", "Audit logging for exposure"],
+      "remediation": "Omit or redact sensitive fields and log only approved non-reversible identifiers.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "SEC-006",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to hardcode or embed credentials.",
+      "nonMatches": ["Remove a hardcoded secret", "Reference an approved secret-store key"],
+      "remediation": "Retrieve the credential from the approved secret store by name.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "SEC-007",
+      "owner": "security-governance",
+      "policyIntent": "Block high-confidence customer, payment, and regulated identifiers in prompts.",
+      "nonMatches": ["Use synthetic fixtures", "Use long non-payment ticket identifiers"],
+      "remediation": "Replace customer data with synthetic or irreversibly anonymized fixtures.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-validator-backed", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "egress-control-owned", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "not-equivalent", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "SEC-008",
+      "owner": "security-governance",
+      "policyIntent": "Block requests to reveal or transmit credentials and environment data.",
+      "nonMatches": ["Explain exfiltration risk", "Reference a credential by vault name"],
+      "remediation": "Use approved operational workflows and refer to secret resources by name only.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "egress-control-owned", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "not-equivalent", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "SEC-009",
+      "owner": "security-governance",
+      "policyIntent": "Block command injection and dynamic execution of untrusted input.",
+      "nonMatches": ["Fix command injection", "Use an argument-array API with an allowlist"],
+      "remediation": "Use parameterized process APIs, allowlists, and no shell interpretation.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-010",
+      "owner": "security-governance",
+      "policyIntent": "Block XSS and template-injection authoring requests.",
+      "nonMatches": ["Fix XSS", "Add output encoding or sanitization"],
+      "remediation": "Use framework output encoding and approved sanitization at the rendering boundary.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-011",
+      "owner": "security-governance",
+      "policyIntent": "Block SSRF, open-redirect, and path-traversal authoring requests.",
+      "nonMatches": ["Fix SSRF or traversal", "Add destination allowlisting and canonical path checks"],
+      "remediation": "Allowlist destinations and canonicalize paths within an approved root.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-012",
+      "owner": "security-governance",
+      "policyIntent": "Block unsafe object deserialization and XML external entity processing.",
+      "nonMatches": ["Remove unsafe deserialization", "Disable DTD and external entities"],
+      "remediation": "Use schema-validated formats and parsers with dangerous features disabled.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-013",
+      "owner": "security-governance",
+      "policyIntent": "Block weakening of token storage, cookie, CSRF, CORS, and server-side identity controls.",
+      "nonMatches": ["Harden session cookies", "Remove client-side identity trust"],
+      "remediation": "Use secure cookies, CSRF validation, restricted CORS, and server-side authorization.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-014",
+      "owner": "security-governance",
+      "policyIntent": "Block disclosure of internal errors and implementation details to clients.",
+      "nonMatches": ["Replace stack traces with safe error codes", "Retain sanitized server-side diagnostics"],
+      "remediation": "Return a business-safe error code and keep sanitized diagnostics server-side.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "GOV-001",
+      "owner": "security-governance",
+      "policyIntent": "Block prompt-policy tampering, governance bypass, and blanket tool approval.",
+      "nonMatches": ["Audit governance controls", "Request a scoped permission through review"],
+      "remediation": "Keep governance active and grant tools only the least privilege required for the task.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "egress-control-owned", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "not-equivalent", "networkDlpOwner": "security-governance" }
+    },
+    {
+      "id": "DEP-001",
+      "owner": "security-governance",
+      "policyIntent": "Block explicit software-supply-chain weakening and unsafe dependency acquisition.",
+      "nonMatches": ["Upgrade or remove a vulnerable package", "Verify a signature or lockfile"],
+      "remediation": "Use approved registries, pinned lockfiles, integrity verification, and SCA review.",
+      "classification": { "determinism": "high", "precisionCeiling": "prompt-intent-only", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "SEC-015",
+      "owner": "security-governance",
+      "policyIntent": "Block explicit weakening of rate limits, timeouts, circuit breakers, and bounded resources.",
+      "nonMatches": ["Tune limits with capacity evidence", "Add rate limiting or a timeout"],
+      "remediation": "Tune bounded-resource controls through reviewed configuration and operational evidence.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "medium", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "QA-003",
+      "owner": "security-governance",
+      "policyIntent": "Block silent error swallowing and false-success behavior.",
+      "nonMatches": ["Remove an empty catch block", "Add typed recovery or propagation"],
+      "remediation": "Recover explicitly or propagate a typed failure with sanitized diagnostics.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "medium", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "QA-004",
+      "owner": "security-governance",
+      "policyIntent": "Block type and lint suppression used to bypass a failure.",
+      "nonMatches": ["Remove @ts-ignore", "Fix the underlying type or lint violation"],
+      "remediation": "Correct the type contract or lint violation and keep strict checks enabled.",
+      "classification": { "determinism": "high", "precisionCeiling": "mandatory-high-precision", "falsePositiveBlastRadius": "medium", "remediationClarity": "high" },
       "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
     }
   ]
