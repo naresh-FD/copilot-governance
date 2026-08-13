@@ -31,6 +31,17 @@ export function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function policyFileChecksumMatches(content, expected) {
+  if (sha256(content) === expected) return true;
+
+  // Git stores policy text as LF, while older signed packs may have been built
+  // from a Windows CRLF checkout. Treat only those two byte representations as
+  // equivalent; every non-line-ending content change still fails integrity.
+  const lf = content.replace(/\r\n/g, "\n");
+  if (sha256(lf) === expected) return true;
+  return sha256(lf.replace(/\n/g, "\r\n")) === expected;
+}
+
 function parseVersion(value, label) {
   const match = String(value || "").match(/^(\d+)\.(\d+)\.(\d+)$/);
   if (!match) throw new PolicyPackError(`${label} must be semantic version x.y.z`);
@@ -167,8 +178,9 @@ function validateBundle({
       failures.push(`${path}: missing`);
       continue;
     }
-    const actual = sha256(content);
-    if (actual !== expected) failures.push(`${path}: checksum mismatch`);
+    if (!policyFileChecksumMatches(content, expected)) {
+      failures.push(`${path}: checksum mismatch`);
+    }
   }
   if (failures.length) {
     throw new PolicyPackError("policy pack integrity validation failed", failures);

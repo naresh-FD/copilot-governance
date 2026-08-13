@@ -16,8 +16,9 @@ const publicKeyPath = join(CORE, "policy-public-key.pem");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
 
 for (const path of Object.keys(manifest.files || {})) {
+  const content = readFileSync(join(CORE, path), "utf8").replace(/\r\n/g, "\n");
   manifest.files[path] = createHash("sha256")
-    .update(readFileSync(join(CORE, path)))
+    .update(content, "utf8")
     .digest("hex");
 }
 

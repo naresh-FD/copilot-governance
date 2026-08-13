@@ -91,6 +91,29 @@ test("active policy pack validates every declared checksum", () => {
   });
 });
 
+test("signed policy checksums are portable across LF and CRLF checkouts", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    for (const path of Object.keys(MANIFEST.files)) {
+      const file = join(activeDir, path);
+      writeFileSync(
+        file,
+        readFileSync(file, "utf8").replace(/\r\n/g, "\n"),
+        "utf8",
+      );
+    }
+    const pack = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(pack.source, "active");
+    assert.equal(pack.manifest.version, "3.2.0");
+  });
+});
+
 test("a tampered active pack rolls back to the checksummed last-known-good cache", () => {
   withTemp((dir) => {
     const activeDir = join(dir, "active");
