@@ -1,14 +1,22 @@
 {
-  "schemaVersion": 1,
-  "version": "2.0.0",
+  "schemaVersion": 2,
+  "version": "3.0.0",
+  "issuedAt": "2026-08-13T00:00:00.000Z",
+  "expiresAt": "2027-02-13T00:00:00.000Z",
   "minimumKernelVersion": "3.0.0",
   "maximumKernelVersionExclusive": "4.0.0",
-  "releaseNotes": "Canonical envelope, independent rule modes, integrity validation, last-known-good rollback, and fail-loud control states.",
+  "signature": {
+    "algorithm": "Ed25519",
+    "keyId": "pik-policy-ed25519-2026-01"
+  },
+  "releaseNotes": "Signed, expiring policy pack with evidence-gated promotion, explicit rule portability, independent modes, privacy-safe telemetry, and last-known-good rollback.",
   "files": {
     "core.md": "e224d19f411428335b4078c2c5369a0d1bff122a0ad13d2ca99cda550d316e64",
     "router.json": "bc6e170c83c5f5a673123bc2a8425fea69134fa497d053c488f7659fe5e7ec86",
     "deny.json": "94a8e9403df23da8470ad648589f9da84c98273b7330afc2d89c72171dd8323c",
-    "surfaces.json": "b3097c99dd290a863ab49ddc29ce5c8e323a3fb11947aeb20d2afd060d1b02d2",
-    "control-plane.json": "92f74752155e1ab5979fca85d14cec0c87c05e8c72c735ede062713b10e03bd8"
+    "surfaces.json": "9dce356ed939e491db3e0e0229a438f250e7c4265040a377fc75bd497f63086c",
+    "control-plane.json": "92f74752155e1ab5979fca85d14cec0c87c05e8c72c735ede062713b10e03bd8",
+    "rule-catalog.json": "2b41dec32e468eb76fcd552862480034aaa49a412e956b2992da44469afcf694",
+    "evidence-gates.json": "585983a3041cf9fb3c3c08f8727d945437b159619ba1789276b00a68c4b94783"
   }
 }

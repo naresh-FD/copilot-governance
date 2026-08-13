@@ -71,6 +71,14 @@ if (ruleModeSpec) {
 // them wrong is exactly the failure this tool exists to catch.
 function payloadFor(surfaceId, event) {
   const common = { cwd: ROOT, timestamp: new Date().toISOString() };
+  if (surfaceId === 'copilot-sdk') {
+    return {
+      sessionId: 'simulate-sdk',
+      timestamp: Date.now(),
+      cwd: ROOT,
+      prompt,
+    };
+  }
   if (surfaceId === 'copilot-cli') {
     const p = {
       sessionId: 'simulate-cli',
@@ -110,7 +118,7 @@ function describe(surfaceId, surface, event, res) {
     return lines.join('\n');
   }
   if (notify) {
-    lines.push('  notification-only event — telemetry recorded, nothing modified');
+    lines.push('  observe-only configured event — output is dropped, telemetry recorded');
     lines.push(`  response: ${JSON.stringify(stdout)}`);
     return lines.join('\n');
   }
@@ -118,6 +126,7 @@ function describe(surfaceId, surface, event, res) {
   // Locate the governance block wherever this surface puts it.
   const body =
     stdout.modifiedTransformedPrompt ??
+    stdout.modifiedPrompt ??
     stdout.hookSpecificOutput?.additionalContext ??
     stdout.hookSpecificOutput?.modifiedPrompt ??
     null;
@@ -131,6 +140,8 @@ function describe(surfaceId, surface, event, res) {
   const header = body.match(/mode=(\S+) intent=(\S+) risk=(\S+)/);
   const field = stdout.modifiedTransformedPrompt
     ? 'modifiedTransformedPrompt'
+    : stdout.modifiedPrompt
+      ? 'modifiedPrompt'
     : stdout.hookSpecificOutput?.additionalContext
       ? 'hookSpecificOutput.additionalContext'
       : 'hookSpecificOutput.modifiedPrompt';

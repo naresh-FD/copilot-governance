@@ -11,8 +11,8 @@ leaves the machine at any point.
 
 The v1 kernel emitted `hookSpecificOutput.modifiedPrompt` and
 `permissionDecision` on `UserPromptSubmit`. Neither field exists on that event.
-Every test passed, the selftest passed, and every prompt reached the model
-ungoverned — because the tests asserted *what the engine emitted* and never
+Every test passed and the selftest passed, but the emitted fields would have
+been ignored — because the tests asserted *what the engine emitted* and never
 *what a runtime would accept*.
 
 So this plan is layered deliberately. Each layer catches a class of failure the
@@ -20,7 +20,7 @@ one above it cannot see:
 
 | Layer | Command | Catches |
 | --- | --- | --- |
-| 1. Configuration | `--selftest` | Missing files, bad regexes, unresolvable templates, a rule enforcing despite a recorded blocker |
+| 1. Configuration | `--selftest` | Missing files, signature/config errors, bad regexes, unresolvable templates, or promotion without evidence |
 | 2. Behaviour | `node --test tests/` | Wrong routing, lost original text, a shadow rule blocking, a fault exiting 2 |
 | 3. Wire format | `simulate-hook.mjs` | The engine emitting a field the target runtime ignores |
 | 4. Registration | `validate-copilot-governance.sh` | A surface with no hook config, or a hook missing `--surface` |
@@ -37,7 +37,7 @@ is the only layer that proves the whole chain.
 node prompt-core/rewrite.mjs --selftest
 ```
 
-Expected: `prompt-core selftest OK — 14 intents, 7 deny rules (7 shadow), 3 surfaces`
+Expected: `prompt-core selftest OK — 14 intents, 7 deny rules (7 shadow), 4 surfaces`
 
 The enforcing count must be `0` until a rule has been through the evidence
 review in `docs/prompt-interception-plan.md`.
@@ -50,8 +50,8 @@ node --test "tests/*.test.mjs"
 
 Expected: all tests pass. The suite covers one routing case per intent plus the
 unmatched fallback, the verbatim guarantee, both arms of the hybrid strategy,
-per-surface output fields, all three block mechanisms, fail-open, and that no
-prompt text reaches telemetry.
+per-surface output fields, soft/hard block behavior, fail-open, signed expiry,
+bounded/encrypted buffering, evidence gates, and that no prompt reaches telemetry.
 
 ## Layer 3 — Wire format (the important one)
 
@@ -72,7 +72,8 @@ Expected, per surface:
 | --- | --- | --- |
 | vscode / `UserPromptSubmit` | `rewrite` | `hookSpecificOutput.additionalContext` |
 | claude / `UserPromptSubmit` | `rewrite` | `hookSpecificOutput.additionalContext` |
-| copilot-cli / `userPromptSubmitted` | — | notification-only, `{}` |
+| copilot-sdk / `userPromptSubmitted` | `rewrite` | top-level `modifiedPrompt` |
+| copilot-cli / configured `userPromptSubmitted` | — | output dropped contract, `{}` |
 | copilot-cli / `userPromptTransformed` | `rewrite` | `modifiedTransformedPrompt` |
 
 **`NOT GOVERNED` on any line is a failure**, and it is the exact failure that
@@ -91,9 +92,9 @@ Expect `strategy: rewrite`, `intent: console-cleanup`, and
 node scripts/simulate-hook.mjs --surface copilot-cli --event userPromptTransformed --prompt "rename accountId to customerId" --raw
 ```
 Expect `strategy: inject`, `intent: generic`. In the `--raw` output the
-developer's text must appear **unchanged at the end** of
-`modifiedTransformedPrompt`, after the preamble and a `---` separator. An empty
-or rejected state here is a bug: the no-match path must always apply the generic
+developer's text must appear byte-for-byte exactly once inside the labeled
+original-intent fence in `modifiedTransformedPrompt`. An empty, duplicate, or
+rejected state here is a bug: the no-match path must always apply the generic
 governed wrapper.
 
 ### The block path
@@ -141,8 +142,8 @@ Simulate node being absent — the most likely real-world degradation:
 ```bash
 PATH=/nonexistent node scripts/simulate-hook.mjs --prompt "test" 2>&1 | head -5
 ```
-The hook command failing is treated as a non-blocking warning by all three
-runtimes, so prompts pass through ungoverned rather than failing the session.
+The hook command failing is treated as a non-blocking warning by the represented
+configured runtimes, so prompts pass through ungoverned rather than failing the session.
 `scripts/copilot-gov.sh doctor` reports a missing node.
 
 ### Telemetry privacy
@@ -164,10 +165,13 @@ simulation never pollutes real shadow-mode evidence.
 bash scripts/validate-copilot-governance.sh
 ```
 
-Checks that every surface declared in `surfaces.json` has a hook config
+Checks that every command-configured surface declared in `surfaces.json` has a hook config
 registering it, that each hook command targets `.github/prompt-core/rewrite.mjs`,
 and that each carries the right `--surface` flag. A hook without `--surface`
 renders the wrong schema and fails open silently.
+
+The programmatic SDK adapter intentionally has no command-hook registration:
+configured command/HTTP output would discard `modifiedPrompt`.
 
 Requires `jq`; without it these specific checks skip with a `SKIP:` line rather
 than passing. **Treat a skip as unverified, not as a pass** — CI must have `jq`
@@ -207,7 +211,7 @@ the known gaps in `docs/prompt-interception-plan.md`.
 
 Any change to `prompt-core/` or `hooks/`:
 
-- [ ] `node scripts/build-policy-pack.mjs` after any declared policy-input change
+- [ ] `GOV_POLICY_SIGNING_KEY_FILE=/secure/path/key.pem node scripts/build-policy-pack.mjs` after a declared policy-input change
 - [ ] `node prompt-core/rewrite.mjs --selftest` — all seven rules remain shadow unless an approved promotion is in scope
 - [ ] `node --test "tests/*.test.mjs"` — all pass
 - [ ] `node scripts/simulate-hook.mjs --prompt "fix the SQL injection in the account lookup"` — no `NOT GOVERNED`

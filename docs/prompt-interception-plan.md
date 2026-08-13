@@ -7,8 +7,8 @@ downstream delivery proof is counted as governed. See
 `docs/adapter-capability-matrix.md` for the current evidence.
 
 Schema and capability claims here were re-verified against the VS Code, GitHub
-Copilot and Claude Code documentation on **2026-08-02**. The hooks APIs are in
-**Preview** on all three surfaces — re-verify at each pilot checkpoint and update
+Copilot and Claude Code documentation on **2026-08-13**. The hooks APIs are in
+**Preview** on represented surfaces — re-verify at each pilot checkpoint and update
 the pinned schema below when they move.
 
 ## What is actually enforceable
@@ -30,12 +30,15 @@ the pinned schema below when they move.
 | --- | --- | --- | --- |
 | VS Code Copilot | **No documented field** | Yes, exit code 2 only | `UserPromptSubmit`, `.github/hooks/*.json`; governance delivered as `hookSpecificOutput.additionalContext` |
 | Claude Code | **No** — documented as impossible | Yes, `{"decision":"block","reason":…}` | `UserPromptSubmit` via `.claude/settings.json`; `additionalContext` only |
-| Copilot CLI / coding agent | **Yes** — `modifiedTransformedPrompt` | **No** — mutation-only event | `userPromptTransformed`; `userPromptSubmitted` is notification-only ("Output processed: No") |
+| Copilot SDK programmatic hook | **Yes** — `modifiedPrompt` | Hook cannot reject; application must gate before `session.send()` | SDK `userPromptSubmitted` only |
+| Copilot CLI / coding agent | **Yes** — `modifiedTransformedPrompt` | **No** — mutation-only event | `userPromptTransformed`; configured command/HTTP `userPromptSubmitted` output is dropped |
 | JetBrains / IntelliJ | **None** | **None** | No hook support at all |
 
-Read that table carefully before quoting coverage to anyone. **Exactly one
-surface can genuinely rewrite a prompt, and it is the one that cannot block.**
-The two surfaces that can block cannot rewrite. There is no surface with both.
+Read that table carefully before quoting coverage to anyone. SDK submit and the
+transformed hook have mutation contracts but neither hook hard-rejects. The two
+configured surfaces that can block do not replace the prompt. A supported SDK
+application can combine mutation with its own gate before `session.send()` only
+after that exact application path is proven.
 
 All three configs ship in this phase. The entry point uses local zero-package
 modules for envelope, policy-pack, and control-plane handling; rendering remains
@@ -56,7 +59,8 @@ How each strategy is *delivered* depends on what the surface allows:
 
 | Surface | Rewrite arm | Inject arm |
 | --- | --- | --- |
-| Copilot CLI | Literal: `modifiedTransformedPrompt` replaces the model-facing prompt | Preamble prepended to the transformed prompt; developer's text follows unchanged |
+| Copilot SDK | `modifiedPrompt` contains the governed envelope | The governed envelope contains the available original prompt exactly once |
+| Copilot CLI | `modifiedTransformedPrompt` replaces the model-facing prompt | The governed envelope contains the available original prompt exactly once |
 | VS Code, Claude Code | Governed workflow injected as `additionalContext` beside the untouched prompt | Preamble injected as `additionalContext` |
 
 On the injecting surfaces the developer's wording is preserved by construction —
@@ -82,8 +86,8 @@ developer prompt
       ├─ screen   → deny.json + control-plane.json   independent rule lifecycle
       ├─ classify → router.json  intent, risk, template, anchors
       ├─ compose  → core.md + workflow + verbatim original prompt
-      ├─ verify   → policy-pack.json + last-known-good local cache
-      └─ log      → ~/.copilot-gov/telemetry.jsonl   metadata only
+      ├─ verify   → Ed25519-signed policy pack + expiring LKG cache
+      └─ log      → bounded local event buffer   metadata only
       │  stdout JSON
       ▼
   surface-specific inject/rewrite/block response
@@ -97,11 +101,15 @@ developer prompt
 | `prompt-core/router.json` | `.github/prompt-core/router.json` | Intent map onto the 14 prompt workflows |
 | `prompt-core/deny.json` | `.github/prompt-core/deny.json` | Versioned rule contracts, stable reason codes, and provenance |
 | `prompt-core/control-plane.json` | `.github/prompt-core/control-plane.json` | Independent rule modes, targeting, thresholds, and exceptions |
-| `prompt-core/policy-pack.json` | `.github/prompt-core/policy-pack.json` | Semantic pack version, compatibility range, and file checksums |
+| `prompt-core/policy-pack.json` | `.github/prompt-core/policy-pack.json` | Version, validity window, signature key ID, compatibility, and checksums |
+| `prompt-core/policy-pack.sig` | `.github/prompt-core/policy-pack.sig` | Detached Ed25519 signature; private key is not distributed |
+| `prompt-core/policy-public-key.pem` | `.github/prompt-core/policy-public-key.pem` | Verification trust anchor |
 | `prompt-core/surfaces.json` | `.github/prompt-core/surfaces.json` | Per-surface capability matrix — what each runtime can actually do |
 | `prompt-core/envelope.mjs` | `.github/prompt-core/envelope.mjs` | Canonical in-memory envelope and privacy-safe event projection |
 | `prompt-core/control-plane.mjs` | `.github/prompt-core/control-plane.mjs` | Per-rule targeting, exceptions, kill switch, and rollback |
-| `prompt-core/policy-pack.mjs` | `.github/prompt-core/policy-pack.mjs` | Integrity, compatibility, cache, and last-known-good rollback |
+| `prompt-core/event-buffer.mjs` | `.github/prompt-core/event-buffer.mjs` | Asynchronous bounded metadata buffer with optional encryption |
+| `prompt-core/evidence-gate.mjs` | `.github/prompt-core/evidence-gate.mjs` | 206/210 Wilson and operational promotion gates |
+| `prompt-core/policy-pack.mjs` | `.github/prompt-core/policy-pack.mjs` | Signature, expiry, compatibility, refresh, cache, and LKG rollback |
 | `prompt-core/rewrite.mjs` | `.github/prompt-core/rewrite.mjs` | The engine |
 | `hooks/prompt-interceptor.json` | `.github/hooks/prompt-interceptor.json` | VS Code Copilot registration |
 | `hooks/copilot-cli-interceptor.json` | `.github/hooks/copilot-cli-interceptor.json` | Copilot CLI registration, both events |
@@ -190,10 +198,13 @@ Both halves of that are pinned by tests.
 All seven rules ship in shadow. To graduate one:
 
 1. `copilot-gov.sh report` — read the shadow hit count and the graduation order.
-2. Sample the hits. A rule is ready when its false-positive rate is acceptable
-   *for that rule*, independent of the others.
-3. After approval, move that rule through `candidate`, `soft-block`, and
-   `enforce` in `control-plane.json`; keep every other rule unchanged.
+2. Collect at least 210 independently reviewed matched events across three
+   repositories and four weeks, with at least 206 true positives, no more than
+   four false positives, and a Wilson 95% lower bound of at least 95%.
+3. Record the named owner and evidence approval. A mode edit without those fields
+   is downgraded to shadow by runtime.
+4. Move only that rule through `candidate`, `soft-block`, and `enforce`; keep
+   every other rule unchanged.
 
 ### Graduation order
 
@@ -228,9 +239,11 @@ rollback-only: `GOV_EMERGENCY_SHADOW=1` moves enforced rules to shadow, and
 
 ## Telemetry and privacy
 
-Written to `~/.copilot-gov/telemetry.jsonl` — the user's home directory, **not**
-the repository. Prompt text in a regulated environment can contain customer
-data and must never land in a git working tree.
+Written through an asynchronous bounded buffer under `~/.copilot-gov/` — the
+user's home directory, **not** the repository. Rotation is size-bounded and
+optional AES-256-GCM encryption uses an approved external key. Prompt text in a
+regulated environment can contain customer data and must never land in a git
+working tree.
 
 Each record holds event/correlation IDs; client, adapter, hook, and policy-pack
 versions; repository class and cohort; bucketed size estimates; capabilities;
@@ -377,7 +390,7 @@ each developer to run `report` and send the output. Fine across four pilot
 repos, unworkable at estate scale. Central collection is a Wave 1 prerequisite
 and carries its own privacy and employee-monitoring questions.
 
-**The hook APIs are Preview on all three surfaces, and one already moved under
+**The hook APIs are Preview on represented surfaces, and one already moved under
 us.** The v1 kernel was built against a schema that did not exist, and nothing in
 the build caught it for a full phase, because the tests asserted the engine's own
 output rather than the runtime's contract. `surfaces.json` now carries a

@@ -3,7 +3,7 @@
 **Completed**: Prompt template library + anchored instruction guardrails, ready for pilot. No pilot has run yet, so the outcomes below are targets, not measurements — see `docs/demo.md` for how to actually test and measure them.
 
 **Target Outcomes** (unverified until piloted):
-- 40–60% reduction in repeated prompt context (developers use 1-5 word template commands instead of long prompts)
+- Hypothesis: reusable workflows may reduce repeated context; measure completed-task tokens, turns, rework, elapsed time, and quality before publishing a percentage
 - Fewer hallucinations (Copilot anchored to exact approved patterns)
 - Faster PR reviews (fewer "use this pattern instead" comments)
 - Consistent output across teams (same patterns, same results)

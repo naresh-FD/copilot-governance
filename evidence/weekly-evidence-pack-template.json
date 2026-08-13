@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "status": "template-no-pilot-data",
+  "weekEnding": null,
+  "cohort": null,
+  "versions": { "kernel": null, "policyPack": null, "adapters": [] },
+  "capabilities": { "declared": [], "canaryProven": [], "unsupported": [] },
+  "coverage": { "eligible": null, "governedShadow": null, "governedEnforced": null, "observed": null, "advisoryOnly": null, "degraded": null, "disabled": null },
+  "rules": [],
+  "routing": { "workflowCounts": {}, "unmatchedRate": null, "classificationPrecision": null },
+  "runtime": { "p50Ms": null, "p95Ms": null, "p99Ms": null, "errors": null, "eventLoss": null, "bufferDepth": null },
+  "distribution": { "versionDrift": [], "heartbeatsAvailable": null, "exceptions": [] },
+  "developerImpact": { "advisories": null, "blocks": null, "overrides": null, "supportCases": null, "satisfaction": null },
+  "taskEffectivenessRef": null,
+  "incidents": [],
+  "rollbackActions": [],
+  "recommendation": "hold",
+  "approvalRef": null
+}

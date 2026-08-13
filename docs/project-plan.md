@@ -92,7 +92,7 @@ both the most likely to be working in IntelliJ and the holder of the only
 high-risk, human-review-required intent in the router (`java-security`). The
 teams with the highest-risk prompts have the weakest coverage. This must be
 raised with the Java teams by name and carried as a named accepted risk with an
-owner — not netted off against the three surfaces that do work. Options are to
+owner — not netted off against separately proven adapter paths. Options are to
 move those teams to VS Code for Copilot work, formally accept instructions-only
 coverage, or wait for JetBrains hook support.
 

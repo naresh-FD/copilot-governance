@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { generateKeyPairSync, sign } from "node:crypto";
 import {
   appendFileSync,
   copyFileSync,
@@ -15,6 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   loadPolicyPack,
+  PolicyPackManager,
   PolicyPackError,
 } from "../prompt-core/policy-pack.mjs";
 import {
@@ -45,9 +47,33 @@ function withTemp(fn) {
 function copyPolicyPack(destination) {
   mkdirSync(destination, { recursive: true });
   copyFileSync(join(CORE, "policy-pack.json"), join(destination, "policy-pack.json"));
+  copyFileSync(join(CORE, "policy-pack.sig"), join(destination, "policy-pack.sig"));
+  copyFileSync(
+    join(CORE, "policy-public-key.pem"),
+    join(destination, "policy-public-key.pem"),
+  );
   for (const path of Object.keys(MANIFEST.files)) {
     copyFileSync(join(CORE, path), join(destination, path));
   }
+}
+
+function replaceSigningKey(directory) {
+  const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+  writeFileSync(
+    join(directory, "policy-public-key.pem"),
+    publicKey.export({ type: "spki", format: "pem" }),
+    "utf8",
+  );
+  const signCurrent = () => {
+    const manifestText = readFileSync(join(directory, "policy-pack.json"), "utf8");
+    writeFileSync(
+      join(directory, "policy-pack.sig"),
+      `${sign(null, Buffer.from(manifestText), privateKey).toString("base64")}\n`,
+      "utf8",
+    );
+  };
+  signCurrent();
+  return signCurrent;
 }
 
 test("active policy pack validates every declared checksum", () => {
@@ -58,7 +84,8 @@ test("active policy pack validates every declared checksum", () => {
       cacheDir,
     });
     assert.equal(pack.source, "active");
-    assert.equal(pack.manifest.version, "2.0.0");
+    assert.equal(pack.manifest.version, "3.0.0");
+    assert.equal(pack.manifest.signature.algorithm, "Ed25519");
     assert.equal(pack.deny.rules.length, 7);
     assert.equal(pack.router.intents.length, 14);
   });
@@ -97,6 +124,7 @@ test("a lower active policy version cannot replace a newer last-known-good pack"
     const activeDir = join(dir, "active");
     const cacheDir = join(dir, "cache");
     copyPolicyPack(activeDir);
+    const resign = replaceSigningKey(activeDir);
     loadPolicyPack({
       coreDir: activeDir,
       kernelVersion: "3.0.0",
@@ -104,8 +132,9 @@ test("a lower active policy version cannot replace a newer last-known-good pack"
     });
     const manifestPath = join(activeDir, "policy-pack.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-    manifest.version = "1.9.0";
+    manifest.version = "2.9.0";
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    resign();
 
     const fallback = loadPolicyPack({
       coreDir: activeDir,
@@ -113,7 +142,7 @@ test("a lower active policy version cannot replace a newer last-known-good pack"
       cacheDir,
     });
     assert.equal(fallback.source, "last-known-good");
-    assert.equal(fallback.manifest.version, "2.0.0");
+    assert.equal(fallback.manifest.version, "3.0.0");
     assert.ok(
       fallback.degradedReasons.some((reason) => reason.includes("downgrade")),
     );
@@ -132,7 +161,7 @@ test("a tampered rollback-cache manifest is rejected", () => {
     });
     const cachePath = join(cacheDir, "policy-last-known-good.json");
     const cache = JSON.parse(readFileSync(cachePath, "utf8"));
-    cache.manifestText = cache.manifestText.replace('"version": "2.0.0"', '"version": "9.9.9"');
+    cache.manifestText = cache.manifestText.replace('"version": "3.0.0"', '"version": "9.9.9"');
     writeFileSync(cachePath, JSON.stringify(cache), "utf8");
     appendFileSync(join(activeDir, "deny.json"), "\nTAMPERED", "utf8");
 
@@ -206,6 +235,76 @@ test("incompatible kernel versions are rejected", () => {
         }),
       /incompatible/,
     );
+  });
+});
+
+test("a manifest edit without an Ed25519 signature is rejected", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    copyPolicyPack(activeDir);
+    const manifestPath = join(activeDir, "policy-pack.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    manifest.releaseNotes = "unsigned edit";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+    assert.throws(
+      () =>
+        loadPolicyPack({
+          coreDir: activeDir,
+          kernelVersion: "3.0.0",
+          cacheEnabled: false,
+        }),
+      /signature verification failed/,
+    );
+  });
+});
+
+test("an expired active pack uses signed last-known-good only during the grace window", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+      now: Date.parse("2026-08-14T00:00:00Z"),
+    });
+    const grace = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+      now: Date.parse("2027-02-13T01:00:00Z"),
+    });
+    assert.equal(grace.source, "last-known-good");
+    assert.ok(grace.degradedReasons.includes("last-known-good-expired-grace"));
+    assert.throws(
+      () =>
+        loadPolicyPack({
+          coreDir: activeDir,
+          kernelVersion: "3.0.0",
+          cacheDir,
+          now: Date.parse("2027-02-14T02:00:00Z"),
+        }),
+      /no valid last-known-good|expired/,
+    );
+  });
+});
+
+test("the policy manager refreshes a signed current pack for long-lived adapters", () => {
+  withTemp((cacheDir) => {
+    const states = [];
+    const manager = new PolicyPackManager({
+      coreDir: CORE,
+      kernelVersion: "3.0.0",
+      cacheDir,
+      refreshIntervalMs: 100,
+      onRefresh: (state) => states.push(state.ok),
+    });
+    const current = manager.refresh();
+    assert.equal(current.manifest.version, "3.0.0");
+    assert.deepEqual(states, [true]);
+    manager.start();
+    manager.stop();
   });
 });
 
@@ -366,7 +465,7 @@ test("canonical envelopes keep original prompt in memory but out of JSON telemet
     event: "submit",
     kernelVersion: "3.0.0",
     policyPack: {
-      manifest: { version: "2.0.0" },
+      manifest: { version: "3.0.0", signature: { keyId: "test-key" } },
       checksum: "abc",
       source: "active",
       degradedReasons: [],

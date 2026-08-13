@@ -86,7 +86,7 @@ function activeException(control, ruleId, repository, cohort, now) {
   });
 }
 
-export function prepareControlPlane(control, env = process.env) {
+export function prepareControlPlane(control, env = process.env, evidenceGates = null) {
   const warnings = [];
   const testModes = parseTestModes(env, warnings);
   const rollbackState = readRollbackState(env, warnings);
@@ -106,6 +106,10 @@ export function prepareControlPlane(control, env = process.env) {
         .filter(Boolean),
     ]),
     rollbackStateVersion: rollbackState.version,
+    evidenceGates,
+    testOverrideActive:
+      env.GOV_ALLOW_TEST_OVERRIDES === "1" &&
+      Boolean(env.GOV_TEST_RULE_MODES),
     testModes,
     warnings,
   };
@@ -125,6 +129,38 @@ export function resolveRuleControl(
   const requestedMode = control.testModes?.[rule.id] ?? configured.mode ?? "shadow";
   let mode = modeOrShadow(requestedMode, control.warnings, `rule ${rule.id}`);
   let reason = "configured";
+
+  if (
+    !control.testOverrideActive &&
+    ["candidate", "soft-block", "enforce"].includes(mode)
+  ) {
+    const evidence = control.evidenceGates?.rules?.[rule.id] || {};
+    const approvalField = {
+      candidate: "candidateApproved",
+      "soft-block": "softBlockApproved",
+      enforce: "enforceApproved",
+    }[mode];
+    if (rule.owner === "unassigned" || configured.owner === "unassigned") {
+      mode = "shadow";
+      reason = "named-owner-required";
+    } else if (control.evidenceGates?.status !== "ratified") {
+      mode = "shadow";
+      reason = "threshold-ledger-unratified";
+    } else if (evidence[approvalField] !== true) {
+      mode = "shadow";
+      reason = "evidence-gate-not-approved";
+    } else if (!evidence.approvalRef || !evidence.approvedAt) {
+      mode = "shadow";
+      reason = "evidence-approval-incomplete";
+    } else if (
+      evidence.expiresAt &&
+      (!Number.isFinite(Date.parse(evidence.expiresAt)) ||
+        now >= Date.parse(evidence.expiresAt))
+    ) {
+      mode = "shadow";
+      reason = "evidence-approval-expired";
+    }
+  }
 
   if (control.emergencyRollbackToShadow && ["soft-block", "enforce"].includes(mode)) {
     mode = "shadow";
@@ -174,5 +210,6 @@ export function resolveRuleControl(
     exceptionId: exception?.id || null,
     cohort,
     rolloutPercentage: Number.isFinite(percentage) ? percentage : 0,
+    candidateBlockDate: configured.candidateBlockDate || null,
   };
 }

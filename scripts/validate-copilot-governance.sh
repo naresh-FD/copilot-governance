@@ -96,11 +96,20 @@ REQUIRED_PROMPT_CORE=(
   deny.json
   surfaces.json
   control-plane.json
+  evidence-gates.json
+  rule-catalog.json
   policy-pack.json
+  policy-pack.sig
+  policy-public-key.pem
   rewrite.mjs
   envelope.mjs
   control-plane.mjs
+  event-buffer.mjs
+  evidence-gate.mjs
+  feedback.mjs
+  labeling.mjs
   policy-pack.mjs
+  review-sanitizer.mjs
   repo-profile.mjs
   skill-selector.mjs
   context-optimizer.mjs
@@ -304,9 +313,9 @@ if command -v jq >/dev/null 2>&1; then
     fi
   done
 
-  # Every surface declared by the engine must have a hook registering it.
-  # A surface with no config is an ungoverned client, which is the failure mode
-  # this whole check exists to prevent.
+  # Every command-configured surface must have a hook registration. Programmatic
+  # SDK adapters set registrationRequired:false because command/HTTP registration
+  # would silently discard their modifiedPrompt output.
   if [[ -f "$PROMPT_CORE_DIR/surfaces.json" ]]; then
     while read -r surface_id; do
       if grep -rqF -- "--surface $surface_id" "$HOOKS_DIR"; then
@@ -314,7 +323,7 @@ if command -v jq >/dev/null 2>&1; then
       else
         fail "surface '$surface_id' is declared in surfaces.json but no hook config registers it"
       fi
-    done < <(jq -r '.surfaces | keys[]' "$PROMPT_CORE_DIR/surfaces.json")
+    done < <(jq -r '.surfaces | to_entries[] | select(.value.registrationRequired != false) | .key' "$PROMPT_CORE_DIR/surfaces.json")
   fi
 else
   echo "SKIP: hook config JSON checks (jq not installed)"
@@ -324,7 +333,7 @@ fi
 # a rewrite smoke test all live in the engine so a synced repo can run the same
 # check against its own copy.
 if command -v node >/dev/null 2>&1; then
-  for module in rewrite.mjs envelope.mjs control-plane.mjs policy-pack.mjs; do
+  for module in rewrite.mjs envelope.mjs control-plane.mjs event-buffer.mjs evidence-gate.mjs feedback.mjs labeling.mjs policy-pack.mjs review-sanitizer.mjs; do
     if node --check "$PROMPT_CORE_DIR/$module" 2>/dev/null; then
       pass "$module parses"
     else

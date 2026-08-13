@@ -246,11 +246,12 @@ test("an unmatched prompt is injected, not rewritten, and is never emptied", () 
     !body.includes("## Governed workflow"),
     "no workflow should be inlined without a match",
   );
-  // On the one surface that replaces the prompt, the developer's text has to
-  // survive the injection — it is appended after the preamble, unchanged.
-  assert.ok(
-    body.trimEnd().endsWith("rename accountId to customerId"),
-    "the original prompt was not carried through unchanged",
+  // Replacement-capable surfaces carry the original exactly once inside the
+  // governed envelope; they do not append a second copy after the preamble.
+  assert.equal(
+    body.split("rename accountId to customerId").length - 1,
+    1,
+    "the original prompt was not carried through exactly once",
   );
 });
 
@@ -504,7 +505,7 @@ test("telemetry records no prompt text by default", async () => {
     const row = JSON.parse(log.trim());
     assert.match(row.eventId, /^[0-9a-f-]{36}$/i);
     assert.equal(row.policyResults.length, 7);
-    assert.equal(row.policyPackVersion, "2.0.0");
+    assert.equal(row.policyPackVersion, "3.0.0");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

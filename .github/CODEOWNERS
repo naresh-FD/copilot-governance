@@ -18,6 +18,8 @@
 /templates/                          @org/platform-architecture @org/security
 /instructions/                       @org/platform-architecture @org/security
 /prompts/                            @org/platform-architecture
+/evidence/                           @org/platform-architecture @org/security
+/tests/                              @org/platform-architecture @org/security
 
 # Distribution scope and automation.
 /repos.json                          @org/platform-architecture

@@ -9,6 +9,11 @@
 
 node_modules/
 
+# Policy signing private keys are external secrets. Only the public verification
+# key and detached signature belong in this repository.
+prompt-core/policy-private-key.pem
+.pik-signing/
+
 # Local dogfood hook used for in-repo testing. The canonical hook files live
 # in hooks/ (root) and are synced downstream by sync-copilot-instructions.sh
 # as .github/hooks/. This local copy is machine-specific and must not be

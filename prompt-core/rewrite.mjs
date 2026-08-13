@@ -34,7 +34,7 @@
 // exception — falls through to a pass-through response and exit 0, so a broken
 // kernel degrades to ungoverned prompts rather than a broken chat session.
 //
-import { readFileSync, appendFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { detectRepositoryProfile } from "./repo-profile.mjs";
@@ -47,6 +47,7 @@ import {
   telemetryFromEnvelope,
 } from "./envelope.mjs";
 import { loadPolicyPack } from "./policy-pack.mjs";
+import { eventBufferFromEnv, readBufferedEvents } from "./event-buffer.mjs";
 import { fileURLToPath } from "node:url";
 
 const KERNEL_VERSION = "3.0.0";
@@ -201,6 +202,7 @@ function screen(prompt, deny, control, context) {
       effectiveMode: ruleControl.effectiveMode,
       modeReason: ruleControl.reason,
       exceptionId: ruleControl.exceptionId,
+      candidateBlockDate: ruleControl.candidateBlockDate,
       wouldBlock:
         result === "matched" &&
         ["candidate", "soft-block", "enforce"].includes(
@@ -223,6 +225,10 @@ function fenceVerbatim(text) {
     longestRun = Math.max(longestRun, run.length);
   const fence = "`".repeat(Math.max(3, longestRun + 1));
   return `${fence}text\n${text}\n${fence}`;
+}
+
+function promptIsPreserved(rendered, prompt) {
+  return rendered.includes(fenceVerbatim(prompt));
 }
 
 function loadAnchors(anchorPaths) {
@@ -278,11 +284,12 @@ function compose({
   skills,
   contextDecision,
   failureMarkers,
+  eventId,
 }) {
   const out = [];
   out.push(
     `<!-- copilot-governance | prompt-core v${KERNEL_VERSION} | ` +
-      `mode=${mode} intent=${intent} risk=${risk} -->`,
+      `mode=${mode} intent=${intent} risk=${risk} event=${eventId} -->`,
   );
   out.push("");
   out.push(core.trim());
@@ -392,7 +399,13 @@ function compose({
       "do not simply comply with the part of the request that triggered it.",
     );
     out.push("");
-    for (const hit of shadowHits) out.push(`- **${hit.id}** — ${hit.reason}`);
+    for (const hit of shadowHits) {
+      const candidateDate =
+        hit.effectiveMode === "candidate" && hit.candidateBlockDate
+          ? ` Would block after ${hit.candidateBlockDate}.`
+          : "";
+      out.push(`- **${hit.id}** — ${hit.reason}${candidateDate}`);
+    }
     out.push("");
   }
 
@@ -451,17 +464,13 @@ function compose({
 
 // --- telemetry ---------------------------------------------------------------
 
-function recordTelemetry(record) {
+async function recordTelemetry(record) {
   if (process.env.GOV_TELEMETRY === "0") return { ok: true, disabled: true };
   try {
     const dir =
       process.env.GOV_TELEMETRY_DIR || join(homedir(), ".copilot-gov");
-    mkdirSync(dir, { recursive: true });
-    appendFileSync(
-      join(dir, "telemetry.jsonl"),
-      JSON.stringify(record) + "\n",
-      "utf8",
-    );
+    const buffer = eventBufferFromEnv(join(dir, "telemetry.jsonl"));
+    await buffer.append(record);
     return { ok: true, disabled: false };
   } catch (err) {
     // Telemetry must never break interception.
@@ -472,26 +481,14 @@ function recordTelemetry(record) {
   }
 }
 
-function report() {
+async function report() {
   const dir = process.env.GOV_TELEMETRY_DIR || join(homedir(), ".copilot-gov");
   const file = join(dir, "telemetry.jsonl");
-  if (!existsSync(file)) {
-    console.log(`No telemetry yet at ${file}.`);
-    console.log("Telemetry is written the first time a prompt is intercepted.");
-    return;
-  }
-
-  const rows = readFileSync(file, "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
+  const rows = await readBufferedEvents({
+    path: file,
+    maxFiles: Number(process.env.GOV_EVENT_BUFFER_FILES || 3),
+    encryptionKey: process.env.GOV_EVENT_ENCRYPTION_KEY || null,
+  });
 
   if (rows.length === 0) {
     console.log(`No readable telemetry records in ${file}.`);
@@ -685,7 +682,11 @@ function govern(
   const router = pack.router;
   const deny = pack.deny;
   const core = pack.core;
-  const control = prepareControlPlane(pack.control);
+  const control = prepareControlPlane(
+    pack.control,
+    process.env,
+    pack.evidenceGates,
+  );
   for (const warning of control.warnings) {
     process.stderr.write(`prompt-core: ${warning}\n`);
   }
@@ -714,6 +715,28 @@ function govern(
     ...control.warnings.filter((warning) => !warning.includes("GOV_ENFORCE_ALL")),
   );
 
+  const configuredMaximum = Number(process.env.GOV_MAX_PROMPT_CHARS || 1_000_000);
+  const maximumPromptChars = Number.isFinite(configuredMaximum)
+    ? Math.max(1_000, Math.min(configuredMaximum, 10_000_000))
+    : 1_000_000;
+  if (prompt.length > maximumPromptChars) {
+    envelope.failureMarkers.push("oversized-prompt");
+    envelope.decision = "pass_through_oversized";
+    envelope.controlState = "degraded";
+    envelope.routingResult = "not-evaluated";
+    envelope.latencyMs.totalDecision = Number(
+      (performance.now() - started).toFixed(3),
+    );
+    return {
+      mode: "pass-through",
+      governed: prompt,
+      governedCharsBucket: "0",
+      ruleResults: [],
+      envelope,
+      reason: `prompt exceeded local safety limit ${maximumPromptChars}`,
+    };
+  }
+
   const policyStarted = performance.now();
   const ruleResults = screen(prompt, deny, control, {
     cohort,
@@ -734,6 +757,7 @@ function govern(
     modeReason: result.modeReason,
     wouldBlock: result.wouldBlock,
     exceptionId: result.exceptionId,
+    candidateBlockDate: result.candidateBlockDate,
   }));
 
   const denyHits = ruleResults.filter(
@@ -753,6 +777,7 @@ function govern(
     (performance.now() - routingStarted).toFixed(3),
   );
   envelope.selectedWorkflowIds = [chosen.id];
+  envelope.routingResult = match ? "matched" : "unmatched";
 
   const activeModes = ruleResults.map((result) => result.effectiveMode);
   envelope.operatingMode = ["enforce", "soft-block", "candidate", "shadow", "off"].find(
@@ -774,9 +799,15 @@ function govern(
       match,
       envelope,
       governedCharsBucket: "0",
+      enforcementLevel: enforced.some(
+        (hit) => hit.effectiveMode === "enforce",
+      )
+        ? "enforce"
+        : "soft-block",
       reason: enforced.map((hit) => `[${hit.id}] ${hit.reason}`).join(" "),
     };
-    envelope.decision = "blocked";
+    envelope.decision =
+      decision.enforcementLevel === "soft-block" ? "soft_blocked" : "blocked";
     envelope.controlState = deriveControlState(
       surface,
       event || surface.events[0],
@@ -835,6 +866,7 @@ function govern(
     repositoryProfile,
     skills,
     failureMarkers: envelope.failureMarkers,
+    eventId: envelope.eventId,
   };
   const renderer = (sectionList) =>
     compose({ ...baseComposeParams, contextDecision: { sections: sectionList } });
@@ -853,6 +885,23 @@ function govern(
     ...baseComposeParams,
     contextDecision,
   });
+
+  if (canReplace && !promptIsPreserved(governed, prompt)) {
+    envelope.failureMarkers.push("prompt-preservation-failed");
+    envelope.decision = "pass_through_preservation_failure";
+    envelope.controlState = "degraded";
+    envelope.latencyMs.totalDecision = Number(
+      (performance.now() - started).toFixed(3),
+    );
+    return {
+      mode: "pass-through",
+      governed: prompt,
+      governedCharsBucket: "0",
+      ruleResults,
+      envelope,
+      reason: "original prompt preservation check failed",
+    };
+  }
 
   const decision = {
     mode,
@@ -912,17 +961,41 @@ function render(decision, surface, event, payload) {
   const out = {};
   const eventName = event || surface.events[0];
 
+  if (decision.mode === "pass-through") {
+    if (surface.systemMessage) {
+      return {
+        stdout: JSON.stringify({
+          continue: true,
+          systemMessage:
+            `Copilot governance unavailable; prompt passed through unchanged. ` +
+            `Reference: ${decision.envelope?.eventId || "unavailable"}.`,
+        }),
+        stderr: `prompt-core: ${decision.reason}`,
+        exitCode: 0,
+      };
+    }
+    return {
+      stdout: "{}",
+      stderr: `prompt-core: ${decision.reason}`,
+      exitCode: 0,
+    };
+  }
+
   if (decision.mode === "block") {
     const reference = decision.envelope?.eventId
       ? ` Reference: ${decision.envelope.eventId}.`
       : "";
+    const levelGuidance =
+      decision.enforcementLevel === "soft-block"
+        ? "Soft block: correct the request or use an approved time-bound exception. "
+        : "";
     if (surface.block === "decision") {
       // Claude Code: top-level decision/reason. permissionDecision is ignored
       // on this event, so it must not be used here.
       return {
         stdout: JSON.stringify({
           decision: "block",
-          reason: `${decision.reason}${reference}`,
+          reason: `${levelGuidance}${decision.reason}${reference}`,
         }),
         exitCode: 0,
       };
@@ -931,22 +1004,22 @@ function render(decision, surface, event, payload) {
     // use of the blocking exit code; stderr carries the reason.
     return {
       stdout: "",
-      stderr: `Blocked by Copilot governance: ${decision.reason}${reference}`,
+      stderr: `Blocked by Copilot governance: ${levelGuidance}${decision.reason}${reference}`,
       exitCode: 2,
     };
+  }
+
+  if (surface.rewriteField && !surface.injectField) {
+    setPath(out, surface.rewriteField, decision.governed);
+    return { stdout: JSON.stringify(out), exitCode: 0 };
   }
 
   if (surface.rewriteField === "modifiedTransformedPrompt") {
     // Copilot CLI. Mutation is the only channel, so both strategies land here:
     // a matched intent replaces the transformed prompt outright; an unmatched
     // one is prefixed, leaving the developer's text intact after the preamble.
-    const existing = payload?.transformedPrompt ?? payload?.prompt ?? "";
-    const body =
-      decision.mode === "rewrite"
-        ? decision.governed
-        : `${decision.governed}\n\n---\n\n${existing}`;
     return {
-      stdout: JSON.stringify({ modifiedTransformedPrompt: body }),
+      stdout: JSON.stringify({ modifiedTransformedPrompt: decision.governed }),
       exitCode: 0,
     };
   }
@@ -982,7 +1055,9 @@ function render(decision, surface, event, payload) {
       );
     }
     if (notes.length)
-      out.systemMessage = `Copilot governance — ${notes.join("; ")}.`;
+      out.systemMessage =
+        `Copilot governance — ${notes.join("; ")}; ` +
+        `reference ${decision.envelope?.eventId || "unavailable"}.`;
   }
 
   return { stdout: JSON.stringify(out), exitCode: 0 };
@@ -1001,7 +1076,7 @@ function addDegradedWarning(decision) {
   decision.governedCharsBucket = governedCharsBucket(decision.governed.length);
 }
 
-function handle(
+async function handle(
   prompt,
   { surface, event, payload, cwd, policyPack, policyLoadMs = 0 },
 ) {
@@ -1012,7 +1087,7 @@ function handle(
     policyLoadMs,
   });
 
-  const telemetryStatus = recordTelemetry(
+  const telemetryStatus = await recordTelemetry(
     telemetryFromEnvelope(decision.envelope, decision),
   );
   if (!telemetryStatus.ok) {
@@ -1052,7 +1127,7 @@ function handle(
 // Validates the kernel's own configuration. Runs centrally as part of
 // `copilot-gov validate`, and ships downstream so a synced repo can verify its
 // own copy without the governance repo present.
-function selftest() {
+async function selftest() {
   const problems = [];
   const note = (msg) => problems.push(msg);
 
@@ -1071,6 +1146,8 @@ function selftest() {
   let surfaces;
   let control;
   let policyPack;
+  let ruleCatalog;
+  let evidenceGates;
 
   try {
     policyPack = loadPolicyPack({
@@ -1083,7 +1160,9 @@ function selftest() {
     surfaces = policyPack.surfaces;
     control = prepareControlPlane(policyPack.control, {
       GOV_ROLLBACK_STATE: "0",
-    });
+    }, policyPack.evidenceGates);
+    ruleCatalog = policyPack.ruleCatalog;
+    evidenceGates = policyPack.evidenceGates;
   } catch (err) {
     note(`policy pack invalid: ${err.message}`);
     for (const detail of err.details || []) note(`policy pack: ${detail}`);
@@ -1117,6 +1196,17 @@ function selftest() {
         if (!s.events.includes(e))
           note(`${where}: notifyOnly event "${e}" is not in events`);
       }
+    }
+    const capabilities = surfaces.capabilityRecords || {};
+    if (capabilities["github-sdk-user-prompt-submitted"]?.mutate !== true)
+      note("capabilities: SDK userPromptSubmitted must record mutation support");
+    if (capabilities["github-config-user-prompt-submitted"]?.mutate !== false)
+      note("capabilities: command/HTTP userPromptSubmitted must record dropped output");
+    if (
+      capabilities["github-user-prompt-transformed"]?.mutate !== true ||
+      capabilities["github-user-prompt-transformed"]?.preSendBlock !== false
+    ) {
+      note("capabilities: userPromptTransformed must be mutation-only and non-blocking");
     }
   }
 
@@ -1257,6 +1347,12 @@ function selftest() {
         note(`${where}: expiresAt must be a valid date`);
       if (Number.isFinite(starts) && Number.isFinite(expires) && expires <= starts)
         note(`${where}: expiresAt must be after startsAt`);
+      if (
+        configured.mode === "candidate" &&
+        !Number.isFinite(Date.parse(configured.candidateBlockDate || ""))
+      ) {
+        note(`${where}: candidate mode requires a valid candidateBlockDate`);
+      }
     }
 
     const thresholds = control.rollbackThresholds || {};
@@ -1307,6 +1403,57 @@ function selftest() {
     }
   }
 
+  if (ruleCatalog && evidenceGates && deny?.rules) {
+    if (!["unratified", "ratified"].includes(evidenceGates.status))
+      note("evidence gates: status must be unratified or ratified");
+    const denyIds = new Set(deny.rules.map((rule) => rule.id));
+    const catalogIds = new Set((ruleCatalog.rules || []).map((rule) => rule.id));
+    const evidenceIds = new Set(Object.keys(evidenceGates.rules || {}));
+    for (const id of denyIds) {
+      if (!catalogIds.has(id)) note(`rule catalog: missing rule ${id}`);
+      if (!evidenceIds.has(id)) note(`evidence gates: missing rule ${id}`);
+    }
+    for (const id of catalogIds) {
+      if (!denyIds.has(id)) note(`rule catalog: unknown rule ${id}`);
+    }
+    for (const id of evidenceIds) {
+      if (!denyIds.has(id)) note(`evidence gates: unknown rule ${id}`);
+    }
+    for (const [id, evidence] of Object.entries(evidenceGates.rules || {})) {
+      if (
+        [
+          evidence.candidateApproved,
+          evidence.softBlockApproved,
+          evidence.enforceApproved,
+        ].some((value) => value === true) &&
+        (!evidence.approvalRef ||
+          !Number.isFinite(Date.parse(evidence.approvedAt || "")))
+      ) {
+        note(`evidence gates ${id}: approvalRef and valid approvedAt are required`);
+      }
+    }
+    for (const entry of ruleCatalog.rules || []) {
+      const where = `rule catalog ${entry.id || "(unnamed)"}`;
+      if (!entry.owner) note(`${where}: owner field is required`);
+      if (!entry.policyIntent) note(`${where}: policyIntent is required`);
+      if (!Array.isArray(entry.nonMatches) || entry.nonMatches.length === 0)
+        note(`${where}: explicit nonMatches are required`);
+      if (!entry.remediation) note(`${where}: remediation is required`);
+      if (!entry.classification || !entry.portability)
+        note(`${where}: classification and portability are required`);
+      if (Object.hasOwn(entry, "riskRating"))
+        note(`${where}: bank risk ratings must not be invented in engineering config`);
+    }
+    const evidenceThresholds = evidenceGates.thresholds || {};
+    if (
+      evidenceThresholds.minimumReviewedMatches !== 210 ||
+      evidenceThresholds.minimumTruePositives !== 206 ||
+      evidenceThresholds.maximumFalsePositives !== 4
+    ) {
+      note("evidence gates: corrected 206/210 threshold is not configured");
+    }
+  }
+
   // Smoke test: on every surface, a known-routable prompt must produce a
   // governed block that carries the core, and the developer's words must
   // survive — verbatim inside the block where the block replaces the prompt.
@@ -1321,7 +1468,7 @@ function selftest() {
           surface.events.find((candidate) =>
             !(surface.notifyOnly || []).includes(candidate),
           ) || surface.events[0];
-        const { decision } = handle(probe, {
+        const { decision } = await handle(probe, {
           surface,
           event: smokeEvent,
           payload: { prompt: probe, transformedPrompt: probe },
@@ -1342,7 +1489,7 @@ function selftest() {
       }
       // Unmatched prompts must still be governed, never rejected or emptied.
       const surface = resolveSurface(surfaces, surfaces.default, null);
-      const { decision } = handle("rename accountId to customerId", {
+      const { decision } = await handle("rename accountId to customerId", {
         surface,
         policyPack,
       });
@@ -1442,7 +1589,7 @@ async function main() {
         (candidate) => !(surface.notifyOnly || []).includes(candidate),
       ) ||
       surface.events[0];
-    const result = handle(prompt, {
+    const result = await handle(prompt, {
       surface,
       event: cliEvent,
       payload: { prompt, transformedPrompt: prompt },
@@ -1491,8 +1638,8 @@ async function main() {
     wantEvent || payload.hook_event_name || payload.hookEventName || null;
   const surface = resolveSurface(surfaces, wantSurface, event);
 
-  // Notification-only events cannot change anything. Log the interception for
-  // shadow-mode evidence and return an empty acknowledgement.
+  // Observe-only configured events cannot change anything because their output
+  // is dropped. Log metadata for shadow evidence and return an empty response.
   if (event && (surface.notifyOnly || []).includes(event)) {
     const text = payload[surface.promptField] ?? payload.prompt ?? "";
     if (text.trim()) {
@@ -1504,7 +1651,7 @@ async function main() {
       });
       decision.envelope.controlState = "advisory-only";
       decision.envelope.decision = "observed";
-      const audit = recordTelemetry(
+      const audit = await recordTelemetry(
         telemetryFromEnvelope(decision.envelope, {
           ...decision,
           mode: "notify",
@@ -1521,17 +1668,21 @@ async function main() {
     return;
   }
 
-  const prompt =
+  const modelFacingPrompt =
     payload[surface.promptField] ??
-    payload.prompt ??
     payload.transformedPrompt ??
+    payload.prompt ??
     "";
+  const prompt =
+    event === "userPromptTransformed"
+      ? (payload.prompt ?? modelFacingPrompt)
+      : modelFacingPrompt;
   if (!prompt.trim()) {
     passThrough();
     return;
   }
 
-  const result = handle(prompt, {
+  const result = await handle(prompt, {
     surface,
     event,
     payload,

@@ -53,9 +53,15 @@ prompt-core/
   router.json
   deny.json
   control-plane.json
+  evidence-gates.json
+  rule-catalog.json
   policy-pack.json
+  policy-pack.sig
+  policy-public-key.pem
   envelope.mjs
   control-plane.mjs
+  event-buffer.mjs
+  evidence-gate.mjs
   policy-pack.mjs
   rewrite.mjs
 hooks/
@@ -70,6 +76,7 @@ tests/
   prompt-core.test.mjs
   hook-simulator.test.mjs
   policy-controls.test.mjs
+  pik-v2.test.mjs
 docs/
   demo.md
   project-plan.md
@@ -87,8 +94,9 @@ docs/
 `prompt-core/` and `hooks/` are the Phase 5 interception kernel. The kernel
 preserves the developer prompt byte-for-byte on replacement-capable paths,
 evaluates all seven policy contracts independently, selects one of 14 workflows,
-and writes metadata-only local audit events. Raw prompts and prompt-derived
-content hashes are not stored.
+and writes metadata-only events through an asynchronous bounded local buffer.
+Raw prompts and prompt-derived content hashes are not stored. Policy inputs are
+checksummed under an expiring Ed25519-signed manifest with validated LKG fallback.
 
 Coverage is capability- and evidence-based, not inferred from the client name:
 
@@ -96,23 +104,29 @@ Coverage is capability- and evidence-based, not inferred from the client name:
   canary for the tested client and is classified `governed-shadow` while healthy.
 - Claude Code context injection is represented from the vendor contract but is
   classified `observed` until a pinned-runtime downstream canary is recorded.
-- Copilot CLI `userPromptSubmitted` is notification-only; its
-  `userPromptTransformed` mutation contract is implemented but remains
+- Copilot SDK programmatic `userPromptSubmitted` can return `modifiedPrompt`, but
+  hard rejection must occur in the application before `session.send()`.
+- Configured Copilot command/HTTP `userPromptSubmitted` output is dropped; its
+  `userPromptTransformed` mutation contract is implemented separately but remains
   `observed` until a pinned-runtime downstream canary is recorded.
 - JetBrains remains unsupported for interception and is not included in governed
   coverage.
 
 All seven rules are currently `shadow`. Modes are configured per rule in
-`prompt-core/control-plane.json`; the removed global enable-all switch is ignored.
+`prompt-core/control-plane.json`; named ownership, a ratified threshold ledger,
+and per-rule evidence approval are also required, so a mode-only edit cannot
+promote a rule. The removed global enable-all switch is ignored.
 The emergency control can only roll enforced rules back to shadow. See
 `docs/adapter-capability-matrix.md` and `docs/phase5-p0-implementation.md` for the
 implemented controls and the evidence still required before a pilot or enforcement.
+The corrected delivery audit is tracked in `docs/pik-v2-delivery-status.md`.
 
 Quick verification:
 
 ```bash
 node prompt-core/rewrite.mjs --selftest
 node --test "tests/*.test.mjs"
+node scripts/run-canary.mjs
 node scripts/simulate-hook.mjs --prompt "add eslint-disable" --rule-mode bypass-verification=enforce
 ```
 

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "status": "template-no-results",
+  "experimentId": null,
+  "taskTaxonomyVersion": null,
+  "baselineCohort": { "cohortRef": null, "completedTasks": 0 },
+  "shadowCohort": { "cohortRef": null, "completedTasks": 0 },
+  "metrics": {
+    "governanceOverheadTokens": null,
+    "totalTaskInputTokens": null,
+    "totalTaskOutputTokens": null,
+    "turns": null,
+    "reworkPrompts": null,
+    "acceptedOutputRate": null,
+    "elapsedTimeMs": null,
+    "qualityOutcome": null
+  },
+  "qualityNonInferiority": {
+    "margin": null,
+    "method": null,
+    "passed": null
+  },
+  "publicationAllowed": false,
+  "_comment": "Do not publish a token-reduction percentage until matched completed tasks, total task tokens where available, and the quality non-inferiority method are populated and approved."
+}

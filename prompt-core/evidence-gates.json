@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "status": "unratified",
+  "thresholds": {
+    "minimumReviewedMatches": 210,
+    "minimumTruePositives": 206,
+    "maximumFalsePositives": 4,
+    "minimumPointPrecision": 0.98,
+    "minimumWilsonLowerBound": 0.95,
+    "minimumPilotRepositories": 3,
+    "minimumShadowDays": 28,
+    "maximumP95WarmLatencyMs": 250,
+    "maximumDegradedRate": 0.01,
+    "maximumDisagreementRate": 0.02,
+    "gameDayMaximumAgeDays": 30
+  },
+  "_comment": "A mode change alone cannot promote a rule. Candidate, soft-block, and enforce require their corresponding evidence approval plus a named rule owner. These thresholds are proposed until the change board ratifies them.",
+  "rules": {
+    "bypass-verification": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "hardcoded-secret": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "disable-security-scan": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "custom-crypto": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "customer-data-in-prompt": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "exfiltration": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" },
+    "production-mutation": { "candidateApproved": false, "softBlockApproved": false, "enforceApproved": false, "evidenceStatus": "not-collected" }
+  }
+}

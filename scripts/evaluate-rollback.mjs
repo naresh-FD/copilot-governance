@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { readBufferedEvents } from "../prompt-core/event-buffer.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -49,7 +50,7 @@ export function evaluateRollback(events, control, now = new Date()) {
     : 0;
   const integrityFailure = events.some((event) =>
     (event.failureMarkers || []).some((marker) =>
-      /integrity|checksum|audit-write-failed/i.test(marker),
+      /integrity|checksum|audit-write-failed|event-loss|decision-engine|ui-unavailable/i.test(marker),
     ),
   );
   const latencyFailure = latencyBreachedTwice(
@@ -110,7 +111,7 @@ function flagValue(argv, name, fallback = null) {
   return index === -1 ? fallback : argv[index + 1] ?? fallback;
 }
 
-export function run(argv = process.argv.slice(2)) {
+export async function run(argv = process.argv.slice(2)) {
   const telemetryPath = flagValue(
     argv,
     "--telemetry",
@@ -128,20 +129,12 @@ export function run(argv = process.argv.slice(2)) {
   const control = JSON.parse(
     readFileSync(join(ROOT, "prompt-core", "control-plane.json"), "utf8"),
   );
-  const events = existsSync(telemetryPath)
-    ? readFileSync(telemetryPath, "utf8")
-        .split("\n")
-        .filter(Boolean)
-        .map((line) => {
-          try {
-            return JSON.parse(line);
-          } catch {
-            return null;
-          }
-        })
-        .filter(Boolean)
-        .slice(-windowSize)
-    : [];
+  const events = await readBufferedEvents({
+    path: telemetryPath,
+    maxFiles: Number(process.env.GOV_EVENT_BUFFER_FILES || 3),
+    encryptionKey: process.env.GOV_EVENT_ENCRYPTION_KEY || null,
+    limit: windowSize,
+  });
   const now = new Date();
   const rules = evaluateRollback(events, control, now);
   const ttlMinutes = Number(control.rollbackThresholds?.stateTtlMinutes ?? 10);
@@ -161,5 +154,8 @@ export function run(argv = process.argv.slice(2)) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  run();
+  run().catch((error) => {
+    process.stderr.write(`evaluate-rollback: ${error.message}\n`);
+    process.exitCode = 1;
+  });
 }

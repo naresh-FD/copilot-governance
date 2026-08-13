@@ -1,17 +1,17 @@
 {
-  "version": 2,
+  "version": 3,
   "_comment": [
     "Per-surface capability matrix for the prompt interception kernel.",
     "",
-    "The three hook runtimes do NOT share an output schema, and none of them",
+    "The hook runtimes and registration variants do NOT share one capability set,",
     "supports every governance action. This file is the single place that records",
     "what each surface can actually do, so the engine renders the correct shape",
     "instead of emitting a field the runtime silently ignores. A hook that writes",
     "an unsupported field does not fail loudly — the prompt simply goes to the",
     "model ungoverned, which is the worst possible failure for a control.",
     "",
-    "Verified against vendor documentation on 2026-08-02. The hooks APIs on all",
-    "three surfaces are Preview. Re-verify at each pilot checkpoint and bump",
+    "Verified against vendor documentation on 2026-08-13. The hooks APIs on all",
+    "represented surfaces are Preview. Re-verify at each pilot checkpoint and bump",
     "'verifiedOn' when you do.",
     "",
     "Fields:",
@@ -24,7 +24,61 @@
     "                'exit2', or null when the surface cannot block at all.",
     "  systemMessage Whether a 'systemMessage' string is surfaced to the developer."
   ],
-  "verifiedOn": "2026-08-02",
+  "verifiedOn": "2026-08-13",
+  "capabilityRecords": {
+    "github-sdk-user-prompt-submitted": {
+      "surface": "Copilot SDK",
+      "hook": "userPromptSubmitted",
+      "runtime": "programmatic SDK hook",
+      "interactionTypes": ["sdk-session-send"],
+      "observe": true,
+      "notify": false,
+      "mutate": true,
+      "preSendBlock": "application-owned-before-session-send",
+      "correlate": "local-contract-only",
+      "proof": "official-contract",
+      "notes": "modifiedPrompt is honored only here; the hook itself cannot hard-reject, so a supported application must gate before session.send()."
+    },
+    "github-config-user-prompt-submitted": {
+      "surface": "Copilot CLI / cloud agent",
+      "hook": "userPromptSubmitted",
+      "runtime": "command-or-http configuration",
+      "interactionTypes": ["cli", "cloud-agent"],
+      "observe": true,
+      "notify": false,
+      "mutate": false,
+      "preSendBlock": false,
+      "correlate": "metadata-only",
+      "proof": "official-contract",
+      "notes": "Command and HTTP output is dropped, including modifiedPrompt; the lighter hosted/steering cloud runtime also ignores it."
+    },
+    "github-user-prompt-transformed": {
+      "surface": "Copilot CLI / cloud agent",
+      "hook": "userPromptTransformed",
+      "runtime": "command-or-http configuration",
+      "interactionTypes": ["primary", "batched-preceding-message"],
+      "observe": true,
+      "notify": false,
+      "mutate": true,
+      "preSendBlock": false,
+      "correlate": "local-contract-only",
+      "proof": "official-contract",
+      "notes": "modifiedTransformedPrompt replaces model-facing content and session history but cannot block or handle the turn."
+    },
+    "github-cloud-agent-policy-hooks": {
+      "surface": "Copilot cloud agent",
+      "hook": "policy-level hooks",
+      "runtime": "hosted sandbox",
+      "interactionTypes": ["cloud-agent"],
+      "observe": false,
+      "notify": false,
+      "mutate": false,
+      "preSendBlock": false,
+      "correlate": false,
+      "proof": "unsupported",
+      "notes": "Machine-wide policy hooks are Copilot CLI-only; cloud-agent hook behavior must be proven separately in the repository sandbox."
+    }
+  },
   "default": "vscode",
   "surfaces": {
     "vscode": {
@@ -86,6 +140,33 @@
         "default command timeout to 30s."
       ]
     },
+    "copilot-sdk": {
+      "label": "Copilot SDK programmatic hook",
+      "registrationRequired": false,
+      "adapterId": "copilot-sdk-user-prompt-submitted",
+      "adapterVersion": "1.0.0",
+      "events": ["userPromptSubmitted"],
+      "notifyOnly": [],
+      "promptField": "prompt",
+      "rewriteField": "modifiedPrompt",
+      "rewriteVerified": true,
+      "injectField": null,
+      "injectVerified": false,
+      "deliveryProof": {
+        "status": "contract-only",
+        "verifiedOn": "2026-08-13",
+        "scope": "Official SDK contract only; no pinned SDK application or downstream model-receipt canary is recorded"
+      },
+      "block": null,
+      "systemMessage": false,
+      "notes": [
+        "modifiedPrompt is honored only for an SDK programmatic hook.",
+        "The hook cannot hard-reject a prompt. Applications claiming pre-send",
+        "prevention must enforce the decision before calling session.send().",
+        "This adapter is a wire-contract implementation and is not distributed",
+        "as a command hook because command/HTTP output is dropped."
+      ]
+    },
     "copilot-cli": {
       "label": "Copilot CLI / coding agent",
       "adapterId": "copilot-cli-prompt-hooks",
@@ -105,16 +186,14 @@
       "block": null,
       "systemMessage": false,
       "notes": [
-        "The only surface with real, documented prompt replacement.",
-        "userPromptSubmitted is notification-only ('Output processed: No') and",
-        "cannot block or modify, so it is used for telemetry alone.",
+        "userPromptSubmitted command/HTTP output is dropped, including",
+        "modifiedPrompt, so the configured command hook is telemetry-only.",
         "userPromptTransformed is mutation-only: it can rewrite what the model",
         "receives but cannot block. An enforcing deny rule therefore CANNOT stop a",
         "prompt here — it degrades to a hard refusal instruction written into the",
         "rewritten prompt. That is a genuine enforcement gap, not parity.",
-        "Because there is no injectField distinct from rewriteField, no-match",
-        "injection is done by prepending the governance preamble to the existing",
-        "transformed prompt, which leaves the developer's text intact after it."
+        "The composer replaces transformed content with a governed envelope that",
+        "contains the available original prompt exactly once and verifies it locally."
       ]
     }
   }

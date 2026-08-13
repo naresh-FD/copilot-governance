@@ -183,8 +183,11 @@ function Invoke-Validate {
 
   $requiredKernel = @(
     "core.md", "router.json", "deny.json", "surfaces.json",
-    "control-plane.json", "policy-pack.json", "rewrite.mjs",
-    "envelope.mjs", "control-plane.mjs", "policy-pack.mjs",
+    "control-plane.json", "evidence-gates.json", "rule-catalog.json",
+    "policy-pack.json", "policy-pack.sig", "policy-public-key.pem", "rewrite.mjs",
+    "envelope.mjs", "control-plane.mjs", "event-buffer.mjs",
+    "evidence-gate.mjs", "feedback.mjs", "labeling.mjs", "policy-pack.mjs",
+    "review-sanitizer.mjs",
     "repo-profile.mjs", "skill-selector.mjs", "context-optimizer.mjs"
   ) | ForEach-Object { Join-Path $Root "prompt-core/$_" }
 
@@ -198,7 +201,7 @@ function Invoke-Validate {
   }
 
   if (Get-Command node -ErrorAction SilentlyContinue) {
-    foreach ($module in @("rewrite.mjs", "envelope.mjs", "control-plane.mjs", "policy-pack.mjs")) {
+    foreach ($module in @("rewrite.mjs", "envelope.mjs", "control-plane.mjs", "event-buffer.mjs", "evidence-gate.mjs", "feedback.mjs", "labeling.mjs", "policy-pack.mjs", "review-sanitizer.mjs")) {
       & node --check (Join-Path $Root "prompt-core/$module")
       if ($LASTEXITCODE -ne 0) {
         "FAIL: prompt-core/$module has a syntax error"

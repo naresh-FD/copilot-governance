@@ -3,39 +3,45 @@
 Status date: 2026-08-13
 Machine-readable source: `prompt-core/surfaces.json`
 
-This matrix separates an implemented wire contract from proof that governed
-content reached the downstream model. A surface is counted as governed only when
-the exact client, hook, interaction, and version has a repeatable canary marked
-`canary-verified`.
+Capabilities are specific to surface, client version, hook runtime and
+interaction type. An official wire contract is not downstream delivery proof.
 
-| Surface and hook | Observe | Notify | Replace/augment | Block | Delivery evidence | Current control state |
-|---|---:|---:|---:|---:|---|---|
-| VS Code `UserPromptSubmit` | Yes | Yes | `additionalContext` canary verified; `modifiedPrompt` unverified | Exit 2 contract | Local canary recorded 2026-08-09 for `additionalContext`; revalidate after upgrades | `governed-shadow` while healthy; `governed-enforced` only for a separately approved rule |
-| Claude Code `UserPromptSubmit` | Yes | Yes | Context injection contract; prompt replacement unavailable | Top-level `decision:block` contract | Contract tests only; no pinned-runtime downstream canary recorded | `observed` |
-| Copilot CLI `userPromptSubmitted` | Yes | Event-owned | No | No | Notification-only contract | `advisory-only` |
-| Copilot CLI `userPromptTransformed` | Yes | No dedicated message channel | `modifiedTransformedPrompt` contract | No | Contract tests only; no pinned-runtime downstream canary recorded | `observed`; `degraded` if an enforced rule matches because hard blocking is unavailable |
-| JetBrains | No supported adapter | No | No | No | None | `unsupported` |
+| Surface/runtime and hook | Observe | Mutate model-facing content | Pre-send/hard block | Evidence | Counted state |
+|---|---:|---:|---:|---|---|
+| VS Code `UserPromptSubmit` command hook | Yes | `additionalContext` augmentation; `modifiedPrompt` unverified | Exit-2 contract | Local augmentation canary 2026-08-09; client version must be pinned for pilot | `governed-shadow` only in recorded scope |
+| Claude Code `UserPromptSubmit` | Yes | Context injection contract; cannot replace prompt | Top-level `decision:block` contract | Process contract only; no model-receipt canary | `observed` |
+| Copilot SDK programmatic `userPromptSubmitted` | Yes | Yes, `modifiedPrompt` | Hook cannot reject; application must gate before `session.send()` | Official contract plus local process harness; no pinned app receipt canary | `observed` |
+| Copilot CLI/cloud command or HTTP `userPromptSubmitted` | Yes | No; output is dropped, including `modifiedPrompt` | No | Official contract plus local process harness | `advisory-only` |
+| Copilot CLI/cloud `userPromptTransformed` | Yes | Yes, `modifiedTransformedPrompt` | No; mutation-only | Official contract plus local process harness; no pinned downstream receipt canary | `observed`; `degraded` for an unenforceable blocking match |
+| Cloud-agent machine-wide policy hook | No | No | No | Officially unsupported for policy-hook installation | `unsupported` |
+| JetBrains | No adapter | No | No | None | `unsupported` |
 
-## Repeatable contract checks
+GitHub’s current contract states that configured command/HTTP
+`userPromptSubmitted` output is dropped, while SDK programmatic output can
+return `modifiedPrompt`. `userPromptTransformed` runs immediately before
+model-facing content is emitted and persisted, can replace that content, and
+cannot block or handle the turn. Hosted/cloud-agent behavior still requires a
+pinned live canary.
+
+## Repeatable local checks
 
 ```bash
-node --test tests/hook-simulator.test.mjs
-node scripts/simulate-hook.mjs --prompt "fix the SQL injection"
+node scripts/run-canary.mjs
+node --test tests/hook-simulator.test.mjs tests/pik-v2.test.mjs
 ```
 
-These checks prove process-boundary payload and response shapes. They do not
-replace the live harmless canary needed to prove that the pinned client delivered
-the governed context to the model.
+The canary correlates a harmless marker with its metadata event and separately
+tests SDK submit, configured submit, and transformed output. Its evidence type
+is `local-process-contract` and it explicitly reports
+`downstreamModelReceiptProven: false`.
 
-## Canary evidence record
+## Required live canary record
 
-For every pilot client/version, record:
-
-- client, extension, adapter, hook, and interaction versions;
-- harmless canary identifier and expected governed instruction;
+- client, SDK/extension, adapter, hook and interaction versions;
+- harmless canary ID and expected governed instruction;
 - model-visible result proving receipt;
 - correlated local event ID;
-- tester, timestamp, repository class, and result;
-- revalidation result after any client or extension upgrade.
+- tester, timestamp, repository class and result;
+- failure/degraded behavior and upgrade revalidation.
 
-No unrecorded surface may be added to the governed-coverage numerator.
+No unrecorded path enters the governed-coverage numerator.

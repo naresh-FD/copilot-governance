@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "_comment": "Engineering inventory for the seven rules. Classification values are preliminary implementation assessments, not bank risk ratings. No Argus, DLP, or pipeline mapping is called verified until the owning team supplies evidence.",
+  "rules": [
+    {
+      "id": "bypass-verification",
+      "owner": "unassigned",
+      "policyIntent": "Prevent assistant-authored suppression or bypass of verification controls.",
+      "nonMatches": ["Remove an existing suppression", "Audit or explain existing skipped checks"],
+      "remediation": "Fix the failing test, lint, scan, or CI condition at its root cause.",
+      "classification": { "determinism": "mixed", "precisionCeiling": "requires-shadow-evidence", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "hardcoded-secret",
+      "owner": "unassigned",
+      "policyIntent": "Prevent secrets or requests to hardcode secrets from reaching generated source or prompts.",
+      "nonMatches": ["Reference a secret by approved store name", "Remove or rotate an exposed credential"],
+      "remediation": "Use the approved secret store and rotate any exposed credential.",
+      "classification": { "determinism": "mixed", "precisionCeiling": "requires-rule-split", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "security-unassigned" }
+    },
+    {
+      "id": "disable-security-scan",
+      "owner": "unassigned",
+      "policyIntent": "Prevent assistant-driven disabling or waiver of security scanning.",
+      "nonMatches": ["Discuss an already approved waiver", "Repair a scanner configuration"],
+      "remediation": "Fix the finding or route an exception through the security approval process.",
+      "classification": { "determinism": "mixed", "precisionCeiling": "requires-shadow-evidence", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "custom-crypto",
+      "owner": "unassigned",
+      "policyIntent": "Prevent unsafe custom cryptography and weak-algorithm introduction.",
+      "nonMatches": ["Remove a weak algorithm", "Migrate to an approved cryptographic library"],
+      "remediation": "Use the organization-approved cryptographic or authentication library.",
+      "classification": { "determinism": "mixed", "precisionCeiling": "requires-signal-narrowing", "falsePositiveBlastRadius": "high", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    },
+    {
+      "id": "customer-data-in-prompt",
+      "owner": "unassigned",
+      "policyIntent": "Prevent customer or regulated data from being submitted to a model.",
+      "nonMatches": ["Use synthetic fixtures", "Discuss data handling without including real records"],
+      "remediation": "Replace real data with synthetic or irreversibly anonymized fixtures.",
+      "classification": { "determinism": "low", "precisionCeiling": "requires-validator-hardening", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "egress-control-owned", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "not-equivalent", "networkDlpOwner": "security-unassigned" }
+    },
+    {
+      "id": "exfiltration",
+      "owner": "unassigned",
+      "policyIntent": "Prevent instructions to reveal or transmit credentials and environment data.",
+      "nonMatches": ["Reference a secret by name", "Describe an approved rotation procedure"],
+      "remediation": "Use approved secret references and egress-controlled operational workflows.",
+      "classification": { "determinism": "mixed", "precisionCeiling": "requires-shadow-evidence", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "egress-control-owned", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "required-for-prevention", "argusCiEquivalent": "not-equivalent", "networkDlpOwner": "security-unassigned" }
+    },
+    {
+      "id": "production-mutation",
+      "owner": "unassigned",
+      "policyIntent": "Prevent assistant-driven direct mutation of production data, deployments, or protected branches.",
+      "nonMatches": ["Prepare a reviewed release plan", "Operate in a non-production test environment"],
+      "remediation": "Use the normal reviewed release, branch, and production-change process.",
+      "classification": { "determinism": "medium", "precisionCeiling": "requires-shadow-evidence", "falsePositiveBlastRadius": "critical", "remediationClarity": "high" },
+      "portability": { "class": "dual-surface", "promptTime": true, "modelFacingCompose": true, "preSendBlock": "adapter-dependent", "argusCiEquivalent": "partial-unverified", "networkDlpOwner": "not-applicable" }
+    }
+  ]
+}
