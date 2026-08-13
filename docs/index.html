@@ -458,7 +458,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 .hflow-branch svg{width:18px;height:18px;color:var(--danger-fg);flex-shrink:0;margin-top:.1rem}
 .hflow-branch p{font-size:12.4px;color:var(--body);line-height:1.65;margin:.2rem 0 0}
 .hflow-branch b{color:var(--danger-fg);font-size:.85rem}
-.hflow-surfaces{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-top:1rem}
+.hflow-surfaces{display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-top:1rem}
 .hs-item{display:flex;flex-direction:column;align-items:flex-start;gap:.4rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:.9rem 1rem}
 .hs-item b{font-size:.83rem;color:var(--ink)}
 .hs-note{font-size:11px;color:var(--muted);line-height:1.5}
@@ -668,9 +668,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="overview" class="block">
     <div class="hero2">
       <div class="hero2-left">
-        <div class="eyebrow">Copilot Governance · Shadow Mode</div>
+        <div class="eyebrow">PIK v2 Implemented · Pilot On Hold</div>
         <h1>Govern the prompt before Copilot generates the code.</h1>
-        <p class="hero2-sub">On canary-verified hook paths, approved governance context is delivered before the model responds while your wording stays untouched. Contract-only and unsupported paths are reported separately.</p>
+        <p class="hero2-sub">The corrected interception kernel is implemented and verified locally. Signed policy integrity, evidence-gated rule promotion, metadata-only audit, rollback, feedback and labeling controls are ready; production enforcement remains disabled until live evidence and named approvals exist.</p>
         <div class="hero2-cta">
           <a class="btn btn-primary" href="#demo">See it in action</a>
           <a class="btn btn-secondary" href="#architecture">View architecture</a>
@@ -694,7 +694,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           </div>
           <div class="hp-status">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Advisory in shadow mode — flagged, not yet blocking
+            All 7 rules remain shadow-only — no production blocking
           </div>
         </div>
       </div>
@@ -709,7 +709,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <div class="outcome-row" style="margin-top:2.5rem">
       <div class="outcome danger">
         <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
-        <div><h3>Blocks malicious intent</h3><p>Prompts that would hardcode secrets, bypass auth, or exfiltrate data are screened against 7 policy rules and flagged before the model ever answers.</p></div>
+        <div><h3>Screens risky intent</h3><p>Prompts that would hardcode secrets, bypass auth, or exfiltrate data are evaluated against 7 independently controlled policy rules. Today they are recorded and surfaced as shadow advisories, not blocked.</p></div>
       </div>
       <div class="outcome info">
         <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8.3" y1="8.3" x2="13.7" y2="13.7"/><line x1="13.7" y1="8.3" x2="8.3" y2="13.7"/></svg></div>
@@ -718,7 +718,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     </div>
 
     <h2 class="h" style="margin-top:2.5rem" id="pipeline">The Full Pipeline</h2>
-    <p class="lede">Every governed prompt runs through the same five stages, left to right. Your wording rides through every one of them untouched — only the context around it grows.</p>
+    <p class="lede">Every eligible event follows the same policy sequence. Replacement paths verify the developer's original wording locally and include it exactly once; augmentation-only and observe-only paths use their documented surface contract.</p>
 
     <div class="hflow">
       <div class="hflow-row">
@@ -726,7 +726,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <div class="hnode-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
           <span class="hnode-tag">1 · Input</span>
           <b>Developer Prompt</b>
-          <p>Exactly what's typed. Nothing rewritten yet — this wording reaches the model unchanged, start to finish.</p>
+          <p>Exactly what's typed. It remains in memory, is excluded from metadata telemetry, and is preserved exactly once on replacement paths.</p>
         </div>
         <div class="hflow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="hnode on">
@@ -754,7 +754,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <div class="hnode-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
           <span class="hnode-tag">5 · Output</span>
           <b>Governed Prompt</b>
-          <p>Same wording with governed context. It counts as model-delivered only where a pinned live canary proves receipt.</p>
+          <p>Surface-specific output: injected context, replacement content, SDK <code>modifiedPrompt</code>, or observe-only telemetry. Model delivery is claimed only after a pinned live canary.</p>
         </div>
       </div>
 
@@ -782,6 +782,11 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <span class="badge b-info">Rewrite contract implemented</span>
           <span class="hs-note">No block mechanism — degrades to refusal text</span>
         </div>
+        <div class="hs-item">
+          <b>Copilot SDK</b>
+          <span class="badge b-info">modifiedPrompt contract</span>
+          <span class="hs-note">Application must gate before session.send()</span>
+        </div>
       </div>
     </div>
     <p class="lede" style="margin-top:1rem;margin-bottom:0">Concrete proof this actually happens — not just the diagram — is in <a href="#demo">See It In Action</a> below.</p>
@@ -789,7 +794,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <div class="stats">
       <div class="stat"><b>7</b><span>Platform Phases</span></div>
       <div class="stat"><b>14</b><span>Approved Workflows</span></div>
-      <div class="stat"><b>3</b><span>Declared Adapters</span></div>
+      <div class="stat"><b>4</b><span>Runtime Adapters</span></div>
       <div class="stat"><b>11</b><span>Success Metrics</span></div>
     </div>
   </section>
@@ -824,7 +829,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="card">
         <div class="card-top">
           <span class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg></span>
-          <div><h3>Interception Kernel</h3><p class="card-sub">Phase 5 — capability proof and shadow validation in progress</p></div>
+          <div><h3>Interception Kernel</h3><p class="card-sub">PIK v2 implementation complete — live pilot evidence and approvals remain</p></div>
         </div>
         <div class="card-links">
           <a href="#ic-flow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Kernel Flow</a>
@@ -971,10 +976,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <p>Pre-commit hook enforces token budgets and blocks unresolved placeholders or hardcoded secrets in governance content. <strong>Output: local developer toolchain.</strong></p></div></li>
       <li><span class="pin p-done">4</span><div class="tl-body"><div class="tl-head"><b>GitHub Automation</b><span class="tag t-done">Delivered</span></div>
         <p>Governance scales across repos through PR-based automation. Drift detected and corrected on the next sync. <strong>Output: org-wide automation ready.</strong></p></div></li>
-      <li><span class="pin p-now">5</span><div class="tl-body"><div class="tl-head"><b>Prompt Interception Kernel</b><span class="tag t-now">In Progress</span></div>
-        <p>Target: governed delivery on every supported, healthy, canary-verified hook path. All <strong>seven policy rules remain in shadow mode</strong> — evaluated and logged, the developer sees an advisory, and the prompt proceeds. Enforcement requires pilot evidence and per-rule approval. JetBrains remains an explicit unsupported gap.</p></div></li>
+      <li><span class="pin p-now">5</span><div class="tl-body"><div class="tl-head"><b>Prompt Interception Kernel</b><span class="tag t-now">Implemented · Shadow</span></div>
+        <p>The corrected PIK v2 engineering controls and local verification are complete. All <strong>seven policy rules remain in shadow mode</strong>; enforcement requires production labels, operational proof, named owners and per-rule approval. JetBrains remains an explicit unsupported gap.</p></div></li>
       <li><span class="pin p-next">6</span><div class="tl-body"><div class="tl-head"><b>Pilot Rollout</b><span class="tag t-next">Not Started</span></div>
-        <p>Four pilot repos covering all three declared adapters and at least one IntelliJ Java team. Deny rules graduate from shadow to enforcing one at a time based on real telemetry.</p></div></li>
+        <p>No pilot repository has been nominated. The pilot must exercise the four represented runtime adapters, record the JetBrains risk cohort separately, complete a four-week soak and collect at least 210 independently reviewed outcomes before any one-rule-at-a-time promotion.</p></div></li>
       <li><span class="pin p-next">7</span><div class="tl-body"><div class="tl-head"><b>Wave Rollout</b><span class="tag t-next">Not Started</span></div>
         <p>4 → 20–25 → 50–75 → remaining repos, then weekly audit and sync steady state. Pilot feedback refines the baseline before Wave 1.</p></div></li>
     </ol>
@@ -984,18 +989,18 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="interception" class="block">
     <div class="eyebrow">Phase 5 — Engineering Leadership Brief</div>
     <h2 class="h">Prompt Interception Kernel</h2>
-    <p class="lede">Until Phase 5, governance worked mainly by publishing standards. Phase 5 adds measured interception where client hooks support it, while keeping unverified and unsupported paths visible instead of claiming universal coverage.</p>
+    <p class="lede">PIK v2 adds signed policy loading, independent rule lifecycles, evidence-gated promotion, privacy-safe audit buffering, structured feedback, review labeling and automatic rollback. Unverified and unsupported paths remain visible instead of being counted as universal coverage.</p>
 
     <h3 class="h3" id="ic-change">What Changes for a Developer</h3>
     <div class="tbl-wrap scroller">
       <table>
         <thead><tr><th>Dimension</th><th>Before Phase 5</th><th>After Phase 5</th></tr></thead>
         <tbody>
-          <tr><td>What the developer types</td><td>Free-form prompt</td><td>Unchanged — exactly what they typed</td></tr>
-          <tr><td>What the AI receives</td><td>Whatever was typed</td><td>Their exact words, plus security rules and the matched workflow</td></tr>
+          <tr><td>What the developer types</td><td>Free-form prompt</td><td>Preserved exactly once on replacement paths</td></tr>
+          <tr><td>What the AI receives</td><td>Whatever was typed</td><td>Surface-specific governed content only where the hook supports injection or mutation</td></tr>
           <tr><td>Prompts blocked</td><td>None</td><td>None yet — shadow mode. Advisory shown; the prompt proceeds.</td></tr>
-          <tr><td>Telemetry</td><td>None — every number was an estimate</td><td>Real counts: intent distribution, deny-rule hits per surface</td></tr>
-          <tr><td>Setup required</td><td>None</td><td>None — arrives with the normal governance sync</td></tr>
+          <tr><td>Telemetry</td><td>None — every number was an estimate</td><td>Metadata-only local events; raw prompts, source fragments and prompt-derived hashes are prohibited</td></tr>
+          <tr><td>Setup required</td><td>None</td><td>Hook registration per supported runtime; SDK applications integrate programmatically</td></tr>
         </tbody>
       </table>
     </div>
@@ -1012,20 +1017,20 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <li>
         <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
         <div class="kf-body">
-          <div class="kf-head"><b>UserPromptSubmit Hook</b><span class="kf-tag">Registration</span></div>
-          <p>Fires before the model sees anything. Registered per surface in <code>prompt-interceptor.json</code>.</p>
+          <div class="kf-head"><b>Surface Hook</b><span class="kf-tag">Registration</span></div>
+          <p>Receives <code>UserPromptSubmit</code>, SDK <code>userPromptSubmitted</code>, configured submit, or <code>userPromptTransformed</code>. Each event keeps its own capability record.</p>
         </div>
       </li>
       <li>
         <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></span>
         <div class="kf-body">
           <div class="kf-head"><b>rewrite.mjs</b><span class="kf-tag">Engine · zero deps</span></div>
-          <p>A single file runs four steps in order:</p>
+          <p>The kernel verifies the signed pack before making any decision, then runs:</p>
           <div class="kf-mini">
             <div class="kf-mini-item"><b>Screen</b><span><code>deny.json</code></span></div>
             <div class="kf-mini-item"><b>Classify</b><span><code>router.json</code></span></div>
             <div class="kf-mini-item"><b>Compose</b><span><code>core.md</code> + matched workflow</span></div>
-            <div class="kf-mini-item"><b>Log</b><span><code>telemetry.jsonl</code></span></div>
+            <div class="kf-mini-item"><b>Audit</b><span>bounded metadata-only event buffer</span></div>
           </div>
         </div>
       </li>
@@ -1033,7 +1038,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <span class="kf-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/></svg></span>
         <div class="kf-body">
           <div class="kf-head"><b>AI Model</b><span class="kf-tag">Output</span></div>
-          <p>Receives <code>additionalContext</code> on VS Code and Claude Code, or <code>modifiedTransformedPrompt</code> on Copilot CLI — the delivery mechanism depends on the surface.</p>
+          <p>Receives <code>additionalContext</code> on augmentation paths, <code>modifiedPrompt</code> in the programmatic SDK, or <code>modifiedTransformedPrompt</code> on the transformed hook. Configured submit output is dropped.</p>
         </div>
       </li>
     </ol>
@@ -1044,7 +1049,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <thead><tr><th>Client</th><th>Evidence state</th><th>Rewrite</th><th>Block</th><th>Config</th></tr></thead>
         <tbody>
           <tr><td>VS Code Copilot</td><td><span class="badge b-ok">Canary-verified injection</span></td><td><span class="badge b-no">No verified replacement</span></td><td><span class="badge b-ok">Exit 2 contract</span></td><td><code>prompt-interceptor.json</code></td></tr>
-          <tr><td>Copilot CLI / agent</td><td><span class="badge b-warn">Contract-only; live canary pending</span></td><td><span class="badge b-ok">Yes — contract</span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
+          <tr><td>Copilot SDK programmatic submit</td><td><span class="badge b-warn">Official contract + local harness</span></td><td><span class="badge b-ok"><code>modifiedPrompt</code></span></td><td><span class="badge b-no">Application-owned gate</span></td><td>SDK registration</td></tr>
+          <tr><td>Copilot CLI configured submit</td><td><span class="badge b-info">Observe-only</span></td><td><span class="badge b-no">No — output dropped</span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
+          <tr><td>Copilot CLI transformed hook</td><td><span class="badge b-warn">Official contract + local harness</span></td><td><span class="badge b-ok"><code>modifiedTransformedPrompt</code></span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
           <tr><td>Claude Code</td><td><span class="badge b-warn">Contract-only; live canary pending</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-ok">Decision contract</span></td><td><code>claude-code-settings.fragment.json</code></td></tr>
           <tr><td>JetBrains / IntelliJ</td><td><span class="badge b-no">Unsupported — files only</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-no">No</span></td><td>None — no hook support</td></tr>
         </tbody>
@@ -1052,7 +1059,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     </div>
     <div class="note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      <p><strong>Key constraint:</strong> no declared surface can both rewrite and block. A union of different client capabilities is not coverage for any individual interaction. Always report the exact client, hook, version, and canary state.</p>
+      <p><strong>Key constraint:</strong> capabilities belong to one exact runtime and event. Configured submit cannot mutate, transformed content cannot block, and the SDK hook relies on its application to gate before <code>session.send()</code>. Never combine these capabilities into a claim for one interaction.</p>
     </div>
 
     <h3 class="h3" id="ic-gaps" style="margin-top:2.25rem">Known Gaps</h3>
@@ -1067,11 +1074,11 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="gap">
         <span class="gap-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
-        <p><b>No central telemetry collection.</b><code>report</code> reads only the local machine's file — deliberate for privacy, but the platform cannot demonstrate estate-wide that interception is running. Central collection is a Wave 1 prerequisite and carries its own employee-monitoring questions.</p>
+        <p><b>No privacy-approved central collector.</b>The local asynchronous buffer rotates metadata-only events and can encrypt them, but the platform cannot yet demonstrate estate-wide operation. Collector, dashboard, retention and employee-monitoring approval remain external prerequisites.</p>
       </div>
       <div class="gap">
         <span class="gap-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
-        <p><b>Hook APIs are Preview — re-verify quarterly.</b>The v1 kernel was built against a schema that did not exist, and nothing caught it for a full phase. <code>surfaces.json</code> carries a <code>verifiedOn</code> date — treat it as an expiry, not a footnote. Last verified: <strong>2026-08-02</strong>.</p>
+        <p><b>Hook APIs are Preview — re-verify every pinned pilot version.</b><code>surfaces.json</code> separates SDK submit, configured submit and transformed semantics and carries a <code>verifiedOn</code> date. Last verified against vendor documentation: <strong>2026-08-13</strong>.</p>
       </div>
     </div>
 
@@ -1082,7 +1089,8 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <tbody>
           <tr><td class="num">1</td><td><strong>IntelliJ coverage</strong> — move Java teams to VS Code for Copilot work, formally accept instructions-only coverage, or wait for JetBrains hook support?</td><td>Determines whether coverage can be described as complete. Must be resolved before briefing risk or audit.</td></tr>
           <tr><td class="num">2</td><td><strong>Argus integration</strong> — can the CWE ruleset export format be shared?</td><td>Deny rules are currently hand-authored placeholders. Wiring to Argus keeps one source of truth instead of two drifting copies.</td></tr>
-          <tr><td class="num">3</td><td><strong>Device policy</strong> — will desktop engineering push the MDM setting preventing developers from disabling hooks?</td><td>The difference between a guardrail and an auditable control.</td></tr>
+          <tr><td class="num">3</td><td><strong>Privacy and device policy</strong> — approve metadata retention, collector access, and managed hook deployment?</td><td>The difference between a local engineering guardrail and an auditable operating control.</td></tr>
+          <tr><td class="num">4</td><td><strong>Owners and evidence</strong> — assign rule/control owners and ratify the 206-of-210 review gate?</td><td>Configuration changes alone cannot promote a rule; named approvals and operational evidence are mandatory.</td></tr>
         </tbody>
       </table>
     </div>
@@ -1199,7 +1207,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="rollout" class="block">
     <div class="eyebrow">Deployment</div>
     <h2 class="h">Rollout Waves</h2>
-    <p class="lede">Pilot repos must cover all three governed surfaces and at least one IntelliJ Java team, so the coverage gap is measured during the pilot rather than discovered at wave rollout.</p>
+    <p class="lede">No pilot repository is nominated yet. The approved cohort must exercise all four represented runtime adapters and separately measure an IntelliJ Java team as an unsupported risk cohort.</p>
     <div class="waves">
       <div class="wave now"><b>4</b><em>Pilot</em><span>alerts · react-feature-template · backend-api · web-dashboard</span></div>
       <div class="wave"><b>20–25</b><em>Wave 1</em><span>Active repos; baseline refined from pilot feedback first</span></div>
@@ -1231,6 +1239,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <tr><td><code>validate</code> catches missing markers and required files</td><td><span class="badge b-ok">Proven</span></td><td><code>scripts/copilot-gov.sh validate</code></td></tr>
           <tr><td>Auto-injected files stay under an enforced word budget</td><td><span class="badge b-ok">Proven &amp; enforced</span></td><td>Blocks the commit if exceeded (300 words default; security 900, code-quality 1400)</td></tr>
           <tr><td>Governance content free of unresolved placeholders and literal secrets</td><td><span class="badge b-ok">Proven &amp; enforced</span></td><td>Deny-pattern checks in <code>validate</code>; also blocks the commit</td></tr>
+          <tr><td>Signed policy integrity, expiry, anti-downgrade and last-known-good rollback</td><td><span class="badge b-ok">Proven locally</span></td><td>Ed25519 policy pack and tamper/expiry tests in <code>policy-controls.test.mjs</code></td></tr>
+          <tr><td>Metadata-only bounded audit, feedback, labels and promotion gates</td><td><span class="badge b-ok">Proven locally</span></td><td><code>pik-v2.test.mjs</code>; production collector and privacy approval remain external</td></tr>
+          <tr><td>Production rule enforcement</td><td><span class="badge b-no">Not enabled</span></td><td>All seven rules remain shadow until named owners, ratified approvals and production evidence exist</td></tr>
           <tr><td>Prompt files are shorter to type than free-form prompts</td><td><span class="badge b-ok">Proven</span></td><td>Straight character count — measurable without a pilot</td></tr>
           <tr><td>Custom instructions auto-apply in Copilot Chat</td><td><span class="badge b-info">Real feature — client/version dependent</span></td><td>Ask Copilot to add a <code>console.log</code>; it should push back citing the instruction file. No pushback is a setup problem, not a content problem.</td></tr>
           <tr><td>70–80% Copilot-side token reduction <span style="color:var(--muted)">(claimed in <code>PHASE1_COMPLETE.md</code>)</span></td><td><span class="badge b-warn">Target — not measured</span></td><td>Requires pilot usage data over 4–6 weeks. Nothing in the repo measures actual Copilot usage — no telemetry, no metrics API hook.</td></tr>
@@ -1293,6 +1304,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <div class="doc-list">
           <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/phase5-briefing.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>phase5-briefing.md<span class="badge b-info">Brief</span></a>
           <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/prompt-interception-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>prompt-interception-plan.md</a>
+          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/pik-v2-delivery-status.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PIK v2 delivery status<span class="badge b-warn">Hold before pilot</span></a>
           <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/hallucination-prevention.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>hallucination-prevention.md</a>
           <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/demo.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>demo.md<span class="badge b-warn">Read first</span></a>
         </div>
@@ -1302,7 +1314,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 
   <footer class="foot">
     <div><b>Copilot Governance Platform</b><br>naresh-fd/copilot-governance</div>
-    <div>Phases 0–4 delivered · Phase 5 shadow mode · 4 pilot repositories<br>Hook schemas last verified 2026-08-02</div>
+    <div>Phases 0–4 delivered · PIK v2 implemented in shadow · pilot not yet approved<br>Hook contracts last verified 2026-08-13 · 188 tests / 0 failures</div>
   </footer>
 
 </div>

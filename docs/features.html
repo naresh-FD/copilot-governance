@@ -567,7 +567,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="stat"><b>9</b><span>Instruction Packs</span></div>
       <div class="stat"><b>14</b><span>Approved Workflows</span></div>
       <div class="stat"><b>7</b><span>Curated Skills</span></div>
-      <div class="stat"><b>7</b><span>Test Suites</span></div>
+      <div class="stat"><b>188</b><span>Automated Checks</span></div>
     </div>
   </section>
 
@@ -744,7 +744,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="kernel" class="block">
     <div class="eyebrow">Phase 5</div>
     <h2 class="h">Prompt Interception Kernel</h2>
-    <p class="lede">Eligible hook events are screened, classified, composed and logged locally. Only canary-verified delivery paths count as governed; contract-only paths remain observed. The developer's exact wording is preserved on replacement paths. Full engineering brief on the <a href="index.html#ic-flow">docs home</a>.</p>
+    <p class="lede">PIK v2 verifies a signed policy pack, screens and classifies eligible events, applies independent control states, composes surface-specific output and writes metadata-only audit records. Configuration alone cannot promote a rule. Full engineering status is on the <a href="index.html#ic-flow">docs home</a>.</p>
 
     <div class="cards">
       <div class="card">
@@ -784,8 +784,28 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="card">
         <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></div>
-          <div><h3>surfaces.json</h3><p class="card-sub">Per-surface capability matrix for VS Code Copilot, Claude Code and Copilot CLI — what each hook runtime can actually rewrite, inject or block, verified against vendor docs.</p></div></div>
+          <div><h3>surfaces.json</h3><p class="card-sub">Capability records for VS Code, Claude Code, Copilot SDK and configured Copilot CLI hooks — including observe-only and unsupported paths.</p></div></div>
         <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/surfaces.json" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/surfaces.json</a></div>
+      </div>
+      <div class="card">
+        <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div><h3>Signed Policy Pack</h3><p class="card-sub">Ed25519 signature verification, checksums, validity windows, anti-downgrade logic, background refresh and a 24-hour last-known-good grace.</p></div></div>
+        <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/policy-pack.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/policy-pack.mjs</a></div>
+      </div>
+      <div class="card">
+        <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19V2"/></svg></div>
+          <div><h3>Evidence-Gated Promotion</h3><p class="card-sub">Requires 206 true positives from 210 independent reviews, Wilson lower bound, fixture, latency, degraded-rate, disagreement and game-day gates.</p></div></div>
+        <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/evidence-gate.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/evidence-gate.mjs</a></div>
+      </div>
+      <div class="card">
+        <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"/></svg></div>
+          <div><h3>Privacy-Safe Event Buffer</h3><p class="card-sub">Asynchronous bounded rotation, concurrent append locking, stale-lock recovery, strict metadata allowlists and optional AES-256-GCM encryption.</p></div></div>
+        <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/event-buffer.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/event-buffer.mjs</a></div>
+      </div>
+      <div class="card">
+        <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></div>
+          <div><h3>Feedback &amp; Review Labels</h3><p class="card-sub">Structured agree/disagree/uncertain feedback, safe reason codes, two independent reviewers, adjudication and conservative local sanitization.</p></div></div>
+        <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/feedback.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>feedback.mjs + labeling.mjs</a></div>
       </div>
     </div>
 
@@ -831,18 +851,20 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="testing" class="block">
     <div class="eyebrow">Quality Bar</div>
     <h2 class="h">Testing</h2>
-    <p class="lede">Seven automated suites cover the interception kernel, policy integrity and rollback, declared hook contracts, and the sync lifecycle.</p>
+    <p class="lede">The complete validator executes 188 checks: 187 pass and one Windows symlink case is skipped when administrator privileges are unavailable. It covers interception, signed policy integrity, rollback, audit privacy, evidence gates, hook contracts and sync lifecycle.</p>
 
     <div class="docs-2">
       <div class="doc-list">
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/prompt-core.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>prompt-core.test.mjs <span class="badge b-info">router · deny · rewrite</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/claude-hook.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>claude-hook.test.mjs <span class="badge b-info">Claude Code contract</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/hook-simulator.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>hook-simulator.test.mjs <span class="badge b-info">cross-surface replay</span></a>
+        <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/pik-v2.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>pik-v2.test.mjs <span class="badge b-info">evidence · privacy · canary</span></a>
       </div>
       <div class="doc-list">
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/registry-validation.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>registry-validation.test.mjs <span class="badge b-info">skill lock integrity</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/sync-downstream.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>sync-downstream.test.mjs <span class="badge b-info">downstream repo sync</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/sync-lifecycle.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>sync-lifecycle.test.mjs <span class="badge b-info">manifest add/update/remove</span></a>
+        <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/policy-controls.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>policy-controls.test.mjs <span class="badge b-info">signature · rollback · expiry</span></a>
       </div>
     </div>
   </section>
@@ -868,14 +890,14 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="row">
         <dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Diagrams &amp; Source Docs</dt>
-        <dd>Architecture SVG/PDF diagrams plus the underlying markdown — project plan, prompt-interception plan, security &amp; compliance plan, hallucination prevention, rollout plan. <a href="https://github.com/naresh-FD/copilot-governance/tree/main/docs/diagrams" target="_blank" rel="noopener">docs/diagrams/</a></dd>
+        <dd>Architecture diagrams plus repository-truth records for PIK v2 delivery, topology, privacy, thresholds, pilot risk and task effectiveness. <a href="https://github.com/naresh-FD/copilot-governance/blob/main/docs/pik-v2-delivery-status.md" target="_blank" rel="noopener">PIK v2 delivery status</a></dd>
       </div>
     </dl>
   </section>
 
   <footer class="foot">
     <div><b>Copilot Governance Platform</b><br>naresh-fd/copilot-governance</div>
-    <div>Feature catalog · generated from the repository at commit time<br><a href="index.html#overview">Back to Docs Home</a></div>
+    <div>PIK v2 implemented in shadow · 188 checks / 0 failures · pilot on hold<br><a href="index.html#overview">Back to Docs Home</a></div>
   </footer>
 
 </div>
