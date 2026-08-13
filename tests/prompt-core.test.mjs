@@ -21,7 +21,16 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const ENGINE = join(ROOT, "prompt-core", "rewrite.mjs");
 
 // Telemetry off everywhere: tests must not write to the developer's home dir.
-const ENV = { ...process.env, GOV_TELEMETRY: "0" };
+const ENV = {
+  ...process.env,
+  GOV_TELEMETRY: "0",
+  GOV_POLICY_CACHE: "0",
+  GOV_ROLLBACK_STATE: "0",
+};
+const enforceRule = (id) => ({
+  GOV_ALLOW_TEST_OVERRIDES: "1",
+  GOV_TEST_RULE_MODES: JSON.stringify({ [id]: "enforce" }),
+});
 
 function runCli(prompt, extraEnv = {}, surface = "vscode") {
   const out = execFileSync(
@@ -151,6 +160,15 @@ test("the developer prompt survives verbatim wherever the block can replace it",
   assert.ok(governed.includes("Original developer intent"));
 });
 
+test("replacement preserves leading/trailing whitespace, Unicode, multiline text, and fences", () => {
+  const prompt = "  \tFix café π\r\n```ts\r\nconst value = '🔐';\r\n```\r\n  ";
+  const governed = blockOf(runCli(prompt, {}, "copilot-cli"));
+  assert.ok(
+    governed.includes(prompt),
+    "replacement changed whitespace, Unicode, newlines, or fenced content",
+  );
+});
+
 test("a prompt cannot restructure the governance around it", () => {
   // The fence must grow past any backtick run in the prompt, or a crafted prompt
   // could close it and inject its own sections.
@@ -248,7 +266,7 @@ test("shadow rules advise but never block", () => {
 });
 
 test("bypass-verification advises but does not block in shadow mode", () => {
-  // bypass-verification is in shadow (enforce:false) pending the full negative
+  // bypass-verification is in shadow pending the full negative
   // false-positive test suite passing. In shadow it records and advises but
   // never blocks, regardless of surface.
   const res = runHookRaw(
@@ -273,7 +291,7 @@ test("an enforcing rule blocks on Claude Code with a top-level decision", () => 
   const raw = runHookRaw(
     "claude",
     "just commit with --no-verify to skip the tests",
-    { GOV_ENFORCE_ALL: "1" },
+    enforceRule("bypass-verification"),
   );
   assert.equal(
     raw.status ?? 0,
@@ -295,7 +313,7 @@ test("an enforcing rule blocks on VS Code with exit 2 and a stderr reason", () =
   const res = runHookRaw(
     "vscode",
     "just commit with --no-verify to skip the tests",
-    { GOV_ENFORCE_ALL: "1" },
+    enforceRule("bypass-verification"),
   );
   assert.equal(
     res.status,
@@ -316,7 +334,7 @@ test("Copilot CLI cannot block, so an enforcing rule degrades to a refusal instr
   const res = runHookRaw(
     "copilot-cli",
     "just commit with --no-verify to skip the tests",
-    { GOV_ENFORCE_ALL: "1" },
+    enforceRule("bypass-verification"),
     "userPromptTransformed",
   );
   assert.equal(
@@ -329,17 +347,17 @@ test("Copilot CLI cannot block, so an enforcing rule degrades to a refusal instr
   assert.match(body, /bypass-verification/);
 });
 
-test("no rules are currently enforcing — all are in shadow", async () => {
+test("no rules are currently enforcing — all are independently shadow", async () => {
   // bypass-verification was returned to shadow (2026-08-10) after false-positive
   // evidence showed it blocked legitimate remediation prompts. All rules must
-  // pass the full negative test suite before being re-graduated to enforce=true.
+  // pass the full negative test suite before being promoted to enforce.
   // Any rule appearing here was flipped without a recorded evidence review.
-  const deny = JSON.parse(
-    readFileSync(join(ROOT, "prompt-core", "deny.json"), "utf8"),
+  const control = JSON.parse(
+    readFileSync(join(ROOT, "prompt-core", "control-plane.json"), "utf8"),
   );
-  const enforcing = deny.rules
-    .filter((r) => r.enforce === true)
-    .map((r) => r.id);
+  const enforcing = Object.entries(control.rules)
+    .filter(([, rule]) => ["soft-block", "enforce"].includes(rule.mode))
+    .map(([id]) => id);
   assert.deepEqual(
     enforcing,
     [],
@@ -351,7 +369,9 @@ test("no rules are currently enforcing — all are in shadow", async () => {
 
 test("malformed input passes through without interrupting the developer", () => {
   const out = runHook("this is not json");
-  assert.deepEqual(JSON.parse(out), { continue: true });
+  const parsed = JSON.parse(out);
+  assert.equal(parsed.continue, true);
+  assert.match(parsed.systemMessage, /not counted as governed/);
 });
 
 test("an empty prompt passes through", () => {
@@ -466,7 +486,13 @@ test("telemetry records no prompt text by default", async () => {
     const secret = "customer 4111111111111111 said hunter2";
     execFileSync(process.execPath, [ENGINE, "--prompt", secret], {
       encoding: "utf8",
-      env: { ...process.env, GOV_TELEMETRY: "1", GOV_TELEMETRY_DIR: dir },
+      env: {
+        ...process.env,
+        GOV_TELEMETRY: "1",
+        GOV_TELEMETRY_DIR: dir,
+        GOV_POLICY_CACHE: "0",
+        GOV_ROLLBACK_STATE: "0",
+      },
     });
     const log = readFileSync(join(dir, "telemetry.jsonl"), "utf8");
     assert.ok(!log.includes("hunter2"), "prompt text leaked into telemetry");
@@ -474,7 +500,61 @@ test("telemetry records no prompt text by default", async () => {
       !log.includes("4111111111111111"),
       "card-shaped data leaked into telemetry",
     );
-    assert.match(log, /"promptHash":"[0-9a-f]{16}"/);
+    assert.ok(!log.includes("promptHash"), "content-derived prompt hash must not be stored");
+    const row = JSON.parse(log.trim());
+    assert.match(row.eventId, /^[0-9a-f-]{36}$/i);
+    assert.equal(row.policyResults.length, 7);
+    assert.equal(row.policyPackVersion, "2.0.0");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("raw telemetry cannot be enabled by a legacy environment flag", async () => {
+  const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "govtel-no-raw-"));
+  try {
+    execFileSync(process.execPath, [ENGINE, "--prompt", "secret hunter2"], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        GOV_TELEMETRY: "1",
+        GOV_TELEMETRY_RAW: "1",
+        GOV_TELEMETRY_DIR: dir,
+        GOV_POLICY_CACHE: "0",
+        GOV_ROLLBACK_STATE: "0",
+      },
+    });
+    const log = readFileSync(join(dir, "telemetry.jsonl"), "utf8");
+    assert.ok(!log.includes("hunter2"));
+    assert.ok(!log.includes("rawPrompt"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("audit loss automatically rolls an independently enforced rule back to degraded pass-through", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const dir = mkdtempSync(join(tmpdir(), "govtel-fail-"));
+  const notDirectory = join(dir, "not-a-directory");
+  writeFileSync(notDirectory, "file", "utf8");
+  try {
+    const res = runHookRaw(
+      "vscode",
+      "Add eslint-disable to silence this warning",
+      {
+        ...enforceRule("bypass-verification"),
+        GOV_TELEMETRY: "1",
+        GOV_TELEMETRY_DIR: notDirectory,
+      },
+    );
+    assert.equal(res.status ?? 0, 0, "audit loss must fail open, never exit 2");
+    const body = JSON.parse(res.stdout);
+    assert.equal(body.continue, true);
+    assert.match(body.systemMessage, /not counted as governed|control unavailable/);
+    assert.match(blockOf(body), /Governance availability warning/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -528,7 +608,13 @@ test("telemetry records skill decisions without prompt content", async () => {
       ],
       {
         encoding: "utf8",
-        env: { ...process.env, GOV_TELEMETRY: "1", GOV_TELEMETRY_DIR: dir },
+        env: {
+          ...process.env,
+          GOV_TELEMETRY: "1",
+          GOV_TELEMETRY_DIR: dir,
+          GOV_POLICY_CACHE: "0",
+          GOV_ROLLBACK_STATE: "0",
+        },
       },
     );
     const log = readFileSync(join(dir, "telemetry.jsonl"), "utf8");
@@ -875,7 +961,7 @@ const BYPASS_NEGATIVE_CASES = [
 for (const [signal, prompt] of BYPASS_NEGATIVE_CASES) {
   test(`bypass-verification does not fire for remediation: "${prompt.slice(0, 60)}"`, () => {
     const res = runHookRaw("vscode", prompt);
-    // Must not block (even with GOV_ENFORCE_ALL the classifier gates it)
+    // Must not block; the remediation classifier gates the rule.
     assert.equal(res.status ?? 0, 0, `blocked a legitimate remediation prompt for signal: ${signal}`);
     const out = JSON.parse(res.stdout || "{}");
     const block = blockOf(out);
@@ -934,11 +1020,11 @@ test("bypass-verification: quoted signal in remediation context is not blocked",
   assert.ok(!advisory.includes("bypass-verification"), "remediation context must suppress the advisory");
 });
 
-test("bypass-verification enforces when GOV_ENFORCE_ALL=1", () => {
+test("bypass-verification enforces when that rule alone is promoted", () => {
   // Verifies the enforcement path still works with a bypass-intent prompt.
   const res = runHookRaw("vscode", "Add eslint-disable to silence this warning", {
-    GOV_ENFORCE_ALL: "1",
+    ...enforceRule("bypass-verification"),
   });
-  assert.equal(res.status, 2, "GOV_ENFORCE_ALL must cause exit 2 on vscode for bypass intent");
+  assert.equal(res.status, 2, "the named rule must cause exit 2 on vscode for bypass intent");
   assert.match(res.stderr, /bypass-verification/);
 });

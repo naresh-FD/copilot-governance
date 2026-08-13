@@ -9,6 +9,7 @@ This repository is the central source of truth for:
 - repo-wide `.github/copilot-instructions.md`
 - path-specific `.github/instructions/*.instructions.md`
 - reusable `.github/prompts/*.prompt.md` workflows
+- a versioned prompt-interception kernel with metadata-only audit events
 - local developer validation through `scripts/copilot-gov.sh`
 - GitHub PR-based sync automation
 
@@ -51,6 +52,11 @@ prompt-core/
   core.md
   router.json
   deny.json
+  control-plane.json
+  policy-pack.json
+  envelope.mjs
+  control-plane.mjs
+  policy-pack.mjs
   rewrite.mjs
 hooks/
   prompt-interceptor.json
@@ -62,6 +68,8 @@ scripts/
   hooks/pre-commit
 tests/
   prompt-core.test.mjs
+  hook-simulator.test.mjs
+  policy-controls.test.mjs
 docs/
   demo.md
   project-plan.md
@@ -76,17 +84,37 @@ docs/
 
 ## Prompt Interception
 
-`prompt-core/` and `hooks/` are the Phase 5 interception kernel. Once synced,
-every prompt submitted in a governed repository is intercepted by a VS Code
-`UserPromptSubmit` hook and rewritten against the governance core before the
-model sees it — the developer's original wording is always carried through
-verbatim. Policy rules ship in shadow mode: logged and surfaced, never blocking,
-until pilot data justifies enforcing them one at a time.
+`prompt-core/` and `hooks/` are the Phase 5 interception kernel. The kernel
+preserves the developer prompt byte-for-byte on replacement-capable paths,
+evaluates all seven policy contracts independently, selects one of 14 workflows,
+and writes metadata-only local audit events. Raw prompts and prompt-derived
+content hashes are not stored.
 
-This works in VS Code and Claude Code. **JetBrains has no hook support**, so
-IntelliJ users get the instruction and prompt files only. See
-`docs/prompt-interception-plan.md` for the full coverage matrix, the pinned hook
-schema, and the honest limits.
+Coverage is capability- and evidence-based, not inferred from the client name:
+
+- VS Code `UserPromptSubmit` has a recorded end-to-end `additionalContext`
+  canary for the tested client and is classified `governed-shadow` while healthy.
+- Claude Code context injection is represented from the vendor contract but is
+  classified `observed` until a pinned-runtime downstream canary is recorded.
+- Copilot CLI `userPromptSubmitted` is notification-only; its
+  `userPromptTransformed` mutation contract is implemented but remains
+  `observed` until a pinned-runtime downstream canary is recorded.
+- JetBrains remains unsupported for interception and is not included in governed
+  coverage.
+
+All seven rules are currently `shadow`. Modes are configured per rule in
+`prompt-core/control-plane.json`; the removed global enable-all switch is ignored.
+The emergency control can only roll enforced rules back to shadow. See
+`docs/adapter-capability-matrix.md` and `docs/phase5-p0-implementation.md` for the
+implemented controls and the evidence still required before a pilot or enforcement.
+
+Quick verification:
+
+```bash
+node prompt-core/rewrite.mjs --selftest
+node --test "tests/*.test.mjs"
+node scripts/simulate-hook.mjs --prompt "add eslint-disable" --rule-mode bypass-verification=enforce
+```
 
 ## How Sync Works
 

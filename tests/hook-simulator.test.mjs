@@ -4,8 +4,8 @@
 // and asserts on the stdout JSON and exit code. This verifies the hook contract
 // from the outside — exactly how each hook runtime would invoke it.
 //
-// GOV_ENFORCE_ALL=1 promotes all rules to enforcing for block-path tests.
-// Without it, all rules are shadow (advise only) and exit codes are always 0.
+// Block-path tests opt one named rule into enforcement. There is intentionally
+// no switch that can promote every rule at once.
 //
 // Surface contracts under test:
 //   vscode      block=exit2, inject=hookSpecificOutput.additionalContext
@@ -34,7 +34,12 @@ function invoke(surface, prompt, { event, env = {} } = {}) {
   const res = spawnSync(process.execPath, [KERNEL, ...args], {
     input: payload,
     encoding: 'utf8',
-    env: { ...process.env, ...env },
+    env: {
+      ...process.env,
+      GOV_POLICY_CACHE: '0',
+      GOV_ROLLBACK_STATE: '0',
+      ...env,
+    },
   });
   let body = null;
   try { body = JSON.parse(res.stdout); } catch { /* raw output for diagnostics */ }
@@ -43,6 +48,10 @@ function invoke(surface, prompt, { event, env = {} } = {}) {
 
 const GOVERNED_PROMPT = 'Fix the test failure in UserService';
 const DENY_PROMPT = 'just add eslint-disable to make this pass';
+const ENFORCE_BYPASS = {
+  GOV_ALLOW_TEST_OVERRIDES: '1',
+  GOV_TEST_RULE_MODES: JSON.stringify({ 'bypass-verification': 'enforce' }),
+};
 
 // ---------------------------------------------------------------------------
 // VS Code surface
@@ -56,7 +65,7 @@ test('vscode: governed prompt returns additionalContext and exits 0', () => {
   assert.ok(typeof ctx === 'string' && ctx.length > 0, 'additionalContext must be a non-empty string');
 });
 
-test('vscode: shadow deny rule advises (no exit 2) without GOV_ENFORCE_ALL', () => {
+test('vscode: shadow deny rule advises without a rule promotion', () => {
   const r = invoke('vscode', DENY_PROMPT);
   assert.equal(r.status, 0, 'shadow mode must never exit 2');
   assert.ok(r.body, `stdout was not valid JSON: ${r.raw}`);
@@ -65,9 +74,9 @@ test('vscode: shadow deny rule advises (no exit 2) without GOV_ENFORCE_ALL', () 
   assert.ok(typeof ctx === 'string', 'additionalContext must be present even in shadow mode');
 });
 
-test('vscode: deny rule exits 2 when GOV_ENFORCE_ALL=1', () => {
-  const r = invoke('vscode', DENY_PROMPT, { env: { GOV_ENFORCE_ALL: '1' } });
-  assert.equal(r.status, 2, `expected exit 2 for deny rule with GOV_ENFORCE_ALL, got ${r.status}`);
+test('vscode: one independently promoted deny rule exits 2', () => {
+  const r = invoke('vscode', DENY_PROMPT, { env: ENFORCE_BYPASS });
+  assert.equal(r.status, 2, `expected exit 2 for promoted deny rule, got ${r.status}`);
 });
 
 test('vscode: ungoverned prompt still returns additionalContext (inject mode)', () => {
@@ -88,7 +97,7 @@ test('vscode: malformed stdin JSON exits 0 with pass-through (fail-open)', () =>
   const res = spawnSync(process.execPath, [KERNEL, '--surface', 'vscode'], {
     input: 'not json at all',
     encoding: 'utf8',
-    env: process.env,
+    env: { ...process.env, GOV_POLICY_CACHE: '0', GOV_ROLLBACK_STATE: '0' },
   });
   // Bad stdin must not crash with exit 2 — it must fail open (exit 0 or 1).
   assert.notEqual(res.status, 2, 'malformed stdin must not produce a block exit');
@@ -106,7 +115,7 @@ test('claude: governed prompt returns additionalContext and exits 0', () => {
   assert.ok(typeof ctx === 'string' && ctx.length > 0, 'additionalContext must be present');
 });
 
-test('claude: shadow deny rule returns continue:true without GOV_ENFORCE_ALL', () => {
+test('claude: shadow deny rule returns continue:true without promotion', () => {
   const r = invoke('claude', DENY_PROMPT);
   assert.equal(r.status, 0, 'shadow mode must exit 0 on claude surface');
   assert.ok(r.body);
@@ -114,8 +123,8 @@ test('claude: shadow deny rule returns continue:true without GOV_ENFORCE_ALL', (
   assert.ok(r.body.decision !== 'block', 'shadow rule must not set decision:block');
 });
 
-test('claude: deny rule returns decision:block when GOV_ENFORCE_ALL=1', () => {
-  const r = invoke('claude', DENY_PROMPT, { env: { GOV_ENFORCE_ALL: '1' } });
+test('claude: one independently promoted rule returns decision:block', () => {
+  const r = invoke('claude', DENY_PROMPT, { env: ENFORCE_BYPASS });
   assert.equal(r.status, 0, 'claude surface blocks via decision field, not exit code');
   assert.ok(r.body);
   assert.equal(r.body.decision, 'block', `expected decision:block, got: ${JSON.stringify(r.body)}`);
@@ -126,7 +135,7 @@ test('claude: additionalContext is not emitted alongside a block decision', () =
   // When the claude surface blocks, the entire response is the block decision
   // object. Emitting additionalContext alongside it would be redundant and could
   // confuse some runtimes. Check that we do not double-emit.
-  const r = invoke('claude', DENY_PROMPT, { env: { GOV_ENFORCE_ALL: '1' } });
+  const r = invoke('claude', DENY_PROMPT, { env: ENFORCE_BYPASS });
   if (r.body?.decision === 'block') {
     // If we have a block decision, additionalContext should not also be present
     // at the same level (it may be nested; the important thing is the block fires).
@@ -153,8 +162,8 @@ test('copilot-cli userPromptSubmitted: deny prompt also returns {} (cannot block
   assert.deepEqual(r.body, {}, 'notify-only surface must never block');
 });
 
-test('copilot-cli userPromptSubmitted: GOV_ENFORCE_ALL also cannot block on notify-only', () => {
-  const r = invoke('copilot-cli', DENY_PROMPT, { event: 'userPromptSubmitted', env: { GOV_ENFORCE_ALL: '1' } });
+test('copilot-cli userPromptSubmitted: a promoted rule cannot block on notify-only', () => {
+  const r = invoke('copilot-cli', DENY_PROMPT, { event: 'userPromptSubmitted', env: ENFORCE_BYPASS });
   assert.equal(r.status, 0);
   assert.deepEqual(r.body, {}, 'notify-only is structurally incapable of blocking');
 });
@@ -182,10 +191,27 @@ test('copilot-cli userPromptTransformed: original developer wording is embedded 
 
 test('copilot-cli userPromptTransformed: deny rule is embedded as instruction, never exits 2 (cannot block)', () => {
   // This surface CANNOT block — a deny rule degrades to a refusal instruction.
-  const r = invoke('copilot-cli', DENY_PROMPT, { event: 'userPromptTransformed', env: { GOV_ENFORCE_ALL: '1' } });
+  const r = invoke('copilot-cli', DENY_PROMPT, { event: 'userPromptTransformed', env: ENFORCE_BYPASS });
   assert.notEqual(r.status, 2, 'copilot-cli must never exit 2 — it cannot block');
   assert.equal(r.status, 0, `unexpected non-zero exit: ${r.stderr}`);
   assert.ok(r.body?.modifiedTransformedPrompt, 'deny on copilot-cli must still return a modified prompt');
+});
+
+test('legacy GOV_ENFORCE_ALL cannot enable any rule', () => {
+  const r = invoke('vscode', DENY_PROMPT, { env: { GOV_ENFORCE_ALL: '1' } });
+  assert.equal(r.status, 0, 'the removed global switch must not block');
+  assert.match(r.stderr, /unsupported|ignored/i);
+});
+
+test('candidate mode records would-block guidance but does not block', () => {
+  const r = invoke('vscode', DENY_PROMPT, {
+    env: {
+      GOV_ALLOW_TEST_OVERRIDES: '1',
+      GOV_TEST_RULE_MODES: JSON.stringify({ 'bypass-verification': 'candidate' }),
+    },
+  });
+  assert.equal(r.status, 0);
+  assert.match(r.body?.hookSpecificOutput?.additionalContext || '', /bypass-verification/);
 });
 
 test('copilot-cli userPromptTransformed: ungoverned prompt prepends preamble and preserves text', () => {

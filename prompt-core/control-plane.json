@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.0",
+  "defaultCohort": "unassigned",
+  "emergencyRollbackToShadow": false,
+  "rollbackThresholds": {
+    "minimumMatchedEvents": 20,
+    "appealOverrideRate": 0.02,
+    "immediateOverrideRate": 0.2,
+    "degradedRate": 0.01,
+    "p95LatencyMs": 250,
+    "consecutiveLatencyWindows": 2,
+    "stateTtlMinutes": 10
+  },
+  "_comment": "Every rule is controlled independently. emergencyRollbackToShadow is rollback-only and can never enable rules. Runtime operations may set GOV_EMERGENCY_SHADOW=1 or GOV_RULE_ROLLBACK=<comma-separated rule IDs> without deploying code. GOV_ENFORCE_ALL is intentionally unsupported.",
+  "rules": {
+    "bypass-verification": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "hardcoded-secret": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "disable-security-scan": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "custom-crypto": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "customer-data-in-prompt": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "exfiltration": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" },
+    "production-mutation": { "mode": "shadow", "rolloutPercentage": 100, "owner": "unassigned" }
+  },
+  "exceptions": []
+}

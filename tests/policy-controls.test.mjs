@@ -1,0 +1,413 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import {
+  appendFileSync,
+  copyFileSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  loadPolicyPack,
+  PolicyPackError,
+} from "../prompt-core/policy-pack.mjs";
+import {
+  prepareControlPlane,
+  resolveRuleControl,
+} from "../prompt-core/control-plane.mjs";
+import {
+  createCanonicalEnvelope,
+  telemetryFromEnvelope,
+} from "../prompt-core/envelope.mjs";
+import { evaluateRollback } from "../scripts/evaluate-rollback.mjs";
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const CORE = join(ROOT, "prompt-core");
+const MANIFEST = JSON.parse(
+  readFileSync(join(CORE, "policy-pack.json"), "utf8"),
+);
+
+function withTemp(fn) {
+  const dir = mkdtempSync(join(tmpdir(), "gov-policy-"));
+  try {
+    return fn(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+function copyPolicyPack(destination) {
+  mkdirSync(destination, { recursive: true });
+  copyFileSync(join(CORE, "policy-pack.json"), join(destination, "policy-pack.json"));
+  for (const path of Object.keys(MANIFEST.files)) {
+    copyFileSync(join(CORE, path), join(destination, path));
+  }
+}
+
+test("active policy pack validates every declared checksum", () => {
+  withTemp((cacheDir) => {
+    const pack = loadPolicyPack({
+      coreDir: CORE,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(pack.source, "active");
+    assert.equal(pack.manifest.version, "2.0.0");
+    assert.equal(pack.deny.rules.length, 7);
+    assert.equal(pack.router.intents.length, 14);
+  });
+});
+
+test("a tampered active pack rolls back to the checksummed last-known-good cache", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    const seeded = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(seeded.source, "active");
+
+    appendFileSync(join(activeDir, "deny.json"), "\nTAMPERED", "utf8");
+    const fallback = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(fallback.source, "last-known-good");
+    assert.ok(
+      fallback.degradedReasons.some((reason) =>
+        reason.includes("active-policy-invalid"),
+      ),
+    );
+    assert.equal(fallback.deny.rules.length, 7);
+  });
+});
+
+test("a lower active policy version cannot replace a newer last-known-good pack", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    const manifestPath = join(activeDir, "policy-pack.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    manifest.version = "1.9.0";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+
+    const fallback = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(fallback.source, "last-known-good");
+    assert.equal(fallback.manifest.version, "2.0.0");
+    assert.ok(
+      fallback.degradedReasons.some((reason) => reason.includes("downgrade")),
+    );
+  });
+});
+
+test("a tampered rollback-cache manifest is rejected", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    const cachePath = join(cacheDir, "policy-last-known-good.json");
+    const cache = JSON.parse(readFileSync(cachePath, "utf8"));
+    cache.manifestText = cache.manifestText.replace('"version": "2.0.0"', '"version": "9.9.9"');
+    writeFileSync(cachePath, JSON.stringify(cache), "utf8");
+    appendFileSync(join(activeDir, "deny.json"), "\nTAMPERED", "utf8");
+
+    assert.throws(
+      () =>
+        loadPolicyPack({
+          coreDir: activeDir,
+          kernelVersion: "3.0.0",
+          cacheDir,
+        }),
+      /no valid last-known-good/,
+    );
+  });
+});
+
+test("a valid active pack repairs a corrupt last-known-good cache", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    const cacheDir = join(dir, "cache");
+    copyPolicyPack(activeDir);
+    loadPolicyPack({ coreDir: activeDir, kernelVersion: "3.0.0", cacheDir });
+    const cachePath = join(cacheDir, "policy-last-known-good.json");
+    const cache = JSON.parse(readFileSync(cachePath, "utf8"));
+    cache.files["deny.json"] += "\nTAMPERED";
+    writeFileSync(cachePath, JSON.stringify(cache), "utf8");
+
+    const active = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(active.source, "active");
+    appendFileSync(join(activeDir, "deny.json"), "\nTAMPERED", "utf8");
+    const repaired = loadPolicyPack({
+      coreDir: activeDir,
+      kernelVersion: "3.0.0",
+      cacheDir,
+    });
+    assert.equal(repaired.source, "last-known-good");
+    assert.equal(repaired.deny.rules.length, 7);
+  });
+});
+
+test("an invalid pack without a valid rollback cache fails closed as configuration", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    copyPolicyPack(activeDir);
+    appendFileSync(join(activeDir, "router.json"), "\nTAMPERED", "utf8");
+    assert.throws(
+      () =>
+        loadPolicyPack({
+          coreDir: activeDir,
+          kernelVersion: "3.0.0",
+          cacheDir: join(dir, "missing-cache"),
+        }),
+      PolicyPackError,
+    );
+  });
+});
+
+test("incompatible kernel versions are rejected", () => {
+  withTemp((dir) => {
+    const activeDir = join(dir, "active");
+    copyPolicyPack(activeDir);
+    assert.throws(
+      () =>
+        loadPolicyPack({
+          coreDir: activeDir,
+          kernelVersion: "4.0.0",
+          cacheEnabled: false,
+        }),
+      /incompatible/,
+    );
+  });
+});
+
+test("rules are promoted independently and the legacy global switch is ignored", () => {
+  const base = JSON.parse(
+    readFileSync(join(CORE, "control-plane.json"), "utf8"),
+  );
+  const control = prepareControlPlane(base, {
+    GOV_ROLLBACK_STATE: "0",
+    GOV_ENFORCE_ALL: "1",
+    GOV_ALLOW_TEST_OVERRIDES: "1",
+    GOV_TEST_RULE_MODES: JSON.stringify({ "hardcoded-secret": "enforce" }),
+  });
+  const secret = resolveRuleControl(
+    { id: "hardcoded-secret" },
+    control,
+    { repository: "repo", cohort: "pilot" },
+  );
+  const exfiltration = resolveRuleControl(
+    { id: "exfiltration" },
+    control,
+    { repository: "repo", cohort: "pilot" },
+  );
+  assert.equal(secret.effectiveMode, "enforce");
+  assert.equal(exfiltration.effectiveMode, "shadow");
+  assert.ok(control.warnings.some((warning) => warning.includes("ignored")));
+});
+
+test("the emergency control rolls enforced rules back to shadow and never enables rules", () => {
+  const base = JSON.parse(
+    readFileSync(join(CORE, "control-plane.json"), "utf8"),
+  );
+  base.rules["hardcoded-secret"].mode = "enforce";
+  base.rules.exfiltration.mode = "off";
+  const control = prepareControlPlane(base, {
+    GOV_EMERGENCY_SHADOW: "1",
+    GOV_ROLLBACK_STATE: "0",
+  });
+  assert.equal(
+    resolveRuleControl({ id: "hardcoded-secret" }, control).effectiveMode,
+    "shadow",
+  );
+  assert.equal(
+    resolveRuleControl({ id: "exfiltration" }, control).effectiveMode,
+    "off",
+  );
+});
+
+test("an invalid rule schedule fails safe to shadow", () => {
+  const base = JSON.parse(
+    readFileSync(join(CORE, "control-plane.json"), "utf8"),
+  );
+  base.rules["hardcoded-secret"] = {
+    ...base.rules["hardcoded-secret"],
+    mode: "enforce",
+    startsAt: "not-a-date",
+  };
+  const control = prepareControlPlane(base, { GOV_ROLLBACK_STATE: "0" });
+  const result = resolveRuleControl({ id: "hardcoded-secret" }, control);
+  assert.equal(result.effectiveMode, "shadow");
+  assert.equal(result.reason, "invalid-schedule");
+});
+
+test("active time-bound exceptions revert one matching rule to shadow", () => {
+  const base = JSON.parse(
+    readFileSync(join(CORE, "control-plane.json"), "utf8"),
+  );
+  base.rules["hardcoded-secret"].mode = "enforce";
+  base.exceptions = [
+    {
+      id: "EX-123",
+      ruleId: "hardcoded-secret",
+      repositories: ["payments"],
+      cohorts: ["ring-0"],
+      businessJustification: "Short-lived migration window",
+      approvingOwner: "security-owner",
+      compensatingControl: "Manual review of every change",
+      startsAt: "2026-08-01T00:00:00Z",
+      expiresAt: "2026-09-01T00:00:00Z",
+      reviewDate: "2026-08-20T00:00:00Z",
+    },
+  ];
+  const control = prepareControlPlane(base, { GOV_ROLLBACK_STATE: "0" });
+  const result = resolveRuleControl(
+    { id: "hardcoded-secret" },
+    control,
+    {
+      repository: "payments",
+      cohort: "ring-0",
+      now: Date.parse("2026-08-13T00:00:00Z"),
+    },
+  );
+  assert.equal(result.effectiveMode, "shadow");
+  assert.equal(result.exceptionId, "EX-123");
+});
+
+test("rollback thresholds generate a short-lived per-rule shadow state consumed by the kernel", () => {
+  withTemp((dir) => {
+    const base = JSON.parse(
+      readFileSync(join(CORE, "control-plane.json"), "utf8"),
+    );
+    base.rules["hardcoded-secret"].mode = "enforce";
+    const events = Array.from({ length: 40 }, (_, index) => ({
+      controlState: "governed-enforced",
+      policyResults: [
+        { id: "hardcoded-secret", result: "matched" },
+      ],
+      overrideApproved: index === 0,
+      latencyMs: { totalDecision: 20 },
+      failureMarkers: [],
+    }));
+    const now = new Date("2026-08-13T00:00:00Z");
+    const rules = evaluateRollback(events, base, now);
+    assert.deepEqual(rules["hardcoded-secret"].reasons, [
+      "appeal-or-override-rate",
+    ]);
+
+    const statePath = join(dir, "rollback-state.json");
+    writeFileSync(
+      statePath,
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: now.toISOString(),
+        expiresAt: "2026-09-01T00:00:00Z",
+        rules,
+      }),
+      "utf8",
+    );
+    const control = prepareControlPlane(base, {
+      GOV_ROLLBACK_STATE_FILE: statePath,
+    });
+    const result = resolveRuleControl(
+      { id: "hardcoded-secret" },
+      control,
+      { now: Date.parse("2026-08-13T00:01:00Z") },
+    );
+    assert.equal(result.effectiveMode, "shadow");
+    assert.equal(result.reason, "per-rule-rollback");
+  });
+});
+
+test("canonical envelopes keep original prompt in memory but out of JSON telemetry", () => {
+  const prompt = "customer secret hunter2";
+  const envelope = createCanonicalEnvelope({
+    prompt,
+    surface: {
+      id: "test",
+      adapterId: "test-adapter",
+      adapterVersion: "1.0.0",
+      events: ["submit"],
+      notifyOnly: [],
+      rewriteVerified: true,
+      injectVerified: false,
+      block: null,
+      systemMessage: false,
+      deliveryProof: { status: "contract-only" },
+    },
+    event: "submit",
+    kernelVersion: "3.0.0",
+    policyPack: {
+      manifest: { version: "2.0.0" },
+      checksum: "abc",
+      source: "active",
+      degradedReasons: [],
+    },
+    repositoryProfile: { stacks: ["node"] },
+  });
+  assert.equal(envelope.originalPrompt, prompt);
+  assert.ok(!JSON.stringify(envelope).includes(prompt));
+
+  const event = telemetryFromEnvelope(envelope, {
+    mode: "inject",
+    ruleResults: [],
+    selectedSkills: [],
+  });
+  const serialized = JSON.stringify(event);
+  assert.ok(!serialized.includes(prompt));
+  assert.ok(!serialized.includes("promptHash"));
+});
+
+test("cold process p95 stays below the catastrophic-regression ceiling", {
+  timeout: 20_000,
+}, () => {
+  const durations = [];
+  for (let index = 0; index < 10; index += 1) {
+    const started = performance.now();
+    execFileSync(
+      process.execPath,
+      [join(CORE, "rewrite.mjs"), "--prompt", "rename accountId to customerId"],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          GOV_TELEMETRY: "0",
+          GOV_POLICY_CACHE: "0",
+          GOV_ROLLBACK_STATE: "0",
+        },
+      },
+    );
+    durations.push(performance.now() - started);
+  }
+  durations.sort((left, right) => left - right);
+  const p95 = durations[Math.ceil(durations.length * 0.95) - 1];
+  assert.ok(p95 < 750, `cold process p95 ${p95.toFixed(1)}ms exceeded 750ms safety ceiling`);
+});

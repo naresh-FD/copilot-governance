@@ -1,12 +1,14 @@
 {
-  "version": 1,
-  "_comment": "Deny rules for the prompt interception kernel. Each rule carries its own 'enforce' flag so a high-confidence rule can go live while the rest keep collecting shadow data. enforce=false means the rule is evaluated and logged to telemetry, an advisory is shown, and the concern is written into the governed prompt, but the prompt still proceeds. enforce=true means the prompt is blocked using whatever mechanism the target surface documents (see surfaces.json) — and note that Copilot CLI has no block mechanism at all, so there an enforcing rule degrades to an in-prompt refusal instruction. Use `copilot-gov report` to review shadow hit counts before flipping any rule.",
-  "_provenance": "'provenance' records where a rule's signals came from. 'argus-cwe' means the rule is derived from the Argus CWE ruleset and therefore carries production false-positive data from a live system; those rules graduate to enforcing first. 'hand-authored' means the signals were written here and have no evidence behind them beyond local shadow volume. 'graduationBlocker', when present, names a specific defect that must be fixed before the rule may be enforced at all — the selftest fails if such a rule is flipped to enforce=true. No rule currently carries Argus provenance: the importer that would populate it is still blocked on the Argus export format.",
+  "version": 2,
+  "_comment": "Rule contracts for the prompt interception kernel. Runtime modes live in control-plane.json so each rule can move independently through off, shadow, candidate, soft-block, and enforce. There is deliberately no enable-all control. Each evaluation emits a stable rule version, reason code, effective mode, and match result.",
+  "_provenance": "'provenance' records where a rule's signals came from. 'argus-cwe' means the rule is derived from the Argus CWE ruleset and therefore carries production false-positive data from a live system; those rules graduate to enforcing first. 'hand-authored' means the signals were written here and have no evidence behind them beyond local shadow volume. 'graduationBlocker', when present, names a specific defect that must be fixed before control-plane.json may promote the rule to soft-block or enforce. No rule currently carries Argus provenance: the importer that would populate it is still blocked on the Argus export format.",
   "rules": [
     {
       "id": "bypass-verification",
+      "version": "1.1.0",
+      "owner": "unassigned",
+      "reasonCode": "BYPASS_VERIFICATION_REQUESTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "--no-verify",
         "\\bskip (the |all |these )?(tests?|linting|lint|scans?|checks?|ci)\\b",
@@ -24,8 +26,10 @@
     },
     {
       "id": "hardcoded-secret",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "HARDCODED_SECRET_DETECTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(api[_-]?key|apikey|secret|password|passwd|client[_-]?secret|private[_-]?key|access[_-]?token)\\b[^\\n]{0,20}[:=][^\\n]{0,4}[\"'][^\"'\\n]{8,}[\"']",
         "\\b(hardcode|hard-code|inline|paste|embed) (the )?(secret|password|credential|api[_-]?key|token)\\b",
@@ -41,8 +45,10 @@
     },
     {
       "id": "disable-security-scan",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "SECURITY_SCAN_BYPASS_REQUESTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(disable|turn off|bypass|skip|suppress|ignore|silence|mute) (the )?(sast|dast|security scan\\w*|dependency scan\\w*|secret scan\\w*|vulnerability scan\\w*|code ?ql|snyk|dependabot|argus)\\b",
         "\\b(add|create) (an? )?(exception|exclusion|allowlist|whitelist|waiver) (for|to) (the )?(scan|security|vulnerab\\w*|finding)\\b",
@@ -55,8 +61,10 @@
     },
     {
       "id": "custom-crypto",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "CUSTOM_CRYPTO_REQUESTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(write|implement|build|create|roll|design) (my |our |a |your )?own (crypto\\w*|encryption|cipher|hash\\w*|jwt|auth\\w*|session|token)\\b",
         "\\bcustom (encryption|crypto\\w*|cipher|hashing|jwt|auth\\w*)\\b",
@@ -70,8 +78,10 @@
     },
     {
       "id": "customer-data-in-prompt",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "CUSTOMER_DATA_DETECTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(?:\\d[ -]?){13,19}\\b",
         "\\b\\d{3}-\\d{2}-\\d{4}\\b",
@@ -86,8 +96,10 @@
     },
     {
       "id": "exfiltration",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "CREDENTIAL_EXFILTRATION_REQUESTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(send|post|upload|curl|push|sync|email|exfil\\w*) .{0,40}(\\.env|secret|credential|api[_-]?key|token|config|dump|database) .{0,20}\\b(to|at)\\b .{0,40}(https?://|@)",
         "\\bcat .{0,20}\\.env\\b",
@@ -100,8 +112,10 @@
     },
     {
       "id": "production-mutation",
+      "version": "1.0.0",
+      "owner": "unassigned",
+      "reasonCode": "DIRECT_PRODUCTION_MUTATION_REQUESTED",
       "severity": "high",
-      "enforce": false,
       "signals": [
         "\\b(drop|truncate|delete from) .{0,30}\\b(prod\\w*|live)\\b",
         "\\b(deploy|push|release|hotfix) .{0,20}(straight |directly )?to prod\\w*\\b .{0,30}\\b(without|skip\\w*|bypass\\w*)\\b",

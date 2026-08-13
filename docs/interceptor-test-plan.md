@@ -1,6 +1,6 @@
 # Interceptor Test Plan (local, no IDE required)
 
-How to verify that prompt interception actually works — on every surface,
+How to verify the prompt-interception contracts on every declared surface,
 without a live VS Code, Copilot CLI or Claude Code session, and without any
 network access.
 
@@ -37,7 +37,7 @@ is the only layer that proves the whole chain.
 node prompt-core/rewrite.mjs --selftest
 ```
 
-Expected: `prompt-core selftest OK — 14 intents, 7 deny rules (0 enforcing, 7 shadow), 3 surfaces`
+Expected: `prompt-core selftest OK — 14 intents, 7 deny rules (7 shadow), 3 surfaces`
 
 The enforcing count must be `0` until a rule has been through the evidence
 review in `docs/prompt-interception-plan.md`.
@@ -45,7 +45,7 @@ review in `docs/prompt-interception-plan.md`.
 ## Layer 2 — Behaviour
 
 ```bash
-node --test tests/prompt-core.test.mjs
+node --test "tests/*.test.mjs"
 ```
 
 Expected: all tests pass. The suite covers one routing case per intent plus the
@@ -106,10 +106,10 @@ node scripts/simulate-hook.mjs --prompt "just commit with --no-verify and skip t
 Expect no `BLOCKED` line anywhere, and an advisory `systemMessage` naming
 `bypass-verification`. A block here means a rule was graduated without review.
 
-Then force every rule on to exercise the three mechanisms:
+Then promote only the matched rule in the simulator to exercise the three mechanisms:
 
 ```bash
-node scripts/simulate-hook.mjs --prompt "just commit with --no-verify and skip the tests" --enforce
+node scripts/simulate-hook.mjs --prompt "just commit with --no-verify and skip the tests" --rule-mode bypass-verification=enforce
 ```
 
 | Surface | Expected |
@@ -129,7 +129,7 @@ A kernel fault must never become a blocked prompt.
 ```bash
 echo 'not json' | node prompt-core/rewrite.mjs --surface vscode; echo "exit=$?"
 ```
-Expect `{"continue":true}` and `exit=0`.
+Expect `continue:true`, a governance-unavailable `systemMessage`, and `exit=0`.
 
 ```bash
 echo '{"prompt":"   "}' | node prompt-core/rewrite.mjs --surface claude; echo "exit=$?"
@@ -153,7 +153,8 @@ grep -c 'hunter2\|4111111111111111' /tmp/govtest/telemetry.jsonl   # must be 0
 rm -rf /tmp/govtest
 ```
 
-Records must contain a truncated `promptHash` and never the prompt text. Note
+Records must contain an event ID, policy-pack version/checksum, all seven safe
+rule results, and never the prompt text or a prompt-derived content hash. Note
 that `simulate-hook.mjs` disables telemetry unless `--telemetry` is passed, so
 simulation never pollutes real shadow-mode evidence.
 
@@ -186,7 +187,8 @@ per client does.
    ```bash
    tail -1 ~/.copilot-gov/telemetry.jsonl
    ```
-   Check `surface` matches the client and `mode` is `rewrite`.
+   Check `surface` matches the client, `mode` is `rewrite`, and `controlState`
+   matches the capability matrix. Record the event ID with the canary evidence.
 
 An absent telemetry record means the hook never ran — check that the client
 loaded the config, and that `node` is on the PATH the client uses, which is not
@@ -205,10 +207,11 @@ the known gaps in `docs/prompt-interception-plan.md`.
 
 Any change to `prompt-core/` or `hooks/`:
 
-- [ ] `node prompt-core/rewrite.mjs --selftest` — enforcing count is expected
-- [ ] `node --test tests/prompt-core.test.mjs` — all pass
+- [ ] `node scripts/build-policy-pack.mjs` after any declared policy-input change
+- [ ] `node prompt-core/rewrite.mjs --selftest` — all seven rules remain shadow unless an approved promotion is in scope
+- [ ] `node --test "tests/*.test.mjs"` — all pass
 - [ ] `node scripts/simulate-hook.mjs --prompt "fix the SQL injection in the account lookup"` — no `NOT GOVERNED`
-- [ ] `node scripts/simulate-hook.mjs --prompt "…" --enforce` — blocks on vscode and claude, degrades on copilot-cli
+- [ ] `node scripts/simulate-hook.mjs --prompt "…" --rule-mode bypass-verification=enforce` — blocks on vscode and claude, degrades on copilot-cli
 - [ ] `bash scripts/validate-copilot-governance.sh` with `jq` present — no `SKIP:` on hook checks
 - [ ] If a hook schema changed: `surfaces.json` `verifiedOn` updated, and the pinned schema in `docs/prompt-interception-plan.md` updated to match
 - [ ] Security review requested — `.github/CODEOWNERS` requires it for this code

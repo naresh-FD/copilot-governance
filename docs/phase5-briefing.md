@@ -4,17 +4,23 @@
 **Status:** Built and tested, not yet piloted. Nothing is blocking developers today.
 **Date:** 2026-07-29
 
+> **Evidence correction, 2026-08-13:** Hook registration or a passing local
+> contract test is not proof that the model received governed context. Only the
+> recorded VS Code `additionalContext` canary is currently classified
+> `governed-shadow`; Claude Code and Copilot CLI remain `observed` pending
+> pinned-runtime downstream canaries, and JetBrains is unsupported.
+
 ---
 
 ## In one paragraph
 
 Until now, our Copilot governance worked by *publishing* standards — we pushed
 instruction files into every repository and hoped developers followed them. There
-was no way to know whether they did. Phase 5 changes that: every prompt a
-developer types into Copilot is now automatically intercepted and rewritten to
-include our security and quality rules before the AI ever sees it. The developer
-types what they always typed; the AI receives a governed version of it. We also,
-for the first time, get real measurements of how Copilot is being used.
+was no way to know whether they did. Phase 5 adds capability-aware prompt hooks:
+eligible events are evaluated, composed with security and quality rules, and
+recorded as privacy-safe local metadata. A path is counted as governed only after
+a live canary proves downstream receipt. The developer's wording remains
+unchanged on injected paths and is preserved byte-for-byte on replacement paths.
 
 ## Why this was worth doing
 
@@ -24,7 +30,9 @@ prompt workflows only helped if the developer chose to invoke one. A developer i
 a hurry typing "just make this work" got no governance at all — which is exactly
 the moment governance matters most.
 
-Interception closes that gap. There is no "in a hurry" path around it.
+Interception narrows that gap on healthy, supported clients. It remains bypassable
+through disabled, downgraded, or unsupported clients, so managed-client inventory,
+network controls, and CI remain separate required controls.
 
 The second gap was measurement. Every headline number in our Phase 1 documents —
 token reduction, hallucination refusal rates — was an estimate. We had no

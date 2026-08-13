@@ -670,7 +670,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="hero2-left">
         <div class="eyebrow">Copilot Governance · Shadow Mode</div>
         <h1>Govern the prompt before Copilot generates the code.</h1>
-        <p class="hero2-sub">Every prompt sent to a governed surface is intercepted and rewritten in real time — your wording stays untouched, but approved security context is added before the model ever responds.</p>
+        <p class="hero2-sub">On canary-verified hook paths, approved governance context is delivered before the model responds while your wording stays untouched. Contract-only and unsupported paths are reported separately.</p>
         <div class="hero2-cta">
           <a class="btn btn-primary" href="#demo">See it in action</a>
           <a class="btn btn-secondary" href="#architecture">View architecture</a>
@@ -747,14 +747,14 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <div class="hnode-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
           <span class="hnode-tag">4 · Compose</span>
           <b>core.md + workflow</b>
-          <p>8 non-negotiable rules ride along on <em>every</em> prompt. Rule 5 refuses to guess an unverified API, hook, or library.</p>
+          <p>8 non-negotiable rules ride along on every successfully composed eligible event. Rule 5 refuses to guess an unverified API, hook, or library.</p>
         </div>
         <div class="hflow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="hnode final">
           <div class="hnode-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
           <span class="hnode-tag">5 · Output</span>
           <b>Governed Prompt</b>
-          <p>Same wording, now carrying security context and verified patterns — the version Copilot or Claude actually answers.</p>
+          <p>Same wording with governed context. It counts as model-delivered only where a pinned live canary proves receipt.</p>
         </div>
       </div>
 
@@ -779,7 +779,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         </div>
         <div class="hs-item">
           <b>Copilot CLI</b>
-          <span class="badge b-info">Rewrites prompt today</span>
+          <span class="badge b-info">Rewrite contract implemented</span>
           <span class="hs-note">No block mechanism — degrades to refusal text</span>
         </div>
       </div>
@@ -789,8 +789,8 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <div class="stats">
       <div class="stat"><b>7</b><span>Platform Phases</span></div>
       <div class="stat"><b>14</b><span>Approved Workflows</span></div>
-      <div class="stat"><b>3</b><span>Governed Surfaces</span></div>
-      <div class="stat"><b>10</b><span>Success Metrics</span></div>
+      <div class="stat"><b>3</b><span>Declared Adapters</span></div>
+      <div class="stat"><b>11</b><span>Success Metrics</span></div>
     </div>
   </section>
 
@@ -824,7 +824,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="card">
         <div class="card-top">
           <span class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg></span>
-          <div><h3>Interception Kernel</h3><p class="card-sub">Phase 5 — every prompt governed before the model sees it</p></div>
+          <div><h3>Interception Kernel</h3><p class="card-sub">Phase 5 — capability proof and shadow validation in progress</p></div>
         </div>
         <div class="card-links">
           <a href="#ic-flow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Kernel Flow</a>
@@ -901,7 +901,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     </div>
 
     <div class="demo-ex">
-      <div class="demo-ex-h"><h3>Example 2 — Refusing to guess an API that doesn't exist</h3><span class="badge b-info">Runs on every prompt, every intent</span></div>
+      <div class="demo-ex-h"><h3>Example 2 — Refusing to guess an API that doesn't exist</h3><span class="badge b-info">Runs on every evaluated intent</span></div>
 
       <p class="demo-label">Developer types</p>
       <div class="prompt-box">add a custom hook that fetches and caches the current user, call it useMyCustomState</div>
@@ -945,9 +945,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>Sync Engine</dt>
         <dd>PR-based sync to each target repo. <code>.copilot-governance-manifest</code> tracks shipped files so centrally deleted rules are removed downstream without touching repo-added content.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Interception Kernel</dt>
-        <dd><code>prompt-core/</code> + <code>hooks/</code>. <code>rewrite.mjs</code> intercepts via <code>UserPromptSubmit</code> — developer wording carried verbatim, governance injected. All deny rules ship in shadow mode.</dd></div>
+        <dd><code>prompt-core/</code> + <code>hooks/</code>. Surface-specific adapters evaluate supported events, preserve developer wording, and emit evidence-labelled control states. All seven rules remain shadow-only.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Layer</dt>
-        <dd>No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, secure error handling — enforced at prompt time.</dd></div>
+        <dd>No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, and secure error handling are injected as guidance today; blocking remains disabled pending rule evidence.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>Override Model</dt>
         <dd>Central managed section (between governance markers) owned by this repo. Repo override section always preserved. Overrides may add local context, never weaken security or compliance rules.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>CLI Commands</dt>
@@ -972,9 +972,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <li><span class="pin p-done">4</span><div class="tl-body"><div class="tl-head"><b>GitHub Automation</b><span class="tag t-done">Delivered</span></div>
         <p>Governance scales across repos through PR-based automation. Drift detected and corrected on the next sync. <strong>Output: org-wide automation ready.</strong></p></div></li>
       <li><span class="pin p-now">5</span><div class="tl-body"><div class="tl-head"><b>Prompt Interception Kernel</b><span class="tag t-now">In Progress</span></div>
-        <p>Every prompt governed before the model sees it on every hook-capable surface. All <strong>seven policy rules ship in shadow mode</strong> — evaluated and logged, the developer sees an advisory, the prompt proceeds. Enforcement switches on one rule at a time once pilot data shows which fire cleanly. The JetBrains gap is a named accepted risk.</p></div></li>
+        <p>Target: governed delivery on every supported, healthy, canary-verified hook path. All <strong>seven policy rules remain in shadow mode</strong> — evaluated and logged, the developer sees an advisory, and the prompt proceeds. Enforcement requires pilot evidence and per-rule approval. JetBrains remains an explicit unsupported gap.</p></div></li>
       <li><span class="pin p-next">6</span><div class="tl-body"><div class="tl-head"><b>Pilot Rollout</b><span class="tag t-next">Not Started</span></div>
-        <p>Four pilot repos covering all three governed surfaces and at least one IntelliJ Java team. Deny rules graduate from shadow to enforcing one at a time based on real telemetry.</p></div></li>
+        <p>Four pilot repos covering all three declared adapters and at least one IntelliJ Java team. Deny rules graduate from shadow to enforcing one at a time based on real telemetry.</p></div></li>
       <li><span class="pin p-next">7</span><div class="tl-body"><div class="tl-head"><b>Wave Rollout</b><span class="tag t-next">Not Started</span></div>
         <p>4 → 20–25 → 50–75 → remaining repos, then weekly audit and sync steady state. Pilot feedback refines the baseline before Wave 1.</p></div></li>
     </ol>
@@ -984,7 +984,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="interception" class="block">
     <div class="eyebrow">Phase 5 — Engineering Leadership Brief</div>
     <h2 class="h">Prompt Interception Kernel</h2>
-    <p class="lede">Until Phase 5, governance worked by publishing standards and hoping developers followed them. Now every prompt is rewritten before the AI sees it, with no change required from the developer.</p>
+    <p class="lede">Until Phase 5, governance worked mainly by publishing standards. Phase 5 adds measured interception where client hooks support it, while keeping unverified and unsupported paths visible instead of claiming universal coverage.</p>
 
     <h3 class="h3" id="ic-change">What Changes for a Developer</h3>
     <div class="tbl-wrap scroller">
@@ -1041,18 +1041,18 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <h3 class="h3" id="ic-coverage" style="margin-top:2.25rem">Surface Coverage Matrix</h3>
     <div class="tbl-wrap scroller">
       <table>
-        <thead><tr><th>Client</th><th>Governed</th><th>Rewrite</th><th>Block</th><th>Config</th></tr></thead>
+        <thead><tr><th>Client</th><th>Evidence state</th><th>Rewrite</th><th>Block</th><th>Config</th></tr></thead>
         <tbody>
-          <tr><td>VS Code Copilot</td><td><span class="badge b-ok">Yes — injection</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-ok">Yes — exit 2</span></td><td><code>prompt-interceptor.json</code></td></tr>
-          <tr><td>Copilot CLI / agent</td><td><span class="badge b-ok">Yes — rewrite</span></td><td><span class="badge b-ok">Yes</span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
-          <tr><td>Claude Code</td><td><span class="badge b-ok">Yes — injection</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-ok">Yes — decision</span></td><td><code>claude-code-settings.fragment.json</code></td></tr>
-          <tr><td>JetBrains / IntelliJ</td><td><span class="badge b-no">No — files only</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-no">No</span></td><td>None — no hook support</td></tr>
+          <tr><td>VS Code Copilot</td><td><span class="badge b-ok">Canary-verified injection</span></td><td><span class="badge b-no">No verified replacement</span></td><td><span class="badge b-ok">Exit 2 contract</span></td><td><code>prompt-interceptor.json</code></td></tr>
+          <tr><td>Copilot CLI / agent</td><td><span class="badge b-warn">Contract-only; live canary pending</span></td><td><span class="badge b-ok">Yes — contract</span></td><td><span class="badge b-no">No</span></td><td><code>copilot-cli-interceptor.json</code></td></tr>
+          <tr><td>Claude Code</td><td><span class="badge b-warn">Contract-only; live canary pending</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-ok">Decision contract</span></td><td><code>claude-code-settings.fragment.json</code></td></tr>
+          <tr><td>JetBrains / IntelliJ</td><td><span class="badge b-no">Unsupported — files only</span></td><td><span class="badge b-no">No</span></td><td><span class="badge b-no">No</span></td><td>None — no hook support</td></tr>
         </tbody>
       </table>
     </div>
     <div class="note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      <p><strong>Key constraint:</strong> no single surface can both rewrite and block. Exactly one surface can genuinely rewrite a prompt, and it is the one that cannot block. The union of surfaces provides full coverage; no individual developer's setup does. Always report the per-client position.</p>
+      <p><strong>Key constraint:</strong> no declared surface can both rewrite and block. A union of different client capabilities is not coverage for any individual interaction. Always report the exact client, hook, version, and canary state.</p>
     </div>
 
     <h3 class="h3" id="ic-gaps" style="margin-top:2.25rem">Known Gaps</h3>
@@ -1092,7 +1092,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="security" class="block">
     <div class="eyebrow">Security</div>
     <h2 class="h">Non-Negotiable Guardrails</h2>
-    <p class="lede">These rules are enforced at the prompt layer. They cannot be weakened by repo overrides.</p>
+    <p class="lede">These rules are injected and evaluated independently at the prompt layer. All seven remain shadow-only; organization rules cannot be weakened by repository overrides.</p>
     <div class="grid2">
       <div class="rail"><span class="rail-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
         <div><b>No Hardcoded Secrets</b><p>Never generate passwords, tokens, API keys, certificates, connection strings or session identifiers. Approved secret-management patterns only.</p></div></div>
@@ -1252,8 +1252,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <thead><tr><th>Metric</th><th>Target</th></tr></thead>
         <tbody>
           <tr><td>Repo onboarding</td><td>100% of active repos receive the governance files</td></tr>
-          <tr><td>Runtime interception coverage</td><td>100% of repos on a hook-capable client; IntelliJ-only counted separately as uncovered</td></tr>
-          <tr><td>Token reduction</td><td>40–60% less repeated manual prompt context</td></tr>
+          <tr><td>Technical prompt coverage</td><td>Establish baseline, then ≥95% during pilot on supported healthy adapters</td></tr>
+          <tr><td>Control-perimeter coverage</td><td>Establish managed-client inventory baseline; unsupported and disabled clients stay outside the numerator</td></tr>
+          <tr><td>Token impact</td><td>Measure completed-task tokens, retries and accepted output; no reduction target before baseline evidence</td></tr>
           <tr><td>Security baseline coverage</td><td>100% of repos include security guardrails</td></tr>
           <tr><td>Console / debug reduction</td><td>80% fewer unwanted console and debug review comments</td></tr>
           <tr><td>PR fix speed</td><td>20–30% faster fixes for common issues</td></tr>

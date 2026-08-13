@@ -552,7 +552,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="hero-txt">
         <div class="eyebrow">Feature Catalog</div>
         <h1>Platform Features</h1>
-        <p class="lede">Every capability the Copilot Governance Platform ships today — how governance content is authored, distributed by PR, enforced locally before it ever reaches a commit, and injected into every prompt before the model sees it. Each feature below links straight to the file that implements it.</p>
+        <p class="lede">Capabilities the Copilot Governance Platform ships today — governance authoring, PR distribution, local validation, and evidence-based prompt interception. Hook delivery is counted as governed only where the exact client path has a recorded canary. Each feature below links to its implementation.</p>
         <div class="chips">
           <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Governance Authoring</span>
           <span class="chip"><svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Prompt Interception</span>
@@ -567,7 +567,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="stat"><b>9</b><span>Instruction Packs</span></div>
       <div class="stat"><b>14</b><span>Approved Workflows</span></div>
       <div class="stat"><b>7</b><span>Curated Skills</span></div>
-      <div class="stat"><b>6</b><span>Test Suites</span></div>
+      <div class="stat"><b>7</b><span>Test Suites</span></div>
     </div>
   </section>
 
@@ -744,7 +744,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="kernel" class="block">
     <div class="eyebrow">Phase 5</div>
     <h2 class="h">Prompt Interception Kernel</h2>
-    <p class="lede">Every prompt on a governed surface is screened, classified, composed and logged before the model sees it — carrying the developer's exact wording through untouched. Full engineering brief on the <a href="index.html#ic-flow">docs home</a>.</p>
+    <p class="lede">Eligible hook events are screened, classified, composed and logged locally. Only canary-verified delivery paths count as governed; contract-only paths remain observed. The developer's exact wording is preserved on replacement paths. Full engineering brief on the <a href="index.html#ic-flow">docs home</a>.</p>
 
     <div class="cards">
       <div class="card">
@@ -764,7 +764,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="card">
         <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></div>
-          <div><h3>rewrite.mjs</h3><p class="card-sub">Zero-dependency engine: screen (deny.json) → classify (router.json) → compose (core.md + matched workflow) → log (telemetry.jsonl).</p></div></div>
+          <div><h3>rewrite.mjs</h3><p class="card-sub">Zero-package engine: verify the policy pack → create an envelope → evaluate independent rules → classify → compose → write metadata-only local audit.</p></div></div>
         <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/rewrite.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/rewrite.mjs</a></div>
       </div>
       <div class="card">
@@ -831,7 +831,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="testing" class="block">
     <div class="eyebrow">Quality Bar</div>
     <h2 class="h">Testing</h2>
-    <p class="lede">Six automated suites cover the interception kernel, every governed hook, and the sync lifecycle end to end.</p>
+    <p class="lede">Seven automated suites cover the interception kernel, policy integrity and rollback, declared hook contracts, and the sync lifecycle.</p>
 
     <div class="docs-2">
       <div class="doc-list">

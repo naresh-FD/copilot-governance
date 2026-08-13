@@ -16,7 +16,7 @@
 //   node scripts/simulate-hook.mjs --prompt "<text>"                 all surfaces
 //   node scripts/simulate-hook.mjs --surface claude --prompt "<text>"
 //   node scripts/simulate-hook.mjs --surface copilot-cli --event userPromptTransformed --prompt "..."
-//   node scripts/simulate-hook.mjs --prompt "..." --enforce           exercise the block path
+//   node scripts/simulate-hook.mjs --prompt "..." --rule-mode bypass-verification=enforce
 //   node scripts/simulate-hook.mjs --prompt "..." --raw               print full payload and response
 //
 // Telemetry is disabled by default so simulation never pollutes real shadow-mode
@@ -49,7 +49,22 @@ if (!prompt) {
 
 const only = flag('--surface');
 const onlyEvent = flag('--event');
+const ruleModeSpec = flag('--rule-mode');
 const raw = has('--raw');
+
+let ruleMode = null;
+if (ruleModeSpec) {
+  const separator = ruleModeSpec.indexOf('=');
+  const id = separator > 0 ? ruleModeSpec.slice(0, separator) : '';
+  const mode = separator > 0 ? ruleModeSpec.slice(separator + 1) : '';
+  if (!id || !['off', 'shadow', 'candidate', 'soft-block', 'enforce'].includes(mode)) {
+    process.stderr.write(
+      'simulate-hook: --rule-mode must be <rule-id>=off|shadow|candidate|soft-block|enforce\n',
+    );
+    process.exit(1);
+  }
+  ruleMode = { id, mode };
+}
 
 // Builds the payload each runtime actually sends. Field names differ per
 // surface — camelCase vs snake_case, prompt vs transformedPrompt — and getting
@@ -134,8 +149,8 @@ function describe(surfaceId, surface, event, res) {
 
   // The guarantee that matters: the developer's words must still be there.
   // Where the block may replace the prompt, they have to be inside it.
-  const verbatim = body.includes(prompt.trim());
-  if (surface.rewriteField) {
+  const verbatim = body.includes(prompt);
+  if (surface.rewriteVerified) {
     lines.push(`  original text preserved verbatim in the block: ${verbatim ? 'YES' : 'NO — BUG'}`);
   } else {
     lines.push('  original text preserved: yes (prompt is untouched by this surface)');
@@ -150,13 +165,20 @@ function describe(surfaceId, surface, event, res) {
 
 const env = { ...process.env };
 if (!has('--telemetry')) env.GOV_TELEMETRY = '0';
-if (has('--enforce')) env.GOV_ENFORCE_ALL = '1';
+env.GOV_POLICY_CACHE = '0';
+env.GOV_ROLLBACK_STATE = '0';
+if (ruleMode) {
+  env.GOV_ALLOW_TEST_OVERRIDES = '1';
+  env.GOV_TEST_RULE_MODES = JSON.stringify({ [ruleMode.id]: ruleMode.mode });
+}
 
 const targets = only ? [only] : Object.keys(SURFACES.surfaces);
 
 console.log(`=== simulate-hook ===`);
 console.log(`prompt:  ${JSON.stringify(prompt)}`);
-console.log(`enforce: ${has('--enforce') ? 'ALL RULES (GOV_ENFORCE_ALL=1)' : 'shadow mode (as shipped)'}`);
+console.log(
+  `rule mode: ${ruleMode ? `${ruleMode.id}=${ruleMode.mode} (simulation override)` : 'all rules use the checked-in control plane'}`,
+);
 
 let failures = 0;
 
@@ -188,7 +210,7 @@ for (const surfaceId of targets) {
     // Exit 2 is legitimate only as a deliberate block. Anything else exiting 2
     // means a fault became a blocked prompt, which the contract forbids.
     const blocked = res.status === 2;
-    if (blocked && !has('--enforce')) {
+    if (blocked && !['soft-block', 'enforce'].includes(ruleMode?.mode)) {
       console.log('  FAIL: exited 2 with no enforcing rule — a fault must never block');
       failures += 1;
       continue;

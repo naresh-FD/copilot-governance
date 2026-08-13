@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "_comment": [
     "Per-surface capability matrix for the prompt interception kernel.",
     "",
@@ -29,6 +29,8 @@
   "surfaces": {
     "vscode": {
       "label": "VS Code Copilot",
+      "adapterId": "vscode-user-prompt-submit",
+      "adapterVersion": "2.0.0",
       "events": ["UserPromptSubmit"],
       "notifyOnly": [],
       "promptField": "prompt",
@@ -37,6 +39,11 @@
       "injectField": "hookSpecificOutput.additionalContext",
       "injectVerified": true,
       "injectVerifiedOn": "2026-08-09",
+      "deliveryProof": {
+        "status": "canary-verified",
+        "verifiedOn": "2026-08-09",
+        "scope": "VS Code UserPromptSubmit additionalContext on the tested local client; revalidation required after upgrades"
+      },
       "block": "exit2",
       "systemMessage": true,
       "notes": [
@@ -54,12 +61,20 @@
     },
     "claude": {
       "label": "Claude Code",
+      "adapterId": "claude-user-prompt-submit",
+      "adapterVersion": "2.0.0",
       "events": ["UserPromptSubmit"],
       "notifyOnly": [],
       "promptField": "prompt",
       "rewriteField": null,
       "rewriteVerified": false,
       "injectField": "hookSpecificOutput.additionalContext",
+      "injectVerified": false,
+      "deliveryProof": {
+        "status": "contract-only",
+        "verifiedOn": null,
+        "scope": "Vendor contract is represented; an end-to-end model-receipt canary has not been recorded"
+      },
       "block": "decision",
       "systemMessage": true,
       "notes": [
@@ -73,12 +88,20 @@
     },
     "copilot-cli": {
       "label": "Copilot CLI / coding agent",
+      "adapterId": "copilot-cli-prompt-hooks",
+      "adapterVersion": "2.0.0",
       "events": ["userPromptSubmitted", "userPromptTransformed"],
       "notifyOnly": ["userPromptSubmitted"],
       "promptField": "transformedPrompt",
       "rewriteField": "modifiedTransformedPrompt",
       "rewriteVerified": true,
       "injectField": "modifiedTransformedPrompt",
+      "injectVerified": false,
+      "deliveryProof": {
+        "status": "contract-only",
+        "verifiedOn": null,
+        "scope": "userPromptTransformed mutation is documented; a pinned-runtime downstream canary has not been recorded"
+      },
       "block": null,
       "systemMessage": false,
       "notes": [

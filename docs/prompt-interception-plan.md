@@ -1,9 +1,10 @@
 # Prompt Interception Kernel
 
-Phase 5 of the governance platform. Where phases 0–4 *published* governance
-content and hoped developers used it, this phase *applies* it: every prompt
-submitted in a governed repository is rewritten against a governance core before
-the model sees it.
+Phase 5 of the governance platform. Where phases 0–4 publish governance content,
+this phase attempts to apply it at prompt submission. “Every prompt governed” is
+a target, not a current fact: only a pinned client/hook path with repeatable
+downstream delivery proof is counted as governed. See
+`docs/adapter-capability-matrix.md` for the current evidence.
 
 Schema and capability claims here were re-verified against the VS Code, GitHub
 Copilot and Claude Code documentation on **2026-08-02**. The hooks APIs are in
@@ -21,7 +22,7 @@ the pinned schema below when they move.
 > `additionalContext` alongside it". The v1 kernel emitted both fields, so on
 > those two surfaces every prompt reached the model ungoverned and every deny
 > would have failed open silently. The tests passed because they asserted the
-> engine's own output shape and never the runtime's acceptance of it. The v2
+> engine's own output shape and never the runtime's acceptance of it. The v3
 > kernel renders per surface from `prompt-core/surfaces.json`, and the tests now
 > assert the documented field per surface.
 
@@ -36,8 +37,9 @@ Read that table carefully before quoting coverage to anyone. **Exactly one
 surface can genuinely rewrite a prompt, and it is the one that cannot block.**
 The two surfaces that can block cannot rewrite. There is no surface with both.
 
-All three configs ship in this phase. The engine is a single binary; only the
-rendering differs.
+All three configs ship in this phase. The entry point uses local zero-package
+modules for envelope, policy-pack, and control-plane handling; rendering remains
+surface-specific.
 
 ## The hybrid strategy, and what it means per surface
 
@@ -75,15 +77,16 @@ developer prompt
 .github/hooks/prompt-interceptor.json     UserPromptSubmit registration
       │  stdin JSON
       ▼
-.github/prompt-core/rewrite.mjs           engine, single file, zero dependencies
+.github/prompt-core/rewrite.mjs           engine and local modules, zero external packages
       │
-      ├─ screen   → deny.json    per-rule shadow or enforce
+      ├─ screen   → deny.json + control-plane.json   independent rule lifecycle
       ├─ classify → router.json  intent, risk, template, anchors
       ├─ compose  → core.md + workflow + verbatim original prompt
-      └─ log      → ~/.copilot-gov/telemetry.jsonl   hashed, no raw prompt text
+      ├─ verify   → policy-pack.json + last-known-good local cache
+      └─ log      → ~/.copilot-gov/telemetry.jsonl   metadata only
       │  stdout JSON
       ▼
-  modifiedPrompt → model
+  surface-specific inject/rewrite/block response
 ```
 
 ## Files
@@ -92,8 +95,13 @@ developer prompt
 | --- | --- | --- |
 | `prompt-core/core.md` | `.github/prompt-core/core.md` | Invariant preamble prepended to every prompt. Budget: 150 words |
 | `prompt-core/router.json` | `.github/prompt-core/router.json` | Intent map onto the 14 prompt workflows |
-| `prompt-core/deny.json` | `.github/prompt-core/deny.json` | Policy rules, each with its own `enforce` flag and provenance |
+| `prompt-core/deny.json` | `.github/prompt-core/deny.json` | Versioned rule contracts, stable reason codes, and provenance |
+| `prompt-core/control-plane.json` | `.github/prompt-core/control-plane.json` | Independent rule modes, targeting, thresholds, and exceptions |
+| `prompt-core/policy-pack.json` | `.github/prompt-core/policy-pack.json` | Semantic pack version, compatibility range, and file checksums |
 | `prompt-core/surfaces.json` | `.github/prompt-core/surfaces.json` | Per-surface capability matrix — what each runtime can actually do |
+| `prompt-core/envelope.mjs` | `.github/prompt-core/envelope.mjs` | Canonical in-memory envelope and privacy-safe event projection |
+| `prompt-core/control-plane.mjs` | `.github/prompt-core/control-plane.mjs` | Per-rule targeting, exceptions, kill switch, and rollback |
+| `prompt-core/policy-pack.mjs` | `.github/prompt-core/policy-pack.mjs` | Integrity, compatibility, cache, and last-known-good rollback |
 | `prompt-core/rewrite.mjs` | `.github/prompt-core/rewrite.mjs` | The engine |
 | `hooks/prompt-interceptor.json` | `.github/hooks/prompt-interceptor.json` | VS Code Copilot registration |
 | `hooks/copilot-cli-interceptor.json` | `.github/hooks/copilot-cli-interceptor.json` | Copilot CLI registration, both events |
@@ -118,11 +126,12 @@ downstream (parent is `.github/`) with no configuration.
 
 ## The governance block
 
-Every prompt is governed, matched or not. The developer's words are never
-dropped or paraphrased:
+Every eligible event is evaluated, matched or not. The interaction is counted as
+governed only where delivery proof is current. On replacement paths, the
+developer's words are never dropped, trimmed, or paraphrased:
 
 ```
-<!-- copilot-governance | prompt-core v2 | mode=<rewrite|inject> intent=<id> risk=<low|medium|high> -->
+<!-- copilot-governance | prompt-core v3.0.0 | mode=<rewrite|inject> intent=<id> risk=<low|medium|high> -->
 
 [core.md — the invariant governance preamble]
 
@@ -161,15 +170,17 @@ constraints` heading therefore cannot restructure the block.
 
 ## Deny rules and per-rule enforcement
 
-Every rule in `deny.json` carries its own `enforce` boolean:
+Every contract in `deny.json` has a stable ID, version, owner placeholder,
+reason code, safe explanation, and provenance. `control-plane.json` configures
+each rule independently as `off`, `shadow`, `candidate`, `soft-block`, or
+`enforce`, with repository/cohort/percentage/time targeting and expiring
+exceptions.
 
-- `enforce: false` (**shadow**) — evaluated, logged, an advisory `systemMessage`
-  is shown, the concern is written into the governance block, and the prompt
-  proceeds.
-- `enforce: true` — the prompt is blocked using whatever mechanism the target
-  surface documents: `{"decision":"block","reason":…}` on Claude Code, exit code
-  2 on VS Code, and **nothing at all on Copilot CLI**, where it degrades to an
-  in-prompt refusal instruction.
+All seven rules currently use `shadow`: every rule produces an independent
+matched/not-matched/error result, matched rules are surfaced as advisories, and
+the prompt proceeds. `soft-block` and `enforce` use the documented surface block
+mechanism where available. A rule that matches on an unblockable surface is
+recorded as enforcement-unavailable and is never counted as a hard block.
 
 Exit code 2 is otherwise forbidden to the engine. A deliberate policy block is
 its one legitimate use; every internal fault falls through to a pass-through and
@@ -181,7 +192,8 @@ All seven rules ship in shadow. To graduate one:
 1. `copilot-gov.sh report` — read the shadow hit count and the graduation order.
 2. Sample the hits. A rule is ready when its false-positive rate is acceptable
    *for that rule*, independent of the others.
-3. Set `"enforce": true` for that rule only, and sync.
+3. After approval, move that rule through `candidate`, `soft-block`, and
+   `enforce` in `control-plane.json`; keep every other rule unchanged.
 
 ### Graduation order
 
@@ -191,7 +203,8 @@ All seven rules ship in shadow. To graduate one:
    false-positive data from a live system rather than local pilot volume alone.
 2. Then by shadow hit count.
 3. Rules carrying a `graduationBlocker` are listed but flagged as ineligible.
-   The selftest fails the build if such a rule is flipped to `enforce: true`.
+   The selftest fails the build if such a rule is promoted to `soft-block` or
+   `enforce`.
 
 **No rule currently carries Argus provenance.** All seven are `hand-authored`,
 so today's ranking is driven by local shadow volume alone. Wiring the Argus CWE
@@ -207,9 +220,11 @@ the rule exists to encourage). `disable-security-scan` records a third: it canno
 yet tell an assistant being asked to waive a finding from a developer discussing
 a waiver that already went through security.
 
-`GOV_ENFORCE_ALL=1` promotes every rule to enforcing. It exists so tests and
-`simulate-hook.mjs --enforce` can exercise the block path; it only ever makes the
-kernel stricter.
+There is no global enable-all switch. `GOV_ENFORCE_ALL` is ignored and recorded
+as a bypass marker. Tests and the simulator may opt one named rule into one mode
+with an explicitly test-only override. The production emergency control is
+rollback-only: `GOV_EMERGENCY_SHADOW=1` moves enforced rules to shadow, and
+`GOV_RULE_ROLLBACK=<rule-id>` rolls back only the named rule.
 
 ## Telemetry and privacy
 
@@ -217,14 +232,13 @@ Written to `~/.copilot-gov/telemetry.jsonl` — the user's home directory, **not
 the repository. Prompt text in a regulated environment can contain customer
 data and must never land in a git working tree.
 
-Each record holds: timestamp, **surface**, **event**, **mode** (`rewrite`,
-`inject`, `block` or `notify`), session id, repo name, intent, risk, score,
-matched template, deny rule ids with their enforce state, an `unenforceable`
-flag for rules that fired on a surface with no block mechanism, a truncated
-SHA-256 `promptHash`, and the character counts of the raw prompt and the
-governance block. **Raw prompt text is never written** unless
-`GOV_TELEMETRY_RAW=1` is set explicitly for local debugging. `GOV_TELEMETRY=0`
-disables logging entirely.
+Each record holds event/correlation IDs; client, adapter, hook, and policy-pack
+versions; repository class and cohort; bucketed size estimates; capabilities;
+all seven rule results; selected workflow and skills; operating mode, decision,
+control state, failure/bypass markers, and phase latency. Raw prompt text,
+source fragments, unrestricted paths, repository names, and prompt-derived
+content hashes are never written. There is no raw-telemetry override.
+`GOV_TELEMETRY=0` disables logging for tests and local simulation only.
 
 `surface` and `mode` matter for graduation decisions: a rule's false-positive
 rate is not necessarily the same across clients, and a rule that only ever fires
@@ -310,8 +324,8 @@ that the platform "intercepts and enforces" is therefore true of no single
 client — it is only true of the union, and the union is not what any one
 developer is sitting in front of. State the per-client position, not the union.
 
-**Enforcement on Copilot CLI is model-dependent.** When a rule graduates to
-`enforce: true`, Copilot CLI cannot honour it. The prompt is rewritten with a
+**Enforcement on Copilot CLI is model-dependent.** When a rule reaches
+`enforce`, Copilot CLI cannot honour a hard block. The prompt is rewritten with a
 `## Refuse this request` instruction and the model is trusted to comply. That is
 a materially weaker control than a block and must not be counted as one; it is
 recorded as `unenforceable: true` in telemetry so the difference is measurable.

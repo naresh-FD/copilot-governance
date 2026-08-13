@@ -458,7 +458,7 @@ code {
           </svg>
         </div>
         <h3>Prompt Interception</h3>
-        <p>Every prompt governed by the interception kernel before the model sees it. Developer wording is always preserved verbatim; only context and rules are injected.</p>
+        <p>Eligible prompt hooks are evaluated by the interception kernel. Canary-verified delivery paths count as governed; contract-only and unsupported paths are reported separately. Replacement paths preserve developer wording verbatim.</p>
         <div class="cap-bar"></div>
       </div>
 
@@ -469,7 +469,7 @@ code {
           </svg>
         </div>
         <h3>Security Guardrails</h3>
-        <p>Non-negotiable rules: no hardcoded secrets, no PII logging, no auth bypass, OWASP injection prevention — enforced at the prompt layer, not just in review.</p>
+        <p>Non-negotiable guidance: no hardcoded secrets, no PII logging, no auth bypass, and OWASP injection prevention. All seven prompt rules remain shadow-only pending evidence.</p>
         <div class="cap-bar"></div>
       </div>
 
@@ -615,7 +615,7 @@ code {
             </div>
           </div>
           <div class="arch-lbl">Interception Kernel</div>
-          <div class="arch-val"><code>prompt-core/</code> and <code>hooks/</code> intercept every prompt via <code>UserPromptSubmit</code>. Developer wording is carried verbatim; governance context is injected. Deny rules start in shadow mode — logged, never blocking, until pilot data justifies enforcement.</div>
+          <div class="arch-val"><code>prompt-core/</code> and <code>hooks/</code> evaluate supported prompt events using surface-specific contracts. Developer wording is preserved on replacement paths; governance context is injected where supported. All seven rules remain shadow-only pending pilot evidence.</div>
         </div>
 
         <div class="arch-row">
@@ -627,7 +627,7 @@ code {
             </div>
           </div>
           <div class="arch-lbl">Security Layer</div>
-          <div class="arch-val">No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, secure error handling — all enforced at prompt time in addition to code review.</div>
+          <div class="arch-val">No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, and secure error handling are injected as guidance; blocking is not yet enabled.</div>
         </div>
 
         <div class="arch-row">
@@ -750,7 +750,7 @@ code {
           <div class="status-pill sp-active">In Progress</div>
         </div>
         <div class="tl-content-col">
-          <div class="tl-box">Every prompt governed against the governance core before the model sees it — on every surface that supports hooks. Running in <strong>shadow mode</strong>: deny rules are logged and surfaced, never blocking, until pilot data justifies enforcement per rule. JetBrains gap is a named accepted risk.</div>
+          <div class="tl-box">Capability proof and shadow validation are in progress. Only canary-verified delivery paths count as governed. All seven rules are logged and surfaced, never blocking, until pilot evidence supports one-rule-at-a-time promotion. JetBrains remains unsupported.</div>
         </div>
       </div>
 
@@ -790,15 +790,15 @@ code {
     <div class="eyebrow">Runtime Interception</div>
     <h2 class="sec-title">Surface Coverage Matrix</h2>
     <p class="sec-desc">
-      No single client can both rewrite and block. The platform enforces as a union of surfaces —
-      the per-client position must be reported honestly, not netted off.
+      No single client can both rewrite and block. A union of different client capabilities is not
+      coverage for an individual interaction; report the exact hook and canary state.
     </p>
     <div class="w-scroll">
       <table class="cov-table">
         <thead>
           <tr>
             <th>Client</th>
-            <th>Governed</th>
+            <th>Evidence State</th>
             <th>Can Rewrite</th>
             <th>Can Block</th>
             <th>Hook Config</th>
@@ -807,23 +807,23 @@ code {
         <tbody>
           <tr>
             <td>VS Code Copilot</td>
-            <td><span class="badge b-yes">Yes — by injection</span></td>
-            <td><span class="badge b-no">No</span></td>
-            <td><span class="badge b-yes">Yes — exit 2</span></td>
+            <td><span class="badge b-yes">Canary-verified injection</span></td>
+            <td><span class="badge b-no">No verified replacement</span></td>
+            <td><span class="badge b-yes">Exit 2 contract</span></td>
             <td><code>prompt-interceptor.json</code></td>
           </tr>
           <tr>
             <td>Copilot CLI / Agent</td>
-            <td><span class="badge b-yes">Yes — by rewrite</span></td>
-            <td><span class="badge b-yes">Yes</span></td>
+            <td><span class="badge b-warn">Contract-only; canary pending</span></td>
+            <td><span class="badge b-yes">Yes — contract</span></td>
             <td><span class="badge b-no">No</span></td>
             <td><code>copilot-cli-interceptor.json</code></td>
           </tr>
           <tr>
             <td>Claude Code</td>
-            <td><span class="badge b-yes">Yes — by injection</span></td>
+            <td><span class="badge b-warn">Contract-only; canary pending</span></td>
             <td><span class="badge b-no">No</span></td>
-            <td><span class="badge b-yes">Yes — decision</span></td>
+            <td><span class="badge b-yes">Decision contract</span></td>
             <td><code>claude-code-settings.fragment.json</code></td>
           </tr>
           <tr>
@@ -852,8 +852,8 @@ code {
     <div class="eyebrow">Security</div>
     <h2 class="sec-title">Non-Negotiable Guardrails</h2>
     <p class="sec-desc">
-      These rules are enforced at the prompt layer in addition to code review.
-      They cannot be weakened by repo overrides.
+      These rules are injected and evaluated at the prompt layer in addition to code review.
+      All seven remain shadow-only and cannot be weakened by repo overrides.
     </p>
     <div class="gr-grid">
 
@@ -965,8 +965,9 @@ code {
         </thead>
         <tbody>
           <tr><td>Repo onboarding</td><td>100% active repos receive governance files</td></tr>
-          <tr><td>Runtime interception coverage</td><td>100% on hook-capable clients — IntelliJ repos counted separately as uncovered</td></tr>
-          <tr><td>Token reduction</td><td>40–60% less repeated manual prompt context</td></tr>
+          <tr><td>Technical prompt coverage</td><td>Establish baseline, then ≥95% during pilot on supported healthy adapters</td></tr>
+          <tr><td>Control-perimeter coverage</td><td>Establish managed-client inventory baseline; unsupported and disabled clients stay outside the numerator</td></tr>
+          <tr><td>Token impact</td><td>Measure completed-task tokens, retries and accepted output before setting a reduction target</td></tr>
           <tr><td>Security baseline coverage</td><td>100% repos include security guardrails</td></tr>
           <tr><td>Console / debug noise reduction</td><td>80% reduction in unwanted review comments</td></tr>
           <tr><td>PR fix speed</td><td>20–30% faster fixes for common issues</td></tr>

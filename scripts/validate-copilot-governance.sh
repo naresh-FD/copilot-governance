@@ -22,7 +22,7 @@ INSTRUCTIONS_DIR="$SCRIPT_DIR/instructions"
 PROMPTS_DIR="$SCRIPT_DIR/prompts"
 PROMPT_CORE_DIR="$SCRIPT_DIR/prompt-core"
 HOOKS_DIR="$SCRIPT_DIR/hooks"
-TEST_FILE="$SCRIPT_DIR/tests/prompt-core.test.mjs"
+TEST_DIR="$SCRIPT_DIR/tests"
 REQUIRE_GITHUB_AUTH="${REQUIRE_GITHUB_AUTH:-false}"
 
 CENTRAL_START="<!-- CENTRAL GOVERNANCE START -->"
@@ -95,7 +95,12 @@ REQUIRED_PROMPT_CORE=(
   router.json
   deny.json
   surfaces.json
+  control-plane.json
+  policy-pack.json
   rewrite.mjs
+  envelope.mjs
+  control-plane.mjs
+  policy-pack.mjs
   repo-profile.mjs
   skill-selector.mjs
   context-optimizer.mjs
@@ -319,11 +324,13 @@ fi
 # a rewrite smoke test all live in the engine so a synced repo can run the same
 # check against its own copy.
 if command -v node >/dev/null 2>&1; then
-  if node --check "$PROMPT_CORE_DIR/rewrite.mjs" 2>/dev/null; then
-    pass "rewrite.mjs parses"
-  else
-    fail "rewrite.mjs has a syntax error"
-  fi
+  for module in rewrite.mjs envelope.mjs control-plane.mjs policy-pack.mjs; do
+    if node --check "$PROMPT_CORE_DIR/$module" 2>/dev/null; then
+      pass "$module parses"
+    else
+      fail "$module has a syntax error"
+    fi
+  done
 
   if skill_out="$(node "$SCRIPT_DIR/scripts/validate-skill-registry.mjs" 2>&1)"; then
     pass "skill registry: ${skill_out#skill registry validation OK — }"
@@ -344,9 +351,9 @@ if command -v node >/dev/null 2>&1; then
   # GOV_SKIP_TESTS=1 to skip during rapid local iteration; CI must not skip.
   if [[ "${GOV_SKIP_TESTS:-0}" == "1" ]]; then
     echo "SKIP: kernel behaviour tests (GOV_SKIP_TESTS=1)"
-  elif [[ ! -f "$TEST_FILE" ]]; then
-    fail "kernel behaviour tests not found: $TEST_FILE"
-  elif test_out="$(node --test "$TEST_FILE" 2>&1)"; then
+  elif ! compgen -G "$TEST_DIR/*.test.mjs" >/dev/null; then
+    fail "kernel behaviour tests not found under: $TEST_DIR"
+  elif test_out="$(node --test "$TEST_DIR"/*.test.mjs 2>&1)"; then
     test_count="$(printf '%s\n' "$test_out" | sed -n 's/^# pass \([0-9]*\)$/\1/p;s/^ℹ pass \([0-9]*\)$/\1/p' | head -1)"
     pass "kernel behaviour tests: ${test_count:-all} passed"
   else

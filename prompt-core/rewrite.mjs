@@ -35,15 +35,21 @@
 // kernel degrades to ungoverned prompts rather than a broken chat session.
 //
 import { readFileSync, appendFileSync, mkdirSync, existsSync } from "node:fs";
-import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join, dirname, basename } from "node:path";
 import { detectRepositoryProfile } from "./repo-profile.mjs";
 import { selectSkills } from "./skill-selector.mjs";
 import { optimizeContext } from "./context-optimizer.mjs";
+import { prepareControlPlane, resolveRuleControl, RULE_MODES } from "./control-plane.mjs";
+import {
+  createCanonicalEnvelope,
+  surfaceCapabilities,
+  telemetryFromEnvelope,
+} from "./envelope.mjs";
+import { loadPolicyPack } from "./policy-pack.mjs";
 import { fileURLToPath } from "node:url";
 
-const KERNEL_VERSION = 2;
+const KERNEL_VERSION = "3.0.0";
 const CORE_DIR = dirname(fileURLToPath(import.meta.url));
 // Centrally the kernel sits at <repo>/prompt-core; downstream it sits at
 // <repo>/.github/prompt-core. Either way the parent is the governance root that
@@ -73,12 +79,6 @@ function matches(source, text) {
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
-}
-
-// --- surfaces ----------------------------------------------------------------
-
-function loadSurfaces() {
-  return readJson(join(CORE_DIR, "surfaces.json"));
 }
 
 // Resolve the surface to render for. An explicit --surface always wins; the
@@ -170,29 +170,46 @@ function hasBypassIntent(prompt) {
   return false;                       // ambiguous → fail open (do not fire)
 }
 
-function screen(prompt, deny) {
-  // GOV_ENFORCE_ALL promotes every rule to enforcing. It only ever makes the
-  // kernel stricter, so it is safe to expose; it exists so tests can exercise
-  // the block path without editing deny.json.
-  const forceAll = process.env.GOV_ENFORCE_ALL === "1";
-  const hits = [];
+function screen(prompt, deny, control, context) {
+  const results = [];
   for (const rule of deny.rules || []) {
-    const matched = (rule.signals || []).filter((r) => matches(r, prompt));
-    if (matched.length === 0) continue;
-    // The bypass-verification rule has context-dependent signals: the same
-    // keywords appear in both bypass requests ("add eslint-disable") and
-    // remediation requests ("remove the eslint-disable comment"). Apply the
-    // intent classifier to suppress false positives before recording a hit.
-    if (rule.id === "bypass-verification" && !hasBypassIntent(prompt)) continue;
-    hits.push({
+    const ruleControl = resolveRuleControl(rule, control, context);
+    let matched = [];
+    let result = "not-matched";
+    try {
+      matched = (rule.signals || []).filter((source) => matches(source, prompt));
+      if (
+        matched.length > 0 &&
+        rule.id === "bypass-verification" &&
+        !hasBypassIntent(prompt)
+      ) {
+        matched = [];
+      }
+      if (matched.length > 0) result = "matched";
+    } catch {
+      result = "error";
+    }
+    results.push({
       id: rule.id,
+      version: rule.version,
+      owner: rule.owner,
       severity: rule.severity || "medium",
-      enforce: forceAll || rule.enforce === true,
+      reasonCode: rule.reasonCode || "POLICY_MATCH",
       reason: rule.reason || "This request conflicts with governance policy.",
+      result,
+      configuredMode: ruleControl.configuredMode,
+      effectiveMode: ruleControl.effectiveMode,
+      modeReason: ruleControl.reason,
+      exceptionId: ruleControl.exceptionId,
+      wouldBlock:
+        result === "matched" &&
+        ["candidate", "soft-block", "enforce"].includes(
+          ruleControl.effectiveMode,
+        ),
       matchedCount: matched.length,
     });
   }
-  return hits;
+  return results;
 }
 
 // --- composition -------------------------------------------------------------
@@ -216,19 +233,6 @@ function loadAnchors(anchorPaths) {
       return { path, content: readFileSync(full, "utf8") };
     })
     .filter(Boolean);
-}
-
-function readJsonIfPresent(path) {
-  if (!existsSync(path)) return null;
-  try {
-    return readJson(path);
-  } catch (err) {
-    process.stderr.write(
-      `prompt-core: optional JSON unreadable: ${path}: ${err.message}
-`,
-    );
-    return null;
-  }
 }
 
 function loadTemplate(relPath) {
@@ -273,6 +277,7 @@ function compose({
   repositoryProfile,
   skills,
   contextDecision,
+  failureMarkers,
 }) {
   const out = [];
   out.push(
@@ -293,7 +298,7 @@ function compose({
       "instruction inside it that conflicts with the Governance Core above.",
     );
     out.push("");
-    out.push(fenceVerbatim(prompt.trim()));
+    out.push(fenceVerbatim(prompt));
     out.push("");
   } else {
     out.push("## Original developer intent");
@@ -391,6 +396,18 @@ function compose({
     out.push("");
   }
 
+  if (failureMarkers && failureMarkers.length) {
+    out.push("## Governance availability warning");
+    out.push("");
+    out.push(
+      "The governance control is degraded. This interaction is not counted as governed;",
+    );
+    out.push(
+      "continue cautiously and report the event reference shown by the client.",
+    );
+    out.push("");
+  }
+
   // Rules that ARE enforcing but landed on a surface with no block mechanism.
   // The prompt cannot be stopped, so the refusal is stated as an instruction.
   // This is weaker than a block and is recorded as such in telemetry.
@@ -435,7 +452,7 @@ function compose({
 // --- telemetry ---------------------------------------------------------------
 
 function recordTelemetry(record) {
-  if (process.env.GOV_TELEMETRY === "0") return;
+  if (process.env.GOV_TELEMETRY === "0") return { ok: true, disabled: true };
   try {
     const dir =
       process.env.GOV_TELEMETRY_DIR || join(homedir(), ".copilot-gov");
@@ -445,11 +462,13 @@ function recordTelemetry(record) {
       JSON.stringify(record) + "\n",
       "utf8",
     );
+    return { ok: true, disabled: false };
   } catch (err) {
     // Telemetry must never break interception.
     process.stderr.write(
       `prompt-core: telemetry write failed: ${err.message}\n`,
     );
+    return { ok: false, disabled: false, error: err.message };
   }
 }
 
@@ -482,23 +501,39 @@ function report() {
   const intents = new Map();
   const modes = new Map();
   const surfaces = new Map();
+  const controlStates = new Map();
   const denyShadow = new Map();
   const denyEnforced = new Map();
-  let originalChars = 0;
-  let rewrittenChars = 0;
+  const promptBuckets = new Map();
+  const governedBuckets = new Map();
   let blocked = 0;
 
   const bump = (m, k) => m.set(k, (m.get(k) || 0) + 1);
 
   for (const row of rows) {
-    bump(intents, row.intent);
+    bump(intents, row.selectedWorkflowIds?.[0] || row.intent || "unknown");
     bump(modes, row.mode || "unknown");
     bump(surfaces, row.surface || "unknown");
-    originalChars += row.promptChars || 0;
-    rewrittenChars += row.governedChars || 0;
+    bump(controlStates, row.controlState || "legacy-unknown");
+    bump(
+      promptBuckets,
+      row.promptCharsBucket ||
+        (row.promptChars === undefined ? "legacy-unknown" : "legacy-exact"),
+    );
+    bump(
+      governedBuckets,
+      row.governedCharsBucket ||
+        (row.governedChars === undefined ? "legacy-unknown" : "legacy-exact"),
+    );
     if (row.blocked) blocked += 1;
-    for (const hit of row.denyHits || [])
-      bump(hit.enforce ? denyEnforced : denyShadow, hit.id);
+    const policyResults = row.policyResults || row.denyHits || [];
+    for (const hit of policyResults) {
+      if (hit.result && hit.result !== "matched") continue;
+      const enforced =
+        hit.enforce === true ||
+        ["soft-block", "enforce"].includes(hit.effectiveMode);
+      bump(enforced ? denyEnforced : denyShadow, hit.id);
+    }
   }
 
   const sorted = (m) => [...m.entries()].sort((a, b) => b[1] - a[1]);
@@ -516,6 +551,9 @@ function report() {
   console.log("");
   console.log("Surface:");
   table(surfaces);
+  console.log("");
+  console.log("Control state:");
+  table(controlStates);
   console.log("");
   console.log("Strategy (rewrite = intent matched, inject = no match):");
   table(modes);
@@ -544,13 +582,11 @@ function report() {
   reportGraduation(denyShadow);
 
   console.log("");
-  console.log(
-    "Prompt size (characters, governance block vs. raw developer prompt):",
-  );
-  console.log(`  raw total:      ${originalChars}`);
-  console.log(`  governed total: ${rewrittenChars}`);
-  console.log(`  mean raw:       ${(originalChars / rows.length).toFixed(0)}`);
-  console.log(`  mean governed:  ${(rewrittenChars / rows.length).toFixed(0)}`);
+  console.log("Prompt-size buckets (raw content is not stored):");
+  table(promptBuckets);
+  console.log("");
+  console.log("Governance-block-size buckets:");
+  table(governedBuckets);
   console.log("");
   console.log(
     "Note: the governed prompt is larger than the raw prompt by design — it",
@@ -577,7 +613,6 @@ function reportGraduation(denyShadow) {
   }
 
   const candidates = (deny.rules || [])
-    .filter((r) => r.enforce !== true)
     .map((r) => ({
       id: r.id,
       hits: denyShadow.get(r.id) || 0,
@@ -622,31 +657,136 @@ function reportGraduation(denyShadow) {
 // Decides WHAT should happen to a prompt, independent of how any particular
 // surface expresses it. Rendering is a separate step, because the same decision
 // produces three different wire formats.
-function govern(prompt, surface, cwd = process.cwd()) {
-  const router = readJson(join(CORE_DIR, "router.json"));
-  const deny = readJson(join(CORE_DIR, "deny.json"));
-  const core = readFileSync(join(CORE_DIR, router.core || "core.md"), "utf8");
+function governedCharsBucket(chars) {
+  if (!chars) return "0";
+  if (chars <= 1_000) return "1-1000";
+  if (chars <= 4_000) return "1001-4000";
+  if (chars <= 16_000) return "4001-16000";
+  return "16001+";
+}
 
-  const denyHits = screen(prompt, deny);
-  const enforced = denyHits.filter((h) => h.enforce);
-  const shadowHits = denyHits.filter((h) => !h.enforce);
+function deriveControlState(surface, event, decision, failureMarkers) {
+  if (failureMarkers.length > 0) return "degraded";
+  if ((surface.notifyOnly || []).includes(event)) return "advisory-only";
+  if (decision.unenforceable) return "degraded";
+  if (surface.deliveryProof?.status !== "canary-verified") return "observed";
+  return decision.mode === "block" ? "governed-enforced" : "governed-shadow";
+}
 
+function govern(
+  prompt,
+  surface,
+  cwd = process.cwd(),
+  { policyPack = null, event = null, payload = {}, policyLoadMs = 0 } = {},
+) {
+  const started = performance.now();
+  const pack =
+    policyPack || loadPolicyPack({ coreDir: CORE_DIR, kernelVersion: KERNEL_VERSION });
+  const router = pack.router;
+  const deny = pack.deny;
+  const core = pack.core;
+  const control = prepareControlPlane(pack.control);
+  for (const warning of control.warnings) {
+    process.stderr.write(`prompt-core: ${warning}\n`);
+  }
+  const cohort = process.env.GOV_COHORT || control.defaultCohort || "unassigned";
+
+  const profileStarted = performance.now();
+  const repositoryProfile = detectRepositoryProfile(cwd || process.cwd());
+  const profileMs = performance.now() - profileStarted;
+  const repository = cwd ? basename(cwd) : "unknown";
+  const envelope = createCanonicalEnvelope({
+    prompt,
+    surface,
+    event: event || surface.events[0],
+    payload,
+    kernelVersion: KERNEL_VERSION,
+    policyPack: pack,
+    repositoryProfile,
+    cohort,
+  });
+  envelope.latencyMs.policyLoad = Number(policyLoadMs.toFixed(3));
+  envelope.latencyMs.repositoryProfile = Number(profileMs.toFixed(3));
+  envelope.bypassMarkers.push(
+    ...control.warnings.filter((warning) => warning.includes("GOV_ENFORCE_ALL")),
+  );
+  envelope.failureMarkers.push(
+    ...control.warnings.filter((warning) => !warning.includes("GOV_ENFORCE_ALL")),
+  );
+
+  const policyStarted = performance.now();
+  const ruleResults = screen(prompt, deny, control, {
+    cohort,
+    repository,
+    rolloutKey: process.env.GOV_ROLLOUT_KEY || `${cohort}|${repository}`,
+  });
+  envelope.latencyMs.policyEvaluation = Number(
+    (performance.now() - policyStarted).toFixed(3),
+  );
+  envelope.policyResults = ruleResults.map((result) => ({
+    id: result.id,
+    version: result.version,
+    result: result.result,
+    reasonCode: result.reasonCode,
+    severity: result.severity,
+    configuredMode: result.configuredMode,
+    effectiveMode: result.effectiveMode,
+    modeReason: result.modeReason,
+    wouldBlock: result.wouldBlock,
+    exceptionId: result.exceptionId,
+  }));
+
+  const denyHits = ruleResults.filter(
+    (result) => result.result === "matched" && result.effectiveMode !== "off",
+  );
+  const enforced = denyHits.filter((result) =>
+    ["soft-block", "enforce"].includes(result.effectiveMode),
+  );
+  const shadowHits = denyHits.filter((result) =>
+    ["shadow", "candidate"].includes(result.effectiveMode),
+  );
+
+  const routingStarted = performance.now();
   const match = classify(prompt, router);
   const chosen = match ? match.intent : router.generic;
+  envelope.latencyMs.routing = Number(
+    (performance.now() - routingStarted).toFixed(3),
+  );
+  envelope.selectedWorkflowIds = [chosen.id];
 
-  // A surface that can neither block nor rewrite has no way to stop anything.
-  const canBlock = surface.block !== null;
-  const canReplace = surface.rewriteField !== null;
+  const activeModes = ruleResults.map((result) => result.effectiveMode);
+  envelope.operatingMode = ["enforce", "soft-block", "candidate", "shadow", "off"].find(
+    (mode) => activeModes.includes(mode),
+  ) || "off";
 
-  if (enforced.length > 0 && canBlock) {
-    return {
+  const capabilities = surfaceCapabilities(surface, event || surface.events[0]);
+  const canBlock = capabilities.block;
+  const canReplace = capabilities.replace;
+
+  const healthyForEnforcement = envelope.failureMarkers.length === 0;
+  if (enforced.length > 0 && canBlock && healthyForEnforcement) {
+    const decision = {
       mode: "block",
       enforced,
       denyHits,
+      ruleResults,
       chosen,
       match,
-      reason: enforced.map((h) => `[${h.id}] ${h.reason}`).join(" "),
+      envelope,
+      governedCharsBucket: "0",
+      reason: enforced.map((hit) => `[${hit.id}] ${hit.reason}`).join(" "),
     };
+    envelope.decision = "blocked";
+    envelope.controlState = deriveControlState(
+      surface,
+      event || surface.events[0],
+      decision,
+      envelope.failureMarkers,
+    );
+    envelope.latencyMs.totalDecision = Number(
+      (performance.now() - started).toFixed(3),
+    );
+    return decision;
   }
 
   // Hybrid: a matched intent earns the full workflow; an unmatched prompt gets
@@ -657,7 +797,6 @@ function govern(prompt, surface, cwd = process.cwd()) {
       ? loadTemplate(chosen.template)
       : null;
 
-  const repositoryProfile = detectRepositoryProfile(cwd || process.cwd());
   const registry = readJson(
     join(GOV_ROOT, "skill-registry", "approved-skills.json"),
   );
@@ -671,11 +810,15 @@ function govern(prompt, surface, cwd = process.cwd()) {
     : { selected: [], rejected: [] };
   const skills = skillSelection.selected || [];
   const integrityError = skillSelection.integrityError || false;
+  if (integrityError) envelope.failureMarkers.push("skill-registry-integrity-error");
   const anchors = loadAnchors(chosen.anchors || []);
 
   // Build a renderer that produces the actual serialized governance block for a
   // given section list, so the budget optimizer can measure the real output
   // length rather than just the sum of section body lengths.
+  const effectiveShadowHits = healthyForEnforcement
+    ? shadowHits
+    : [...shadowHits, ...enforced];
   const baseComposeParams = {
     core,
     prompt,
@@ -686,11 +829,12 @@ function govern(prompt, surface, cwd = process.cwd()) {
     anchors,
     requireHumanReview: chosen.requireHumanReview === true,
     guidance: chosen.guidance || [],
-    shadowHits,
-    unenforceableHits: canBlock ? [] : enforced,
+    shadowHits: effectiveShadowHits,
+    unenforceableHits: healthyForEnforcement && !canBlock ? enforced : [],
     includeOriginal: canReplace,
     repositoryProfile,
     skills,
+    failureMarkers: envelope.failureMarkers,
   };
   const renderer = (sectionList) =>
     compose({ ...baseComposeParams, contextDecision: { sections: sectionList } });
@@ -710,20 +854,45 @@ function govern(prompt, surface, cwd = process.cwd()) {
     contextDecision,
   });
 
-  return {
+  const decision = {
     mode,
     governed,
     denyHits,
-    shadowHits,
+    ruleResults,
+    shadowHits: effectiveShadowHits,
     enforced,
-    unenforceable: !canBlock && enforced.length > 0,
+    unenforceable:
+      enforced.length > 0 && (!canBlock || !healthyForEnforcement),
     chosen,
     match,
     template,
     selectedSkills: skills.map((skill) => skill.name),
     contextDecision,
     integrityError,
+    envelope,
+    advisoryShown: effectiveShadowHits.length > 0,
+    governedCharsBucket: governedCharsBucket(governed.length),
   };
+  envelope.decision = decision.unenforceable
+    ? "enforcement_unavailable"
+    : effectiveShadowHits.some((hit) => hit.wouldBlock)
+      ? "would_block"
+      : effectiveShadowHits.length > 0
+        ? "advisory_shown"
+        : "allowed";
+  envelope.controlState = deriveControlState(
+    surface,
+    event || surface.events[0],
+    decision,
+    envelope.failureMarkers,
+  );
+  envelope.latencyMs.composition = Number(
+    (performance.now() - routingStarted).toFixed(3),
+  );
+  envelope.latencyMs.totalDecision = Number(
+    (performance.now() - started).toFixed(3),
+  );
+  return decision;
 }
 
 // --- rendering ---------------------------------------------------------------
@@ -744,11 +913,17 @@ function render(decision, surface, event, payload) {
   const eventName = event || surface.events[0];
 
   if (decision.mode === "block") {
+    const reference = decision.envelope?.eventId
+      ? ` Reference: ${decision.envelope.eventId}.`
+      : "";
     if (surface.block === "decision") {
       // Claude Code: top-level decision/reason. permissionDecision is ignored
       // on this event, so it must not be used here.
       return {
-        stdout: JSON.stringify({ decision: "block", reason: decision.reason }),
+        stdout: JSON.stringify({
+          decision: "block",
+          reason: `${decision.reason}${reference}`,
+        }),
         exitCode: 0,
       };
     }
@@ -756,7 +931,7 @@ function render(decision, surface, event, payload) {
     // use of the blocking exit code; stderr carries the reason.
     return {
       stdout: "",
-      stderr: `Blocked by Copilot governance: ${decision.reason}`,
+      stderr: `Blocked by Copilot governance: ${decision.reason}${reference}`,
       exitCode: 2,
     };
   }
@@ -789,6 +964,13 @@ function render(decision, surface, event, payload) {
 
   if (surface.systemMessage) {
     const notes = [];
+    if (decision.envelope?.controlState === "degraded") {
+      notes.push(
+        `control unavailable; this interaction is not counted as governed; reference ${decision.envelope.eventId}`,
+      );
+    } else if (decision.envelope?.controlState === "observed") {
+      notes.push("delivery proof is not current; interaction recorded as observed");
+    }
     if (decision.shadowHits?.length) {
       notes.push(
         `advisory: ${decision.shadowHits.map((h) => h.id).join(", ")}`,
@@ -807,40 +989,60 @@ function render(decision, surface, event, payload) {
 }
 
 // Full pipeline: decide, log, render.
-function handle(prompt, { surface, event, payload, cwd, sessionId }) {
-  const decision = govern(prompt, surface, cwd);
+function addDegradedWarning(decision) {
+  if (!decision.governed || decision.governed.includes("## Governance availability warning")) {
+    return;
+  }
+  decision.governed =
+    "## Governance availability warning\n\n" +
+    "The local audit record could not be written. This interaction is not counted as governed. " +
+    `Reference: ${decision.envelope?.eventId || "unavailable"}.\n\n` +
+    decision.governed;
+  decision.governedCharsBucket = governedCharsBucket(decision.governed.length);
+}
 
-  recordTelemetry({
-    ts: new Date().toISOString(),
-    kernel: KERNEL_VERSION,
-    surface: surface.id,
-    event: event || surface.events[0],
-    sessionId: sessionId || null,
-    repo: cwd ? basename(cwd) : null,
-    promptHash: createHash("sha256").update(prompt).digest("hex").slice(0, 16),
-    promptChars: prompt.length,
-    governedChars: decision.governed ? decision.governed.length : 0,
-    mode: decision.mode,
-    intent: decision.chosen?.id ?? "blocked",
-    risk: decision.chosen?.risk ?? "high",
-    score: decision.match ? Number(decision.match.score.toFixed(2)) : 0,
-    signalsMatched: decision.match ? decision.match.matchedCount : 0,
-    selectedSkills: decision.selectedSkills || [],
-    contextBudgetChars: decision.contextDecision?.configuredLimit ?? 18000,
-    contextUsedChars: decision.contextDecision?.finalCharCount ?? decision.contextDecision?.usedChars ?? 0,
-    contextOverBudget: decision.contextDecision?.overBudget ?? false,
-    integrityError: decision.integrityError ?? false,
-    template:
-      decision.mode === "rewrite" ? (decision.chosen?.template ?? null) : null,
-    blocked: decision.mode === "block",
-    unenforceable: decision.unenforceable === true,
-    denyHits: (decision.denyHits || []).map((h) => ({
-      id: h.id,
-      enforce: h.enforce,
-      severity: h.severity,
-    })),
-    ...(process.env.GOV_TELEMETRY_RAW === "1" ? { rawPrompt: prompt } : {}),
+function handle(
+  prompt,
+  { surface, event, payload, cwd, policyPack, policyLoadMs = 0 },
+) {
+  let decision = govern(prompt, surface, cwd, {
+    policyPack,
+    event,
+    payload,
+    policyLoadMs,
   });
+
+  const telemetryStatus = recordTelemetry(
+    telemetryFromEnvelope(decision.envelope, decision),
+  );
+  if (!telemetryStatus.ok) {
+    decision.envelope.failureMarkers.push("local-audit-write-failed");
+    decision.envelope.controlState = "degraded";
+    decision.envelope.decision = "audit_unavailable";
+    addDegradedWarning(decision);
+
+    // A block without a local audit record violates the enforcement health
+    // contract. Re-evaluate with the emergency rollback applied and fail open.
+    if (decision.mode === "block") {
+      const saved = process.env.GOV_EMERGENCY_SHADOW;
+      process.env.GOV_EMERGENCY_SHADOW = "1";
+      try {
+        decision = govern(prompt, surface, cwd, {
+          policyPack,
+          event,
+          payload,
+          policyLoadMs,
+        });
+        decision.envelope.failureMarkers.push("local-audit-write-failed");
+        decision.envelope.controlState = "degraded";
+        decision.envelope.decision = "audit_unavailable";
+        addDegradedWarning(decision);
+      } finally {
+        if (saved === undefined) delete process.env.GOV_EMERGENCY_SHADOW;
+        else process.env.GOV_EMERGENCY_SHADOW = saved;
+      }
+    }
+  }
 
   return { decision, ...render(decision, surface, event, payload) };
 }
@@ -867,21 +1069,24 @@ function selftest() {
   let router;
   let deny;
   let surfaces;
+  let control;
+  let policyPack;
 
   try {
-    router = readJson(join(CORE_DIR, "router.json"));
+    policyPack = loadPolicyPack({
+      coreDir: CORE_DIR,
+      kernelVersion: KERNEL_VERSION,
+      cacheEnabled: false,
+    });
+    router = policyPack.router;
+    deny = policyPack.deny;
+    surfaces = policyPack.surfaces;
+    control = prepareControlPlane(policyPack.control, {
+      GOV_ROLLBACK_STATE: "0",
+    });
   } catch (err) {
-    note(`router.json unreadable: ${err.message}`);
-  }
-  try {
-    deny = readJson(join(CORE_DIR, "deny.json"));
-  } catch (err) {
-    note(`deny.json unreadable: ${err.message}`);
-  }
-  try {
-    surfaces = loadSurfaces();
-  } catch (err) {
-    note(`surfaces.json unreadable: ${err.message}`);
+    note(`policy pack invalid: ${err.message}`);
+    for (const detail of err.details || []) note(`policy pack: ${detail}`);
   }
 
   if (surfaces) {
@@ -901,6 +1106,12 @@ function selftest() {
         note(
           `${where}: block must be null, "decision", or "exit2" (got ${JSON.stringify(s.block)})`,
         );
+      }
+      if (!s.adapterId || !s.adapterVersion) {
+        note(`${where}: adapterId and adapterVersion are required`);
+      }
+      if (!s.deliveryProof || !["canary-verified", "contract-only", "unverified"].includes(s.deliveryProof.status)) {
+        note(`${where}: deliveryProof.status must be canary-verified, contract-only, or unverified`);
       }
       for (const e of s.notifyOnly || []) {
         if (!s.events.includes(e))
@@ -976,11 +1187,12 @@ function selftest() {
         else if (seen.has(rule.id)) note(`duplicate deny rule id: ${rule.id}`);
         else seen.add(rule.id);
 
-        if (typeof rule.enforce !== "boolean") {
-          note(
-            `${where}: "enforce" must be a boolean, so shadow vs. blocking is never ambiguous`,
-          );
-        }
+        if (Object.hasOwn(rule, "enforce"))
+          note(`${where}: legacy "enforce" boolean is prohibited; use control-plane.json`);
+        if (!/^\d+\.\d+\.\d+$/.test(rule.version || ""))
+          note(`${where}: version must be semantic version x.y.z`);
+        if (!rule.owner) note(`${where}: owner is required (use unassigned until named)`);
+        if (!rule.reasonCode) note(`${where}: reasonCode is required`);
         if (!rule.reason)
           note(
             `${where}: needs a "reason" — it is shown to the developer when blocking`,
@@ -990,7 +1202,11 @@ function selftest() {
             `${where}: "provenance" must be "argus-cwe" or "hand-authored" so graduation order is auditable`,
           );
         }
-        if (rule.enforce === true && rule.graduationBlocker) {
+        const configuredMode = control?.rules?.[rule.id]?.mode;
+        if (!RULE_MODES.includes(configuredMode)) {
+          note(`${where}: control-plane mode is missing or invalid`);
+        }
+        if (["soft-block", "enforce"].includes(configuredMode) && rule.graduationBlocker) {
           note(
             `${where}: enforcing despite a recorded graduationBlocker: ${rule.graduationBlocker}`,
           );
@@ -999,6 +1215,94 @@ function selftest() {
           note(`${where}: needs at least one signal`);
         }
         for (const src of rule.signals || []) strictCompile(src, where);
+      }
+    }
+  }
+
+  if (control && deny?.rules) {
+    if (control.schemaVersion !== 1)
+      note("control plane: schemaVersion must be 1");
+    if (!/^\d+\.\d+\.\d+$/.test(control.version || ""))
+      note("control plane: version must be semantic version x.y.z");
+    if (typeof control.emergencyRollbackToShadow !== "boolean")
+      note("control plane: emergencyRollbackToShadow must be boolean");
+
+    const denyIds = new Set(deny.rules.map((rule) => rule.id).filter(Boolean));
+    const controlIds = Object.keys(control.rules || {});
+    for (const id of controlIds) {
+      if (!denyIds.has(id))
+        note(`control plane: unknown rule ${id}`);
+    }
+    for (const id of denyIds) {
+      if (!Object.hasOwn(control.rules || {}, id))
+        note(`control plane: missing rule ${id}`);
+    }
+
+    for (const [id, configured] of Object.entries(control.rules || {})) {
+      const where = `control rule ${id}`;
+      const percentage = Number(configured.rolloutPercentage ?? 100);
+      if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100)
+        note(`${where}: rolloutPercentage must be between 0 and 100`);
+      if (!configured.owner)
+        note(`${where}: owner is required (use unassigned until named)`);
+      for (const field of ["cohorts", "repositories"]) {
+        if (configured[field] !== undefined && !Array.isArray(configured[field]))
+          note(`${where}: ${field} must be an array`);
+      }
+      const starts = configured.startsAt ? Date.parse(configured.startsAt) : null;
+      const expires = configured.expiresAt ? Date.parse(configured.expiresAt) : null;
+      if (configured.startsAt && !Number.isFinite(starts))
+        note(`${where}: startsAt must be a valid date`);
+      if (configured.expiresAt && !Number.isFinite(expires))
+        note(`${where}: expiresAt must be a valid date`);
+      if (Number.isFinite(starts) && Number.isFinite(expires) && expires <= starts)
+        note(`${where}: expiresAt must be after startsAt`);
+    }
+
+    const thresholds = control.rollbackThresholds || {};
+    const thresholdChecks = {
+      minimumMatchedEvents: (value) => Number.isInteger(value) && value > 0,
+      appealOverrideRate: (value) => Number.isFinite(value) && value >= 0 && value <= 1,
+      immediateOverrideRate: (value) => Number.isFinite(value) && value >= 0 && value <= 1,
+      degradedRate: (value) => Number.isFinite(value) && value >= 0 && value <= 1,
+      p95LatencyMs: (value) => Number.isFinite(value) && value > 0,
+      consecutiveLatencyWindows: (value) => Number.isInteger(value) && value > 0,
+      stateTtlMinutes: (value) => Number.isFinite(value) && value > 0,
+    };
+    for (const [name, valid] of Object.entries(thresholdChecks)) {
+      if (!valid(thresholds[name]))
+        note(`control plane: rollbackThresholds.${name} is missing or invalid`);
+    }
+
+    if (!Array.isArray(control.exceptions)) {
+      note("control plane: exceptions must be an array");
+    } else {
+      const exceptionIds = new Set();
+      for (const exception of control.exceptions) {
+        const where = `control exception ${exception.id || "(unnamed)"}`;
+        if (!exception.id) note("control plane: an exception is missing an id");
+        else if (exceptionIds.has(exception.id)) note(`${where}: duplicate id`);
+        else exceptionIds.add(exception.id);
+        if (!denyIds.has(exception.ruleId)) note(`${where}: ruleId is unknown`);
+        for (const field of ["repositories", "cohorts"]) {
+          if (!Array.isArray(exception[field]) || exception[field].length === 0)
+            note(`${where}: ${field} must be a non-empty array`);
+        }
+        for (const field of [
+          "businessJustification",
+          "approvingOwner",
+          "compensatingControl",
+        ]) {
+          if (!exception[field]) note(`${where}: ${field} is required`);
+        }
+        const starts = Date.parse(exception.startsAt || "");
+        const expires = Date.parse(exception.expiresAt || "");
+        const review = Date.parse(exception.reviewDate || "");
+        if (!Number.isFinite(starts)) note(`${where}: startsAt must be a valid date`);
+        if (!Number.isFinite(expires)) note(`${where}: expiresAt must be a valid date`);
+        if (!Number.isFinite(review)) note(`${where}: reviewDate must be a valid date`);
+        if (Number.isFinite(starts) && Number.isFinite(expires) && expires <= starts)
+          note(`${where}: expiresAt must be after startsAt`);
       }
     }
   }
@@ -1013,15 +1317,24 @@ function selftest() {
       const probe = "remove the console.log calls from the checkout service";
       for (const id of Object.keys(surfaces.surfaces)) {
         const surface = resolveSurface(surfaces, id, null);
+        const smokeEvent =
+          surface.events.find((candidate) =>
+            !(surface.notifyOnly || []).includes(candidate),
+          ) || surface.events[0];
         const { decision } = handle(probe, {
           surface,
-          payload: { prompt: probe },
+          event: smokeEvent,
+          payload: { prompt: probe, transformedPrompt: probe },
+          policyPack,
         });
         if (decision.mode !== "rewrite")
           note(`smoke test (${id}): expected rewrite, got ${decision.mode}`);
         else if (!decision.governed.includes("Governance Core"))
           note(`smoke test (${id}): no governance core`);
-        else if (surface.rewriteField && !decision.governed.includes(probe)) {
+        else if (
+          surfaceCapabilities(surface, smokeEvent).replace &&
+          !decision.governed.includes(probe)
+        ) {
           note(
             `smoke test (${id}): replacing surface dropped the original prompt`,
           );
@@ -1031,6 +1344,7 @@ function selftest() {
       const surface = resolveSurface(surfaces, surfaces.default, null);
       const { decision } = handle("rename accountId to customerId", {
         surface,
+        policyPack,
       });
       if (decision.mode !== "inject")
         note(
@@ -1053,18 +1367,28 @@ function selftest() {
     return;
   }
 
-  const enforcing = deny.rules.filter((r) => r.enforce === true).length;
+  const modes = deny.rules.reduce((counts, rule) => {
+    const mode = control.rules[rule.id].mode;
+    counts[mode] = (counts[mode] || 0) + 1;
+    return counts;
+  }, {});
   console.log(
     `prompt-core selftest OK — ${router.intents.length} intents, ${deny.rules.length} deny rules ` +
-      `(${enforcing} enforcing, ${deny.rules.length - enforcing} shadow), ` +
+      `(${Object.entries(modes).map(([mode, count]) => `${count} ${mode}`).join(", ")}), ` +
       `${Object.keys(surfaces.surfaces).length} surfaces`,
   );
 }
 
 // --- main --------------------------------------------------------------------
 
-function passThrough() {
-  process.stdout.write(JSON.stringify({ continue: true }));
+function passThrough(reason = null) {
+  const out = { continue: true };
+  if (reason) {
+    out.systemMessage =
+      "Copilot governance is unavailable; this interaction is not counted as governed. " +
+      "Continue cautiously and contact the governance support owner.";
+  }
+  process.stdout.write(JSON.stringify(out));
 }
 
 async function readStdin() {
@@ -1084,9 +1408,25 @@ async function main() {
   if (argv.includes("--selftest")) return selftest();
   if (argv.includes("--report")) return report();
 
-  const surfaces = loadSurfaces();
   const wantSurface = flagValue(argv, "--surface");
   const wantEvent = flagValue(argv, "--event");
+  const policyStarted = performance.now();
+  let policyPack;
+  try {
+    policyPack = loadPolicyPack({
+      coreDir: CORE_DIR,
+      kernelVersion: KERNEL_VERSION,
+    });
+  } catch (error) {
+    process.stderr.write(`prompt-core: governance unavailable: ${error.message}\n`);
+    for (const detail of error.details || []) {
+      process.stderr.write(`prompt-core: ${detail}\n`);
+    }
+    passThrough("policy-pack-unavailable");
+    return;
+  }
+  const policyLoadMs = performance.now() - policyStarted;
+  const surfaces = policyPack.surfaces;
 
   if (argv.includes("--prompt")) {
     const prompt = flagValue(argv, "--prompt");
@@ -1096,12 +1436,19 @@ async function main() {
       return;
     }
     const surface = resolveSurface(surfaces, wantSurface, wantEvent);
+    const cliEvent =
+      wantEvent ||
+      surface.events.find(
+        (candidate) => !(surface.notifyOnly || []).includes(candidate),
+      ) ||
+      surface.events[0];
     const result = handle(prompt, {
       surface,
-      event: wantEvent,
+      event: cliEvent,
       payload: { prompt, transformedPrompt: prompt },
       cwd: process.cwd(),
-      sessionId: "cli",
+      policyPack,
+      policyLoadMs,
     });
 
     if (argv.includes("--json")) {
@@ -1135,7 +1482,8 @@ async function main() {
   try {
     payload = JSON.parse(raw);
   } catch {
-    passThrough();
+    process.stderr.write("prompt-core: malformed hook payload; governance unavailable\n");
+    passThrough("malformed-hook-payload");
     return;
   }
 
@@ -1148,30 +1496,26 @@ async function main() {
   if (event && (surface.notifyOnly || []).includes(event)) {
     const text = payload[surface.promptField] ?? payload.prompt ?? "";
     if (text.trim()) {
-      const decision = govern(text, surface);
-      recordTelemetry({
-        ts: new Date().toISOString(),
-        kernel: KERNEL_VERSION,
-        surface: surface.id,
+      const decision = govern(text, surface, payload.cwd, {
+        policyPack,
         event,
-        sessionId: payload.session_id ?? payload.sessionId ?? null,
-        repo: payload.cwd ? basename(payload.cwd) : null,
-        promptHash: createHash("sha256")
-          .update(text)
-          .digest("hex")
-          .slice(0, 16),
-        promptChars: text.length,
-        governedChars: 0,
-        mode: "notify",
-        intent: decision.chosen?.id ?? "generic",
-        risk: decision.chosen?.risk ?? "low",
-        blocked: false,
-        denyHits: (decision.denyHits || []).map((h) => ({
-          id: h.id,
-          enforce: h.enforce,
-          severity: h.severity,
-        })),
+        payload,
+        policyLoadMs,
       });
+      decision.envelope.controlState = "advisory-only";
+      decision.envelope.decision = "observed";
+      const audit = recordTelemetry(
+        telemetryFromEnvelope(decision.envelope, {
+          ...decision,
+          mode: "notify",
+          governedCharsBucket: "0",
+        }),
+      );
+      if (!audit.ok) {
+        process.stderr.write(
+          "prompt-core: local audit unavailable; interaction is degraded\n",
+        );
+      }
     }
     process.stdout.write("{}");
     return;
@@ -1192,7 +1536,8 @@ async function main() {
     event,
     payload,
     cwd: payload.cwd,
-    sessionId: payload.session_id ?? payload.sessionId,
+    policyPack,
+    policyLoadMs,
   });
 
   if (result.stderr) process.stderr.write(result.stderr + "\n");
@@ -1207,7 +1552,7 @@ main().catch((err) => {
   // never exit 2 — that would turn a bug into a blocked prompt.
   process.stderr.write(`prompt-core: ${err && err.stack ? err.stack : err}\n`);
   try {
-    passThrough();
+    passThrough("kernel-failure");
   } catch {
     /* stdout already closed */
   }

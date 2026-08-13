@@ -181,6 +181,46 @@ function Invoke-Validate {
     }
   }
 
+  $requiredKernel = @(
+    "core.md", "router.json", "deny.json", "surfaces.json",
+    "control-plane.json", "policy-pack.json", "rewrite.mjs",
+    "envelope.mjs", "control-plane.mjs", "policy-pack.mjs",
+    "repo-profile.mjs", "skill-selector.mjs", "context-optimizer.mjs"
+  ) | ForEach-Object { Join-Path $Root "prompt-core/$_" }
+
+  foreach ($path in $requiredKernel) {
+    if (Test-Path $path) {
+      "OK: present $path"
+    } else {
+      "FAIL: missing $path"
+      $script:errors++
+    }
+  }
+
+  if (Get-Command node -ErrorAction SilentlyContinue) {
+    foreach ($module in @("rewrite.mjs", "envelope.mjs", "control-plane.mjs", "policy-pack.mjs")) {
+      & node --check (Join-Path $Root "prompt-core/$module")
+      if ($LASTEXITCODE -ne 0) {
+        "FAIL: prompt-core/$module has a syntax error"
+        $script:errors++
+      }
+    }
+    & node (Join-Path $Root "prompt-core/rewrite.mjs") --selftest
+    if ($LASTEXITCODE -ne 0) {
+      "FAIL: prompt-core selftest failed"
+      $script:errors++
+    }
+    $testFiles = @(Get-ChildItem -LiteralPath (Join-Path $Root "tests") -Filter "*.test.mjs")
+    & node --test @($testFiles.FullName)
+    if ($LASTEXITCODE -ne 0) {
+      "FAIL: kernel behaviour tests failed"
+      $script:errors++
+    }
+  } else {
+    "FAIL: node is required by the prompt interception kernel"
+    $script:errors++
+  }
+
   if (Test-Path $base) {
     ""
     "--- Content budget (auto-injected files only, TOKEN_BUDGET_WORDS=$TokenBudgetWords) ---"

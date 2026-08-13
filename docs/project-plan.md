@@ -52,7 +52,7 @@ GitHub automation it called future work already shipped.
 | 2 | Sync Engine | Delivered | Central governance files can be safely synced to target repos. |
 | 3 | Local CLI | Delivered | Developers can use governance locally before PR. |
 | 4 | GitHub Automation | Delivered | Governance can scale across repos through PR-based automation. |
-| 5 | Prompt Interception Kernel | In progress (shadow mode) | Every prompt is governed against the governance core before the model sees it, on every surface that supports hooks, and every interception is measured. See `docs/prompt-interception-plan.md`. |
+| 5 | Prompt Interception Kernel | In progress (shadow validation) | Capability-aware adapters, independent rule evaluation, and metadata-only local events are implemented. Governed status requires a pinned live canary. See `docs/adapter-capability-matrix.md`. |
 | 6 | Pilot Rollout | Not started | Pilot feedback and real telemetry captured; deny rules graduate from shadow to enforcing per rule. |
 | 7 | Wave Rollout | Not started | Weekly audit and sync steady state. |
 
@@ -66,19 +66,19 @@ Interception is delivered per client, and the clients are not equivalent. This
 table is the coverage position of record; `docs/prompt-interception-plan.md`
 holds the schema detail behind it.
 
-| Client | Governed | Can rewrite | Can block | Config |
+| Client | Current evidence state | Can rewrite | Can block | Config |
 | --- | --- | --- | --- | --- |
-| VS Code Copilot | Yes, by injection | No | Yes (exit 2) | `hooks/prompt-interceptor.json` |
-| Copilot CLI / coding agent | Yes, by rewrite | Yes | **No** | `hooks/copilot-cli-interceptor.json` |
-| Claude Code | Yes, by injection | No | Yes (`decision`) | `hooks/claude-code-settings.fragment.json` |
-| **JetBrains / IntelliJ** | **No** | No | No | *none possible* |
+| VS Code Copilot | Canary-verified injection on the recorded tested client | No | Yes (exit 2) | `hooks/prompt-interceptor.json` |
+| Copilot CLI / coding agent | Contract-only; live downstream canary pending | Yes | **No** | `hooks/copilot-cli-interceptor.json` |
+| Claude Code | Contract-only; live downstream canary pending | No | Yes (`decision`) | `hooks/claude-code-settings.fragment.json` |
+| **JetBrains / IntelliJ** | **Unsupported** | No | No | *none possible* |
 
 Two things follow that must not be smoothed over when reporting coverage:
 
 **No single client can both rewrite and block.** The one client that can replace
-a prompt cannot stop one, and the two that can stop one cannot alter it. "The
-platform intercepts and enforces" is true of the union of clients and of no
-individual developer's setup. Report the per-client position.
+a prompt cannot stop one, and the two that can stop one cannot alter it. Do not
+net different client capabilities into one coverage claim; report the exact
+client, hook, version, proof status, and action for each interaction.
 
 **JetBrains cannot be governed at runtime at all.** IntelliJ has no hook support,
 so those repositories get `.github/copilot-instructions.md`, the
@@ -103,7 +103,7 @@ coverage, or wait for JetBrains hook support.
 - `backend-api`
 - `web-dashboard`
 
-Pilot repos must cover all three governed surfaces and at least one IntelliJ
+Pilot repos must cover all three declared adapter surfaces and at least one IntelliJ
 Java team, so the coverage gap is measured during the pilot rather than
 discovered at wave rollout.
 
@@ -112,8 +112,9 @@ discovered at wave rollout.
 | Metric | Target |
 | --- | --- |
 | Repo onboarding | 100% active repos receive the governance files |
-| Runtime interception coverage | 100% of repos on a hook-capable client; IntelliJ-only repos counted separately as uncovered, never as onboarded |
-| Token reduction | 40-60% less repeated manual prompt context |
+| Technical prompt coverage | Establish baseline, then ≥95% during pilot on supported healthy adapters |
+| Control-perimeter coverage | Establish managed-client inventory baseline; unsupported/disabled clients stay outside the numerator |
+| Token impact | Measure completed-task input/output tokens and retries; no reduction target until baseline evidence exists |
 | Security baseline coverage | 100% repos include security guardrails |
 | Console/debug reduction | 80% reduction in unwanted console/debug review comments |
 | PR fix speed | 20-30% faster fixes for common issues |
