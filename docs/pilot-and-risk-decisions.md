@@ -16,5 +16,7 @@ No values below may be invented by the delivery repository.
 | JetBrains acceptance expiry | Blank | Risk approver | No accepted-risk claim |
 | 20-week capacity | Uncommitted | Program sponsor | Timeline is not an approved forecast |
 
-The engineering default while these decisions are unresolved is all rules in
-shadow, no enforcement, and JetBrains reported separately as unsupported.
+The engineering source default is 21 approved mandatory rules in enforce mode,
+seven legacy rules in shadow, and JetBrains reported separately as unsupported.
+Until pilot evidence exists, this must not be described as estate-wide deployed
+enforcement or an auditable operating control.

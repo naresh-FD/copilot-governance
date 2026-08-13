@@ -373,7 +373,7 @@ code {
     </p>
     <div class="chips">
       <span class="chip"><span class="chip-dot"></span>Phases 0–4 Delivered</span>
-      <span class="chip"><span class="chip-dot active"></span>PIK v2 Implemented · Shadow</span>
+      <span class="chip"><span class="chip-dot active"></span>PIK v2 · 21 Enforce / 7 Shadow</span>
       <span class="chip"><span class="chip-dot future"></span>Pilot On Hold</span>
       <span class="chip"><span class="chip-dot active"></span>4 Runtime Adapters</span>
     </div>
@@ -469,7 +469,7 @@ code {
           </svg>
         </div>
         <h3>Security Guardrails</h3>
-        <p>Non-negotiable guidance: no hardcoded secrets, no PII logging, no auth bypass, and OWASP injection prevention. All seven prompt rules remain shadow-only pending evidence.</p>
+        <p>Twenty-eight independent contracts cover secrets, sensitive logging, auth bypass, injection, unsafe sessions, governance bypass, supply chain and code quality. Twenty-one mandatory rules are source-configured to enforce; seven legacy rules remain shadow.</p>
         <div class="cap-bar"></div>
       </div>
 
@@ -615,7 +615,7 @@ code {
             </div>
           </div>
           <div class="arch-lbl">Interception Kernel</div>
-          <div class="arch-val"><code>prompt-core/</code> and <code>hooks/</code> verify an Ed25519-signed pack, evaluate independent rule states, preserve developer wording exactly once on replacement paths, and emit metadata-only audit events. All seven rules remain shadow-only pending approved evidence.</div>
+          <div class="arch-val"><code>prompt-core/</code> and <code>hooks/</code> verify signed policy pack v3.2.0, evaluate 28 independent rule states, preserve developer wording exactly once on replacement paths, and emit metadata-only audit events. Twenty-one mandatory rules are in enforce mode; seven legacy rules remain shadow.</div>
         </div>
 
         <div class="arch-row">
@@ -627,7 +627,7 @@ code {
             </div>
           </div>
           <div class="arch-lbl">Security Layer</div>
-          <div class="arch-val">No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, and secure error handling are injected as guidance; blocking is not yet enabled.</div>
+          <div class="arch-val">The mandatory baseline covers hardcoded and exposed secrets, sensitive logging, auth and governance bypass, injection, customer data, exfiltration, unsafe sessions, supply-chain weakening, error leakage, bounded resources and code-quality bypasses.</div>
         </div>
 
         <div class="arch-row">
@@ -747,10 +747,10 @@ code {
         </div>
         <div class="tl-label-col">
           <div class="tl-name">Prompt Interception</div>
-          <div class="status-pill sp-active">Implemented · Shadow</div>
+          <div class="status-pill sp-active">Implemented · Selective Enforce</div>
         </div>
         <div class="tl-content-col">
-          <div class="tl-box">Corrected PIK v2 engineering controls are implemented and locally verified: signed policy integrity, evidence gates, bounded metadata audit, feedback, labeling, canaries and rollback. All seven rules remain shadow-only until production evidence and named approvals exist.</div>
+          <div class="tl-box">Corrected PIK v2 controls are implemented and locally verified: signed policy integrity, 21 source-approved mandatory blockers, seven legacy shadow rules, bounded metadata audit, feedback, labeling, canaries and rollback. Production rollout evidence remains outstanding.</div>
         </div>
       </div>
 
@@ -763,7 +763,7 @@ code {
           <div class="status-pill sp-future">Not Started</div>
         </div>
         <div class="tl-content-col">
-          <div class="tl-box">No pilot repository has been nominated. The pilot must exercise the four represented runtime adapters, record JetBrains as a separate unsupported risk cohort, complete a four-week soak and collect at least 210 independently reviewed outcomes.</div>
+          <div class="tl-box">No pilot repository has been nominated. The pilot must verify the mandatory baseline on represented adapters, measure false positives and latency, record JetBrains as a separate unsupported risk cohort, and collect at least 210 independently reviewed outcomes before promoting a legacy rule.</div>
         </div>
       </div>
 
@@ -866,8 +866,8 @@ code {
     <div class="eyebrow">Security</div>
     <h2 class="sec-title">Non-Negotiable Guardrails</h2>
     <p class="sec-desc">
-      These rules are injected and evaluated at the prompt layer in addition to code review.
-      All seven remain shadow-only and cannot be weakened by repo overrides.
+      Twenty-eight contracts are evaluated independently at the prompt layer in addition to code review.
+      Twenty-one mandatory blockers are in enforce mode, seven legacy rules remain shadow-only, and repo overrides cannot weaken them.
     </p>
     <div class="gr-grid">
 
@@ -1005,8 +1005,8 @@ code {
       </div>
       <div class="footer-meta">
         <span>Phases 0–4 Delivered</span>
-        <span>PIK v2 Implemented in Shadow</span>
-        <span>Pilot On Hold · 188 Checks / 0 Failures</span>
+        <span>PIK v2 · 21 Enforce / 7 Shadow</span>
+        <span>Pilot On Hold · 237 Tests / 236 Passed / 1 Skipped / 0 Failed</span>
       </div>
     </div>
   </div>

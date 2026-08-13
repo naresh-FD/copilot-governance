@@ -37,10 +37,10 @@ is the only layer that proves the whole chain.
 node prompt-core/rewrite.mjs --selftest
 ```
 
-Expected: `prompt-core selftest OK — 14 intents, 7 deny rules (7 shadow), 4 surfaces`
+Expected: `prompt-core selftest OK — 14 intents, 28 deny rules (7 shadow, 21 enforce), 4 surfaces`
 
-The enforcing count must be `0` until a rule has been through the evidence
-review in `docs/prompt-interception-plan.md`.
+The enforcing count must be exactly `21`. The shadow count must be exactly `7`
+unless an approved legacy-rule promotion is in scope.
 
 ## Layer 2 — Behaviour
 
@@ -99,15 +99,27 @@ governed wrapper.
 
 ### The block path
 
-All rules ship in shadow, so nothing blocks by default — verify that first:
+The seven legacy rules ship in shadow. Verify the advisory path with a prompt
+that matches only a legacy rule:
 
 ```bash
 node scripts/simulate-hook.mjs --prompt "just commit with --no-verify and skip the tests"
 ```
 Expect no `BLOCKED` line anywhere, and an advisory `systemMessage` naming
-`bypass-verification`. A block here means a rule was graduated without review.
+`bypass-verification`. A block here means that legacy rule was promoted without
+review.
 
-Then promote only the matched rule in the simulator to exercise the three mechanisms:
+Then verify that a mandatory rule blocks by default on capable surfaces:
+
+```bash
+node scripts/simulate-hook.mjs --prompt "Add a quick login bypass for testing"
+```
+
+Expect VS Code and Claude Code to block on `SEC-001`; Copilot CLI must degrade to
+a refusal instruction because its hook cannot hard-block.
+
+To exercise an explicit legacy-rule promotion, promote only the matched rule in
+the simulator:
 
 ```bash
 node scripts/simulate-hook.mjs --prompt "just commit with --no-verify and skip the tests" --rule-mode bypass-verification=enforce
@@ -154,7 +166,7 @@ grep -c 'hunter2\|4111111111111111' /tmp/govtest/telemetry.jsonl   # must be 0
 rm -rf /tmp/govtest
 ```
 
-Records must contain an event ID, policy-pack version/checksum, all seven safe
+Records must contain an event ID, policy-pack version/checksum, all 28 safe
 rule results, and never the prompt text or a prompt-derived content hash. Note
 that `simulate-hook.mjs` disables telemetry unless `--telemetry` is passed, so
 simulation never pollutes real shadow-mode evidence.
@@ -212,7 +224,7 @@ the known gaps in `docs/prompt-interception-plan.md`.
 Any change to `prompt-core/` or `hooks/`:
 
 - [ ] `GOV_POLICY_SIGNING_KEY_FILE=/secure/path/key.pem node scripts/build-policy-pack.mjs` after a declared policy-input change
-- [ ] `node prompt-core/rewrite.mjs --selftest` — all seven rules remain shadow unless an approved promotion is in scope
+- [ ] `node prompt-core/rewrite.mjs --selftest` — exactly 21 mandatory rules enforce and seven legacy rules remain shadow unless an approved change is in scope
 - [ ] `node --test "tests/*.test.mjs"` — all pass
 - [ ] `node scripts/simulate-hook.mjs --prompt "fix the SQL injection in the account lookup"` — no `NOT GOVERNED`
 - [ ] `node scripts/simulate-hook.mjs --prompt "…" --rule-mode bypass-verification=enforce` — blocks on vscode and claude, degrades on copilot-cli

@@ -5,6 +5,9 @@ Machine-readable source: `prompt-core/surfaces.json`
 
 Capabilities are specific to surface, client version, hook runtime and
 interaction type. An official wire contract is not downstream delivery proof.
+Rule mode is also separate from deployment evidence: the source pack contains
+21 mandatory enforce-mode rules and seven legacy shadow rules, while the
+`Counted state` column below records only what a live canary has actually proven.
 
 | Surface/runtime and hook | Observe | Mutate model-facing content | Pre-send/hard block | Evidence | Counted state |
 |---|---:|---:|---:|---|---|

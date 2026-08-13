@@ -567,7 +567,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="stat"><b>9</b><span>Instruction Packs</span></div>
       <div class="stat"><b>14</b><span>Approved Workflows</span></div>
       <div class="stat"><b>7</b><span>Curated Skills</span></div>
-      <div class="stat"><b>188</b><span>Automated Checks</span></div>
+      <div class="stat"><b>237</b><span>Automated Tests</span></div>
     </div>
   </section>
 
@@ -744,7 +744,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="kernel" class="block">
     <div class="eyebrow">Phase 5</div>
     <h2 class="h">Prompt Interception Kernel</h2>
-    <p class="lede">PIK v2 verifies a signed policy pack, screens and classifies eligible events, applies independent control states, composes surface-specific output and writes metadata-only audit records. Configuration alone cannot promote a rule. Full engineering status is on the <a href="index.html#ic-flow">docs home</a>.</p>
+    <p class="lede">PIK v2 verifies signed policy pack v3.2.0, evaluates 28 independent contracts, composes surface-specific output and writes metadata-only audit records. Twenty-one approved mandatory rules are source-configured for enforce mode; seven legacy rules remain evidence-gated in shadow. Full engineering status is on the <a href="index.html#ic-flow">docs home</a>.</p>
 
     <div class="cards">
       <div class="card">
@@ -759,7 +759,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="card">
         <div class="card-top"><div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <div><h3>deny.json</h3><p class="card-sub">Policy deny rules. All seven currently ship in shadow mode — evaluated and logged, never blocking, until pilot data justifies enforcing one at a time.</p></div></div>
+          <div><h3>deny.json</h3><p class="card-sub">Twenty-eight versioned policy contracts: 21 mandatory blockers in enforce mode and seven legacy broad-signal rules retained in shadow.</p></div></div>
         <div class="card-links"><a href="https://github.com/naresh-FD/copilot-governance/blob/main/prompt-core/deny.json" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>prompt-core/deny.json</a></div>
       </div>
       <div class="card">
@@ -851,7 +851,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="testing" class="block">
     <div class="eyebrow">Quality Bar</div>
     <h2 class="h">Testing</h2>
-    <p class="lede">The complete validator executes 188 checks: 187 pass and one Windows symlink case is skipped when administrator privileges are unavailable. It covers interception, signed policy integrity, rollback, audit privacy, evidence gates, hook contracts and sync lifecycle.</p>
+    <p class="lede">The complete Node suite executes 237 tests: 236 pass and one Windows symlink case is skipped when administrator privileges are unavailable. It covers the 21-rule mandatory baseline, remediation-safe negatives, interception, signed policy integrity, rollback, audit privacy, evidence gates, hook contracts and sync lifecycle.</p>
 
     <div class="docs-2">
       <div class="doc-list">
@@ -859,6 +859,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/claude-hook.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>claude-hook.test.mjs <span class="badge b-info">Claude Code contract</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/hook-simulator.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>hook-simulator.test.mjs <span class="badge b-info">cross-surface replay</span></a>
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/pik-v2.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>pik-v2.test.mjs <span class="badge b-info">evidence · privacy · canary</span></a>
+        <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/priority-rules.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>priority-rules.test.mjs <span class="badge b-info">mandatory blockers · remediation</span></a>
       </div>
       <div class="doc-list">
         <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance/blob/main/tests/registry-validation.test.mjs" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>registry-validation.test.mjs <span class="badge b-info">skill lock integrity</span></a>
@@ -897,7 +898,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 
   <footer class="foot">
     <div><b>Copilot Governance Platform</b><br>naresh-fd/copilot-governance</div>
-    <div>PIK v2 implemented in shadow · 188 checks / 0 failures · pilot on hold<br><a href="index.html#overview">Back to Docs Home</a></div>
+    <div>PIK v2 source-configured: 21 enforce / 7 shadow · 237 tests / 236 passed / 1 skipped / 0 failed<br><a href="index.html#overview">Back to Docs Home</a></div>
   </footer>
 
 </div>

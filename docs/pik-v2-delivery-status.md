@@ -41,8 +41,9 @@ approved the control.
 - Signed policy integrity, expiry, LKG behavior, per-rule rollback, global
   rollback-to-shadow, asynchronous bounded audit buffering, and metadata privacy
   have automated tests.
-- All seven rules remain shadow, have no production labels, and are ineligible
-  for promotion.
+- The signed v3.2.0 source pack configures 21 mandatory baseline rules in
+  `enforce` with named ownership and explicit approvals. Seven legacy rules
+  remain shadow and ineligible for promotion without production labels.
 
 ## What remains unproven
 

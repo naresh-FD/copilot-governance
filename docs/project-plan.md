@@ -52,8 +52,8 @@ GitHub automation it called future work already shipped.
 | 2 | Sync Engine | Delivered | Central governance files can be safely synced to target repos. |
 | 3 | Local CLI | Delivered | Developers can use governance locally before PR. |
 | 4 | GitHub Automation | Delivered | Governance can scale across repos through PR-based automation. |
-| 5 | Prompt Interception Kernel | In progress (shadow validation) | Capability-aware adapters, independent rule evaluation, and metadata-only local events are implemented. Governed status requires a pinned live canary. See `docs/adapter-capability-matrix.md`. |
-| 6 | Pilot Rollout | Not started | Pilot feedback and real telemetry captured; deny rules graduate from shadow to enforcing per rule. |
+| 5 | Prompt Interception Kernel | Implemented (selective enforcement source-configured) | Capability-aware adapters, 21 mandatory enforce-mode rules, 7 legacy shadow rules, and metadata-only local events are implemented. Deployed governed status still requires a pinned live canary. See `docs/adapter-capability-matrix.md`. |
+| 6 | Pilot Rollout | Not started | Verify the mandatory baseline per adapter, capture real telemetry, and graduate legacy rules from shadow only after per-rule evidence. |
 | 7 | Wave Rollout | Not started | Weekly audit and sync steady state. |
 
 Phase 5 is sometimes called "Phase 2" in interception-programme documents, where

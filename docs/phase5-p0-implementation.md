@@ -15,8 +15,8 @@ rule evidence remain operational work.
 | Client/hook capability matrix | Versioned `surfaces.json` plus `docs/adapter-capability-matrix.md`; contract-only and canary-verified evidence are distinct | Implemented; two live canaries still required |
 | Canonical prompt envelope | `envelope.mjs` creates event/correlation IDs, runtime/policy metadata, size buckets, capabilities, rule outcomes, workflow IDs, state, and phase latency | Implemented |
 | Original-prompt preservation | Replacement paths use a dynamically sized verbatim fence without trimming; the in-memory prompt property is non-enumerable | Implemented and tested |
-| Independent rule outcomes | Every event records matched/not-matched/error for all seven stable rule IDs, versions, reason codes, and modes | Implemented |
-| Per-rule lifecycle | `control-plane.json` supports `off`, `shadow`, `candidate`, `soft-block`, and `enforce`, with cohort/repository/percentage/time targeting | Implemented; all rules remain shadow |
+| Independent rule outcomes | Every event records matched/not-matched/error for all 28 stable rule IDs, versions, reason codes, and modes | Implemented |
+| Per-rule lifecycle | `control-plane.json` supports `off`, `shadow`, `candidate`, `soft-block`, and `enforce`, with cohort/repository/percentage/time targeting | Implemented; 21 mandatory rules enforce, 7 legacy rules remain shadow |
 | No global enable-all | `GOV_ENFORCE_ALL` is ignored and audited as a bypass marker; tests can promote only named rules | Implemented and tested |
 | Fail open but fail loud | Policy, audit, or integrity failure marks the event `degraded`, notifies supported clients, and prevents unhealthy enforcement | Implemented and tested at unit/contract level |
 | Metadata-only local audit | JSONL events omit raw prompts, source fragments, repository paths, and content-derived prompt hashes | Implemented and tested |
@@ -90,9 +90,12 @@ before invoking Node.
 - on-prem collector, reconciled dashboard, reviewer queue, and approved retention;
 - named rule, adapter, privacy, analytics, and operations owners;
 - golden/pilot/adversarial corpora approved for enterprise use;
-- four-week shadow evidence, confidence bounds, Ring 0–3 rollout, or enforcement;
+- four-week pilot evidence, confidence bounds, Ring 0–3 rollout, or production deployment proof;
 - managed-device heartbeat, endpoint inventory, and network-egress controls;
 - JetBrains interception.
 
-All seven rules therefore remain in `shadow`. Promotion requires the evidence and
-approvals in the next-level plan, not a code-only configuration change.
+The signed v3.2.0 pack source-configures 21 mandatory baseline rules in `enforce`
+mode and retains seven legacy broad-signal rules in `shadow`. Mandatory approval
+is explicit in the control plane and remains independently rollbackable. This is
+not proof of production deployment or operating effectiveness; promotion of any
+legacy rule still requires the evidence and approvals in the next-level plan.

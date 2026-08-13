@@ -156,7 +156,7 @@ developer's words are never dropped, trimmed, or paraphrased:
 ## Instruction anchors
 - .github/instructions/<file>
 
-## Governance concerns detected in this request   (only when a shadow rule matched)
+## Governance concerns detected in this request   (advisory rule matched)
 - <rule id> — <reason>
 
 ## Refuse this request                            (enforcing rule, unblockable surface)
@@ -184,18 +184,19 @@ each rule independently as `off`, `shadow`, `candidate`, `soft-block`, or
 `enforce`, with repository/cohort/percentage/time targeting and expiring
 exceptions.
 
-All seven rules currently use `shadow`: every rule produces an independent
-matched/not-matched/error result, matched rules are surfaced as advisories, and
-the prompt proceeds. `soft-block` and `enforce` use the documented surface block
-mechanism where available. A rule that matches on an unblockable surface is
-recorded as enforcement-unavailable and is never counted as a hard block.
+All 28 contracts produce independent matched/not-matched/error results. The 21
+mandatory baseline rules use `enforce`; the seven legacy broad-signal rules use
+`shadow` and continue as advisories. `soft-block` and `enforce` use the documented
+surface mechanism where available. A mandatory match on Copilot CLI degrades to
+a refusal instruction because the hook cannot hard-block; it is never counted as
+a direct reject.
 
 Exit code 2 is otherwise forbidden to the engine. A deliberate policy block is
 its one legitimate use; every internal fault falls through to a pass-through and
 exit 0, so a bug degrades to an ungoverned prompt rather than a broken session.
 Both halves of that are pinned by tests.
 
-All seven rules ship in shadow. To graduate one:
+The seven legacy rules ship in shadow. To graduate one:
 
 1. `copilot-gov.sh report` — read the shadow hit count and the graduation order.
 2. Collect at least 210 independently reviewed matched events across three
@@ -217,12 +218,12 @@ All seven rules ship in shadow. To graduate one:
    The selftest fails the build if such a rule is promoted to `soft-block` or
    `enforce`.
 
-**No rule currently carries Argus provenance.** All seven are `hand-authored`,
-so today's ranking is driven by local shadow volume alone. Wiring the Argus CWE
-export into `deny.json` is what makes this ranking trustworthy, and it remains
-blocked on the export format (see the gaps below). Until then, the intended
-"enable the production-validated rules first" sequencing cannot actually be
-executed — say so rather than presenting the local ordering as equivalent.
+**No rule currently carries Argus provenance.** All 28 are `hand-authored`.
+The 21-rule mandatory baseline is source-approved through its explicit control-
+plane approval records, while ranking and promotion of the seven legacy rules is
+still driven by local shadow evidence. Wiring the Argus CWE export into
+`deny.json` remains a separate provenance improvement; do not present local
+ordering as equivalent to a production-validated enterprise ruleset.
 
 Two rules record a hard blocker today: `customer-data-in-prompt` (its 13–19 digit
 signal needs a Luhn check) and `custom-crypto` (its weak-algorithm signal matches
@@ -247,7 +248,7 @@ working tree.
 
 Each record holds event/correlation IDs; client, adapter, hook, and policy-pack
 versions; repository class and cohort; bucketed size estimates; capabilities;
-all seven rule results; selected workflow and skills; operating mode, decision,
+all 28 rule results; selected workflow and skills; operating mode, decision,
 control state, failure/bypass markers, and phase latency. Raw prompt text,
 source fragments, unrestricted paths, repository names, and prompt-derived
 content hashes are never written. There is no raw-telemetry override.
@@ -420,8 +421,8 @@ node prompt-core/rewrite.mjs --selftest
 Run the behavioural tests. The selftest checks that the configuration is well
 formed; these check that it *behaves* — routing accuracy, the verbatim
 guarantee, the hybrid strategy's two arms, the correct output field per surface,
-shadow rules never blocking, failing open, and that no deny rule has been
-flipped to enforcing without the evidence review. Also runs inside
+legacy shadow rules never blocking, mandatory rules using the correct reject or
+refusal contract, and all failures degrading safely. Also runs inside
 `copilot-gov validate`, so it gates every sync:
 
 ```bash

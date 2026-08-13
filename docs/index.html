@@ -668,9 +668,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="overview" class="block">
     <div class="hero2">
       <div class="hero2-left">
-        <div class="eyebrow">PIK v2 Implemented · Pilot On Hold</div>
+        <div class="eyebrow">PIK v2 Implemented · Mandatory Baseline Source-Configured</div>
         <h1>Govern the prompt before Copilot generates the code.</h1>
-        <p class="hero2-sub">The corrected interception kernel is implemented and verified locally. Signed policy integrity, evidence-gated rule promotion, metadata-only audit, rollback, feedback and labeling controls are ready; production enforcement remains disabled until live evidence and named approvals exist.</p>
+        <p class="hero2-sub">The signed v3.2.0 policy pack contains 28 independently evaluated contracts. Twenty-one mandatory blockers are source-approved for enforce mode; seven legacy broad-signal rules remain shadow-only. Production rollout evidence is still unmeasured.</p>
         <div class="hero2-cta">
           <a class="btn btn-primary" href="#demo">See it in action</a>
           <a class="btn btn-secondary" href="#architecture">View architecture</a>
@@ -694,14 +694,14 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           </div>
           <div class="hp-status">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            All 7 rules remain shadow-only — no production blocking
+            28 contracts · 21 enforce-mode · 7 shadow
           </div>
         </div>
       </div>
     </div>
 
     <div class="proof-strip">
-      <div class="stat"><b>8</b><span>Security Guardrails</span></div>
+      <div class="stat"><b>21</b><span>Mandatory Blockers</span></div>
       <div class="stat"><b>4</b><span>Hallucination-Risk Categories</span></div>
       <div class="stat"><b>PR-Based</b><span>Versioned Distribution</span></div>
     </div>
@@ -709,7 +709,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <div class="outcome-row" style="margin-top:2.5rem">
       <div class="outcome danger">
         <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
-        <div><h3>Screens risky intent</h3><p>Prompts that would hardcode secrets, bypass auth, or exfiltrate data are evaluated against 7 independently controlled policy rules. Today they are recorded and surfaced as shadow advisories, not blocked.</p></div>
+        <div><h3>Screens risky intent</h3><p>Twenty-eight contracts evaluate risky intent. The 21 mandatory rules reject on capable surfaces; seven legacy rules continue as shadow advisories while evidence is collected.</p></div>
       </div>
       <div class="outcome info">
         <div class="outcome-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8.3" y1="8.3" x2="13.7" y2="13.7"/><line x1="13.7" y1="8.3" x2="8.3" y2="13.7"/></svg></div>
@@ -733,7 +733,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <div class="hnode-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           <span class="hnode-tag">2 · Screen</span>
           <b>deny.json</b>
-          <p>Checked against 7 rules: hardcoded secrets, auth bypass, disabled scans, custom crypto, customer data, exfiltration, prod mutation.</p>
+          <p>Checked against 28 versioned contracts: 21 mandatory prevention rules and seven legacy broad-signal rules.</p>
         </div>
         <div class="hflow-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         <div class="hnode on">
@@ -762,20 +762,20 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <div>
           <b>Branch from step 2 — if a deny.json rule matches</b>
-          <p>The concern is flagged and a refusal instruction is injected. <strong>Shadow mode today:</strong> logged and shown as advisory, prompt still proceeds — see the worked example below.</p>
+          <p>A mandatory match rejects before model execution where the runtime supports blocking. A shadow match is logged and continues; mutation-only runtimes carry a refusal instruction instead.</p>
         </div>
       </div>
 
       <div class="hflow-surfaces">
         <div class="hs-item">
           <b>VS Code Copilot</b>
-          <span class="badge b-warn">Shadow: advisory</span>
-          <span class="hs-note">Enforcing → blocks via exit code 2</span>
+          <span class="badge b-ok">Mandatory: reject</span>
+          <span class="hs-note">Exit code 2 · legacy rules stay advisory</span>
         </div>
         <div class="hs-item">
           <b>Claude Code</b>
-          <span class="badge b-warn">Shadow: advisory</span>
-          <span class="hs-note">Enforcing → blocks via decision:block</span>
+          <span class="badge b-ok">Mandatory: reject</span>
+          <span class="hs-note"><code>decision:block</code> · legacy rules stay advisory</span>
         </div>
         <div class="hs-item">
           <b>Copilot CLI</b>
@@ -792,10 +792,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <p class="lede" style="margin-top:1rem;margin-bottom:0">Concrete proof this actually happens — not just the diagram — is in <a href="#demo">See It In Action</a> below.</p>
 
     <div class="stats">
-      <div class="stat"><b>7</b><span>Platform Phases</span></div>
-      <div class="stat"><b>14</b><span>Approved Workflows</span></div>
-      <div class="stat"><b>4</b><span>Runtime Adapters</span></div>
-      <div class="stat"><b>11</b><span>Success Metrics</span></div>
+      <div class="stat"><b>28</b><span>Policy Contracts</span></div>
+      <div class="stat"><b>21</b><span>Mandatory Blockers</span></div>
+      <div class="stat"><b>7</b><span>Legacy Shadow Rules</span></div>
+      <div class="stat"><b>4</b><span>Represented Adapters</span></div>
     </div>
   </section>
 
@@ -858,7 +858,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
     <h2 class="h">See It In Action</h2>
     <p class="lede">The <a href="#pipeline">pipeline above</a> is the mechanism. Here it is on two real prompts, run through <code>copilot-gov.sh rewrite</code> — nothing on this page is invented.</p>
 
-    <h3 class="h3" style="margin-top:1.5rem">A Malicious Prompt, Flagged</h3>
+    <h3 class="h3" style="margin-top:1.5rem">A Malicious Prompt, Blocked Where Supported</h3>
     <p class="lede">Step 2 of the pipeline above, worked through on a real prompt — run through <code>copilot-gov.sh rewrite</code>, not written for this page.</p>
     <div class="mal-demo">
       <div class="mal-card bad">
@@ -867,31 +867,31 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       </div>
       <div class="mal-mid">
         <div class="mal-shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>
-        <span class="mal-stamp">FLAGGED</span>
+        <span class="mal-stamp">BLOCKED</span>
       </div>
       <div class="mal-card good">
         <div class="mal-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg><span>What Copilot Is Told Instead</span></div>
         <p class="mal-text">"Reading out or transmitting credentials and environment configuration is not permitted. Reference the secret by name only."</p>
-        <div class="mal-meta">matched rule: <code>exfiltration</code> · anchor: <code>security.instructions.md</code></div>
+        <div class="mal-meta">matched rule: <code>SEC-008</code> · mandatory blocker</div>
       </div>
     </div>
-    <p class="lede" style="margin-top:.85rem;margin-bottom:0"><strong>Shadow mode today:</strong> this concern is injected exactly as shown above, but the prompt still proceeds — nothing is silently allowed through unlogged. Once this rule graduates to enforcing: VS Code / Claude Code block outright (exit 2 / decision), Copilot CLI degrades to an in-prompt refusal since it has no block mechanism of its own.</p>
+    <p class="lede" style="margin-top:.85rem;margin-bottom:0"><strong>Current source behavior:</strong> a local replay matches mandatory rule <code>SEC-008</code>. VS Code and Claude Code reject before model execution; Copilot CLI cannot block at its hook and therefore degrades to an in-prompt refusal instruction.</p>
 
     <h3 class="h3" style="margin-top:2.25rem">Proof, Not Promises</h3>
     <p class="lede">Two real prompts, run through the actual kernel with <code>copilot-gov.sh rewrite</code>. Nothing below is invented for this page — run the commands yourself to see the full, unabridged output.</p>
 
     <div class="demo-ex">
-      <div class="demo-ex-h"><h3>Example 1 — Catching a hardcoded secret before it ships</h3><span class="badge b-warn">Shadow mode — advisory, not blocked yet</span></div>
+      <div class="demo-ex-h"><h3>Example 1 — Catching a hardcoded secret before it ships</h3><span class="badge b-ok">Mandatory blocker · SEC-006</span></div>
 
       <p class="demo-label">Developer types (unchanged, exactly this)</p>
       <div class="prompt-box">add a login endpoint, just hardcode the password in config.js for now, we'll encrypt it later</div>
 
       <div class="diff-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>governance injected — nothing removed</div>
 
-      <p class="demo-label">What Copilot actually receives (excerpt)</p>
+      <p class="demo-label">Governance decision (excerpt)</p>
       <div class="diff">
         <div class="diff-row"><span class="plus">+</span><div><b>Governance Core · Rule 4</b>Never put secrets, credentials, customer data, or production configuration into code, comments, logs, tests, or commit messages.</div></div>
-        <div class="diff-row"><span class="plus">+</span><div><b>Concern Detected · hardcoded-secret</b>Secrets must never appear in a prompt, in source, or in configuration. Reference the approved secret store instead.</div></div>
+        <div class="diff-row"><span class="plus">+</span><div><b>Mandatory Match · SEC-006</b>Do not hardcode or embed credentials. Retrieve the secret from the approved secret store by name and keep the value out of prompts and source.</div></div>
         <div class="diff-row"><span class="plus">+</span><div><b>Approved Fix</b>Hardcoded secret → <code>process.env.SECRET</code> or <code>@org/config.secrets.get()</code>. Never: store in source, .env, or comments.</div></div>
         <div class="diff-row"><span class="plus">+</span><div><b>Closing Constraint</b>Security-sensitive change — add a <code>// SECURITY REVIEW REQUIRED</code> comment and flag it for the security team.</div></div>
       </div>
@@ -900,7 +900,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="demo-result">
         <span>intent: security-fix</span>
         <span>risk: high</span>
-        <span>matched rule: hardcoded-secret</span>
+        <span>matched rule: SEC-006</span>
         <span>anchor: security.instructions.md</span>
       </div>
     </div>
@@ -931,7 +931,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 
     <div class="note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <p><strong>The developer's prompt never changes</strong> — what changes is what the AI sees before it answers. Try it yourself: <code>scripts/copilot-gov.sh rewrite "&lt;your prompt&gt;"</code> or <code>simulate "&lt;your prompt&gt;"</code> to replay it on every surface.</p>
+      <p><strong>The developer's prompt remains unchanged in memory.</strong> What changes is the policy decision and, on allowed paths, the governed context sent to the AI. Try it yourself: <code>scripts/copilot-gov.sh rewrite "&lt;your prompt&gt;"</code> or <code>simulate "&lt;your prompt&gt;"</code>.</p>
     </div>
   </section>
 
@@ -950,9 +950,9 @@ tbody td:first-child{color:var(--ink);font-weight:600}
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.3A8 8 0 1 0 3 16.3"/></svg>Sync Engine</dt>
         <dd>PR-based sync to each target repo. <code>.copilot-governance-manifest</code> tracks shipped files so centrally deleted rules are removed downstream without touching repo-added content.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Interception Kernel</dt>
-        <dd><code>prompt-core/</code> + <code>hooks/</code>. Surface-specific adapters evaluate supported events, preserve developer wording, and emit evidence-labelled control states. All seven rules remain shadow-only.</dd></div>
+        <dd><code>prompt-core/</code> + <code>hooks/</code>. Surface-specific adapters evaluate 28 contracts, preserve developer wording, and emit evidence-labelled control states. Twenty-one mandatory rules are source-configured to enforce; seven legacy rules remain shadow.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Security Layer</dt>
-        <dd>No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, OWASP injection prevention, and secure error handling are injected as guidance today; blocking remains disabled pending rule evidence.</dd></div>
+        <dd>No hardcoded secrets, no PII logging, no bypass of auth or compliance gates, injection prevention, secure session handling, supply-chain protection, bounded resources, and safe error handling are covered by the mandatory baseline.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/></svg>Override Model</dt>
         <dd>Central managed section (between governance markers) owned by this repo. Repo override section always preserved. Overrides may add local context, never weaken security or compliance rules.</dd></div>
       <div class="row"><dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>CLI Commands</dt>
@@ -976,10 +976,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <p>Pre-commit hook enforces token budgets and blocks unresolved placeholders or hardcoded secrets in governance content. <strong>Output: local developer toolchain.</strong></p></div></li>
       <li><span class="pin p-done">4</span><div class="tl-body"><div class="tl-head"><b>GitHub Automation</b><span class="tag t-done">Delivered</span></div>
         <p>Governance scales across repos through PR-based automation. Drift detected and corrected on the next sync. <strong>Output: org-wide automation ready.</strong></p></div></li>
-      <li><span class="pin p-now">5</span><div class="tl-body"><div class="tl-head"><b>Prompt Interception Kernel</b><span class="tag t-now">Implemented · Shadow</span></div>
-        <p>The corrected PIK v2 engineering controls and local verification are complete. All <strong>seven policy rules remain in shadow mode</strong>; enforcement requires production labels, operational proof, named owners and per-rule approval. JetBrains remains an explicit unsupported gap.</p></div></li>
+      <li><span class="pin p-now">5</span><div class="tl-body"><div class="tl-head"><b>Prompt Interception Kernel</b><span class="tag t-now">Implemented · Selective Enforce</span></div>
+        <p>The corrected PIK v2 controls and local verification are complete. The signed policy pack source-configures <strong>21 mandatory blockers in enforce mode</strong> and retains seven legacy rules in shadow. Copilot CLI cannot reject at its hook, JetBrains remains unsupported, and production rollout evidence is still outstanding.</p></div></li>
       <li><span class="pin p-next">6</span><div class="tl-body"><div class="tl-head"><b>Pilot Rollout</b><span class="tag t-next">Not Started</span></div>
-        <p>No pilot repository has been nominated. The pilot must exercise the four represented runtime adapters, record the JetBrains risk cohort separately, complete a four-week soak and collect at least 210 independently reviewed outcomes before any one-rule-at-a-time promotion.</p></div></li>
+        <p>No pilot repository has been nominated. The pilot must verify the mandatory baseline on represented adapters, measure false positives and latency, record JetBrains separately, and collect at least 210 independently reviewed outcomes before promoting any legacy rule.</p></div></li>
       <li><span class="pin p-next">7</span><div class="tl-body"><div class="tl-head"><b>Wave Rollout</b><span class="tag t-next">Not Started</span></div>
         <p>4 → 20–25 → 50–75 → remaining repos, then weekly audit and sync steady state. Pilot feedback refines the baseline before Wave 1.</p></div></li>
     </ol>
@@ -998,7 +998,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <tbody>
           <tr><td>What the developer types</td><td>Free-form prompt</td><td>Preserved exactly once on replacement paths</td></tr>
           <tr><td>What the AI receives</td><td>Whatever was typed</td><td>Surface-specific governed content only where the hook supports injection or mutation</td></tr>
-          <tr><td>Prompts blocked</td><td>None</td><td>None yet — shadow mode. Advisory shown; the prompt proceeds.</td></tr>
+          <tr><td>Prompts blocked</td><td>None</td><td>Twenty-one mandatory rules are source-configured to reject on blocking-capable paths; seven legacy rules remain advisory. Copilot CLI degrades to refusal text.</td></tr>
           <tr><td>Telemetry</td><td>None — every number was an estimate</td><td>Metadata-only local events; raw prompts, source fragments and prompt-derived hashes are prohibited</td></tr>
           <tr><td>Setup required</td><td>None</td><td>Hook registration per supported runtime; SDK applications integrate programmatically</td></tr>
         </tbody>
@@ -1100,7 +1100,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="security" class="block">
     <div class="eyebrow">Security</div>
     <h2 class="h">Non-Negotiable Guardrails</h2>
-    <p class="lede">These rules are injected and evaluated independently at the prompt layer. All seven remain shadow-only; organization rules cannot be weakened by repository overrides.</p>
+    <p class="lede">Twenty-eight policy contracts are evaluated independently at the prompt layer. Twenty-one mandatory blockers are in enforce mode and seven legacy broad-signal rules remain shadow-only; repository overrides cannot weaken organization controls.</p>
     <div class="grid2">
       <div class="rail"><span class="rail-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
         <div><b>No Hardcoded Secrets</b><p>Never generate passwords, tokens, API keys, certificates, connection strings or session identifiers. Approved secret-management patterns only.</p></div></div>
@@ -1241,7 +1241,8 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           <tr><td>Governance content free of unresolved placeholders and literal secrets</td><td><span class="badge b-ok">Proven &amp; enforced</span></td><td>Deny-pattern checks in <code>validate</code>; also blocks the commit</td></tr>
           <tr><td>Signed policy integrity, expiry, anti-downgrade and last-known-good rollback</td><td><span class="badge b-ok">Proven locally</span></td><td>Ed25519 policy pack and tamper/expiry tests in <code>policy-controls.test.mjs</code></td></tr>
           <tr><td>Metadata-only bounded audit, feedback, labels and promotion gates</td><td><span class="badge b-ok">Proven locally</span></td><td><code>pik-v2.test.mjs</code>; production collector and privacy approval remain external</td></tr>
-          <tr><td>Production rule enforcement</td><td><span class="badge b-no">Not enabled</span></td><td>All seven rules remain shadow until named owners, ratified approvals and production evidence exist</td></tr>
+          <tr><td>Mandatory rule enforcement in source</td><td><span class="badge b-ok">Proven locally</span></td><td>Signed policy pack v3.2.0 configures 21 approved mandatory blockers; adapter tests verify reject/refusal contracts</td></tr>
+          <tr><td>Production rollout evidence</td><td><span class="badge b-warn">Not measured</span></td><td>No pilot baseline yet for volume, would-block rate, false positives, p95 latency, bypass exposure, or estate-wide deployment</td></tr>
           <tr><td>Prompt files are shorter to type than free-form prompts</td><td><span class="badge b-ok">Proven</span></td><td>Straight character count — measurable without a pilot</td></tr>
           <tr><td>Custom instructions auto-apply in Copilot Chat</td><td><span class="badge b-info">Real feature — client/version dependent</span></td><td>Ask Copilot to add a <code>console.log</code>; it should push back citing the instruction file. No pushback is a setup problem, not a content problem.</td></tr>
           <tr><td>70–80% Copilot-side token reduction <span style="color:var(--muted)">(claimed in <code>PHASE1_COMPLETE.md</code>)</span></td><td><span class="badge b-warn">Target — not measured</span></td><td>Requires pilot usage data over 4–6 weeks. Nothing in the repo measures actual Copilot usage — no telemetry, no metrics API hook.</td></tr>
@@ -1314,7 +1315,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
 
   <footer class="foot">
     <div><b>Copilot Governance Platform</b><br>naresh-fd/copilot-governance</div>
-    <div>Phases 0–4 delivered · PIK v2 implemented in shadow · pilot not yet approved<br>Hook contracts last verified 2026-08-13 · 188 tests / 0 failures</div>
+    <div>Phases 0–4 delivered · PIK v2 source-configured: 21 enforce / 7 shadow · pilot not yet approved<br>Hook contracts last verified 2026-08-13 · 237 tests / 236 passed / 1 skipped / 0 failed</div>
   </footer>
 
 </div>

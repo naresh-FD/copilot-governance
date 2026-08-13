@@ -1,7 +1,9 @@
 # PIK v2 Threshold Ledger
 
-All values are **proposed and unratified**. Owner and approval fields remain
-unresolved; therefore no rule can leave shadow.
+All values are **proposed and unratified** for evidence-based promotion of the
+seven legacy shadow rules and for production operating thresholds. They do not
+override the explicit source approvals attached to the 21 mandatory baseline
+rules. No legacy rule can leave shadow through a mode-only edit.
 
 | Threshold | Proposed value | Runtime action | Owner/status |
 |---|---:|---|---|

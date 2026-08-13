@@ -1,14 +1,16 @@
 # Phase 5 Briefing — Prompt Interception
 
 **For:** Engineering leadership
-**Status:** Built and tested, not yet piloted. Nothing is blocking developers today.
+**Status:** Built and tested, not yet piloted. Twenty-one mandatory rules are
+source-configured for enforce mode; seven legacy rules remain shadow-only.
 **Date:** 2026-07-29
 
 > **Evidence correction, 2026-08-13:** Hook registration or a passing local
 > contract test is not proof that the model received governed context. Only the
-> recorded VS Code `additionalContext` canary is currently classified
-> `governed-shadow`; Claude Code and Copilot CLI remain `observed` pending
-> pinned-runtime downstream canaries, and JetBrains is unsupported.
+> recorded VS Code `additionalContext` canary proves only that governed context
+> reached that tested path. It does not prove that the new mandatory baseline is
+> deployed estate-wide. Claude Code and Copilot CLI still require pinned-runtime
+> downstream canaries, and JetBrains is unsupported.
 
 ---
 
@@ -47,24 +49,31 @@ Very little, deliberately.
 | --- | --- | --- |
 | What they type | Free-form prompt | Unchanged |
 | What the AI receives | Whatever they typed | Their exact words, plus our security rules and the relevant approved workflow |
-| Prompts blocked | n/a | **None** — see shadow mode below |
+| Prompts blocked | n/a | 21 mandatory rules reject on blocking-capable paths; 7 legacy rules remain advisory; Copilot CLI degrades to refusal text |
 | Setup required | n/a | None; it arrives with the normal governance sync |
 
 Their original wording is always preserved word-for-word inside the rewritten
 prompt. We add context; we never replace their intent with our interpretation.
 
-## Shadow mode — why nothing is blocked yet
+## Selective enforcement — what is configured today
 
-The system can block prompts that violate policy (asking to hardcode a secret,
-disable a security scan, skip tests, paste customer data). We have deliberately
-shipped all seven policy rules in **shadow mode**: they are evaluated and logged,
-the developer sees an advisory note, and the prompt proceeds normally.
+The signed v3.2.0 policy pack evaluates 28 independent contracts. Twenty-one
+high-priority prevention rules have named ownership and source approval for
+**enforce mode**. They cover authentication bypass, exposed and hardcoded secrets,
+weak cryptography, debug and sensitive logging, hardcoded values, injection,
+customer data, exfiltration, unsafe sessions and deserialization, governance and
+supply-chain bypass, error leakage, resource-control removal, silent exceptions,
+and type/lint suppression.
 
-This is the low-risk sequencing. We collect a few weeks of real data, see which
-rules fire cleanly and which produce false alarms, and then switch on enforcement
-**one rule at a time**. A high-confidence rule can go live early without waiting
-for the whole set. Nobody's work gets blocked on day one by a rule we hadn't yet
-validated against real usage.
+Seven older broad-signal rules remain in **shadow mode**. They are evaluated and
+logged, the developer sees an advisory note, and the prompt proceeds normally.
+Promotion remains one rule at a time after the evidence gate is satisfied.
+
+This is a source-code state, not a production-rollout claim. VS Code and Claude
+Code have direct reject contracts; Copilot CLI cannot reject at its notification
+or transformed hook and therefore carries a mandatory refusal instruction.
+Production volume, false-positive rate, p95 latency, bypass exposure, and deployed
+adapter coverage remain unmeasured until the pilot.
 
 ## What this is not
 
@@ -103,16 +112,18 @@ because it changes the coverage claim.
 
 ## What happens next
 
-**Phase 6 — Pilot.** Run the four pilot repositories for a few weeks in shadow
-mode. Review which policy rules fired and whether the alerts were correct. Turn
-on enforcement rule by rule. Publish real measured numbers to replace the
-estimates in our Phase 1 documents.
+**Phase 6 — Pilot.** Run four representative repositories for four weeks. Verify
+mandatory reject/refusal behavior per adapter, measure volume, false positives,
+p95 latency and bypass exposure, and review the seven legacy shadow rules. Promote
+legacy rules only one at a time after their evidence gates pass. Publish measured
+numbers to replace estimates in the Phase 1 documents.
 
 **Phase 7 — Wave rollout.** 20–25 repositories, then 50–75, then the remainder,
 using the existing pull-request-based sync we already run.
 
-No new infrastructure, licences, or vendor spend is involved. It rides on the
-governance sync that is already in production.
+Repository-local validation rides on the existing governance sync. A central,
+auditable operating control still requires approved collection, retention,
+managed-device enforcement, and named operational ownership.
 
 ## Two defects found and fixed along the way
 
