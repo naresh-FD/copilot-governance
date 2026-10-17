@@ -394,7 +394,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   border-radius:var(--r-sm);padding:.8rem 1rem;font-size:13.5px;color:var(--ink);font-weight:600;
   transition:border-color .16s,background .16s;
 }
-.doc-item:hover{border-color:var(--accent-line);background:var(--accent-soft);text-decoration:none}
+.doc-item:hover{border-color:var(--accent-line);background:var(--accent-soft);text-decoration:none}.doc-item--private{cursor:default}.doc-item--private:hover{border-color:var(--line);background:var(--surface)}
 .doc-item svg{width:16px;height:16px;color:var(--muted);flex-shrink:0}
 .doc-item .badge{margin-left:auto}
 .list-h{display:flex;align-items:center;gap:.5rem;font-size:1.02rem;font-weight:700;color:var(--ink);margin-bottom:.9rem}
@@ -926,7 +926,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
         <span>rule 5: always included</span>
         <span>anchors: react + code-quality</span>
       </div>
-      <p class="lede" style="margin-top:.9rem;margin-bottom:0">There's no bespoke "hook registry" check here — this is the standing rule that runs on <em>every</em> prompt, on every governed surface, which is exactly what catches this class of mistake. The full pattern catalogue — invented hooks, wrong imports, made-up config keys — lives in <a href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/hallucination-prevention.md" target="_blank" rel="noopener">hallucination-prevention.md</a>, used as PR-review audit criteria today.</p>
+      <p class="lede" style="margin-top:.9rem;margin-bottom:0">There's no bespoke "hook registry" check here — this is the standing rule that runs on <em>every</em> prompt, on every governed surface, which is exactly what catches this class of mistake. The full pattern catalogue — invented hooks, wrong imports, made-up config keys — lives in <code class="src-ref" title="Stored in the private copilot-governance-core repository">hallucination-prevention.md</code>, used as PR-review audit criteria today.</p>
     </div>
 
     <div class="note">
@@ -1283,7 +1283,7 @@ tbody td:first-child{color:var(--ink);font-weight:600}
   <section id="sources" class="block">
     <div class="eyebrow">Reference</div>
     <h2 class="h">Source Documents</h2>
-    <p class="lede">This page summarises the repository's markdown documentation. Each source below is authoritative for its own area.</p>
+    <p class="lede">This page summarises the repository's markdown documentation. Each source below is authoritative for its own area. These documents are stored in the private <code>copilot-governance-core</code> repository, so they are listed by name without links. <!-- conduit-change: CONDUIT-2026-001 --></p>
     <div class="docs-2">
       <div>
         <div class="list-h">
@@ -1291,10 +1291,10 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           Core Planning
         </div>
         <div class="doc-list">
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/project-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>project-plan.md</a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/rollout-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>rollout-plan.md</a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/security-compliance-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>security-compliance-plan.md</a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/prompt-governance-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>prompt-governance-plan.md</a>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>project-plan.md</div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>rollout-plan.md</div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>security-compliance-plan.md</div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>prompt-governance-plan.md</div>
         </div>
       </div>
       <div>
@@ -1303,11 +1303,11 @@ tbody td:first-child{color:var(--ink);font-weight:600}
           Phase 5 &amp; Verification
         </div>
         <div class="doc-list">
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/phase5-briefing.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>phase5-briefing.md<span class="badge b-info">Brief</span></a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/prompt-interception-plan.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>prompt-interception-plan.md</a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/pik-v2-delivery-status.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PIK v2 delivery status<span class="badge b-warn">Hold before pilot</span></a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/hallucination-prevention.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>hallucination-prevention.md</a>
-          <a class="doc-item" href="https://github.com/naresh-FD/copilot-governance-core/blob/main/docs/demo.md" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>demo.md<span class="badge b-warn">Read first</span></a>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>phase5-briefing.md<span class="badge b-info">Brief</span></div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>prompt-interception-plan.md</div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PIK v2 delivery status<span class="badge b-warn">Hold before pilot</span></div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>hallucination-prevention.md</div>
+          <div class="doc-item doc-item--private" title="Stored in the private copilot-governance-core repository"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>demo.md<span class="badge b-warn">Read first</span></div>
         </div>
       </div>
     </div>
